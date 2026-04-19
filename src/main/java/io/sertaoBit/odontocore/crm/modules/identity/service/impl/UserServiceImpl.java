@@ -1,10 +1,14 @@
 package io.sertaoBit.odontocore.crm.modules.identity.service.impl;
 
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.UserCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.UserResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.Role;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.service.UserService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class UserServiceImpl implements UserService {
 
     private final IUserRepository userRepository;
@@ -14,22 +18,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User creat(String username, String password, Role role) {
+    public UserCreateRequestDTO create(String username, String password, Role role) {
         return null;
     }
 
     @Override
-    public User findByUsername(String username) {
+    public UserResponseDTO findByUsername(String username) {
         return null;
     }
 
     @Override
-    public User update(String username) {
+    public UserCreateRequestDTO update(String username) {
         return null;
     }
 
     @Override
-    public User delete(String username) {
+    public UserResponseDTO delete(String username) {
         return null;
     }
 }
