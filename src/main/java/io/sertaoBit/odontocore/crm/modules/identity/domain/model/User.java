@@ -1,6 +1,7 @@
-package io.sertaoBit.odontocore.crm.modules.identity.domain;
+package io.sertaoBit.odontocore.crm.modules.identity.domain.model;
 
 
+import io.sertaoBit.odontocore.crm.modules.identity.domain.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 

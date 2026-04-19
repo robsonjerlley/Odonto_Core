@@ -1,6 +1,6 @@
-package io.sertaoBit.odontocore.crm.modules.crm.api.dto.request;
+package io.sertaoBit.odontocore.crm.modules.identity.api.dto.request;
 
-import io.sertaoBit.odontocore.crm.modules.identity.domain.Role;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.enums.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
