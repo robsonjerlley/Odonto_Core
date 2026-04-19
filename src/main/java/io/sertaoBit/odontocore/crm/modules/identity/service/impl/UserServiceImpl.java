@@ -41,8 +41,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDTO update(String username) {
-        return null;
+    public UserResponseDTO updatePassword(String username, String Newpassword) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+        user.setPassword(Newpassword);
+        User userUpdate =  userRepository.save(user);
+
+        return userMapper.toResponseDTO(userUpdate);
     }
 
     @Override

@@ -11,4 +11,5 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByUsername(String username);
 
+
 }

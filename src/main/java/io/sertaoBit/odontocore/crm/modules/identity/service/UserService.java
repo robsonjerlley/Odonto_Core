@@ -12,11 +12,10 @@ import java.util.UUID;
 public interface UserService {
 
     UserResponseDTO create(UserCreateRequestDTO requestDTO);
-    UserResponseDTO update(String username);
+    UserResponseDTO updatePassword(String username, String newPassword);
     List<UserResponseDTO> findAll();
     UserResponseDTO findById(UUID id);
     UserResponseDTO findByUsername(String username);
-
      void delete(UUID id);
 
 
