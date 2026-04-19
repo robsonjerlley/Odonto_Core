@@ -5,13 +5,19 @@ import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserRespons
 import io.sertaoBit.odontocore.crm.modules.identity.domain.enums.Role;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.UUID;
+
 @Service
 public interface UserService {
 
-    UserCreateRequestDTO create(String username, String password, Role role);
+    UserResponseDTO create(UserCreateRequestDTO requestDTO);
+    UserResponseDTO update(String username);
+    List<UserResponseDTO> findAll();
+    UserResponseDTO findById(UUID id);
     UserResponseDTO findByUsername(String username);
-    UserCreateRequestDTO update(String username);
-    UserResponseDTO delete(String username);
+
+     void delete(UUID id);
 
 
 }
