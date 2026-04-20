@@ -21,7 +21,8 @@ public class UserController {
         this.userService = userService;
     }
 
-    @RequestMapping
+    @RequestMapping("/create")
+    @PostMapping
     public ResponseEntity<UserResponseDTO>create(@Valid @RequestBody UserCreateRequestDTO requestDTO) {
         UserResponseDTO userResponseDTO = userService.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
@@ -45,7 +46,7 @@ public class UserController {
     @PatchMapping("/{username}/password")
     public ResponseEntity<UserResponseDTO>updatePassword(
             @PathVariable String username,
-            @RequestBody String newPassword ){
+            @RequestBody @Valid String newPassword ){
 
         return ResponseEntity.ok(userService.updatePassword(username, newPassword));
     }
