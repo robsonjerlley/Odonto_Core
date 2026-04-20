@@ -15,10 +15,10 @@ import java.util.UUID;
 @NoArgsConstructor @AllArgsConstructor
 @Getter @Setter
 @EqualsAndHashCode(of = "id")
-public class Costumer {
+public class Customer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String name;
     @Column(unique = true)

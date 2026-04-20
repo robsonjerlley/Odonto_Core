@@ -1,11 +1,14 @@
-package io.sertaoBit.odontocore.crm.modules.crm.api.dto.request;
+package io.sertaoBit.odontocore.crm.modules.crm.api.dto.response;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.TicketStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.br.CPF;
 
-public record CostumerCreateRequestDTO(
+import java.util.UUID;
+
+public record CustomerResponseDTO (
+        @NotNull UUID id,
         @NotBlank String name,
         @CPF String cpf,
         @NotBlank String telephone,
@@ -13,5 +16,5 @@ public record CostumerCreateRequestDTO(
         @NotBlank String address,
         @NotBlank String description,
         @NotNull TicketStatus ticketStatus
-) {
+){
 }
