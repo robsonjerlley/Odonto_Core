@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.identity.api.controller;
 
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserPasswordUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.service.UserService;
 import jakarta.validation.Valid;
@@ -21,8 +22,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @RequestMapping("/create")
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<UserResponseDTO>create(@Valid @RequestBody UserCreateRequestDTO requestDTO) {
         UserResponseDTO userResponseDTO = userService.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
@@ -46,9 +46,9 @@ public class UserController {
     @PatchMapping("/{username}/password")
     public ResponseEntity<UserResponseDTO>updatePassword(
             @PathVariable String username,
-            @RequestBody @Valid String newPassword ){
+            @Valid @RequestBody UserPasswordUpdateRequestDTO requestDTO ){
 
-        return ResponseEntity.ok(userService.updatePassword(username, newPassword));
+        return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPassword()));
     }
 
     @DeleteMapping("/{id}")
