@@ -35,7 +35,9 @@ public class Customer {
     @Enumerated(EnumType.STRING)
     private TicketStatus ticketStatus;
 
-    @OneToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
 

@@ -22,7 +22,7 @@ public interface ICustomerService {
 
     CustomerResponseDTO findByName(String name);
 
-    CustomerResponseDTO findByCPF(String cpf);
+    CustomerResponseDTO findByCpf(String cpf);
 
     void deleteById(UUID id);
 

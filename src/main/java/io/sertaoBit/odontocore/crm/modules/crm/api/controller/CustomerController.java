@@ -29,7 +29,7 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerResponseDTO);
     }
 
-    @PatchMapping("{cpf}/")
+    @PatchMapping("/cpf/{cpf}")
     public ResponseEntity<CustomerResponseDTO> update(
             @PathVariable String cpf, @RequestBody
             @Valid CustomerUpdateRequestDTO requestDTO) {
@@ -46,13 +46,13 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.findById(id));
     }
 
-    @GetMapping("/{cpf}")
-    public ResponseEntity<CustomerResponseDTO> findByCPF(@PathVariable String cpf) {
-        return ResponseEntity.ok(customerService.findByCPF(cpf));
+    @GetMapping("cpf/{cpf}")
+    public ResponseEntity<CustomerResponseDTO> findByCpf(@PathVariable String cpf) {
+        return ResponseEntity.ok(customerService.findByCpf(cpf));
     }
 
 
-    @GetMapping("/{name}")
+    @GetMapping("/name/{name}")
     public ResponseEntity<CustomerResponseDTO> findByName(@PathVariable String name) {
         return ResponseEntity.ok(customerService.findByName(name));
     }

@@ -7,13 +7,14 @@ import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ICustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.service.ICustomerService;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Service
 public class CustomerServiceImpl implements ICustomerService {
 
     private final ICustomerRepository customerRepository;
@@ -34,7 +35,7 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     public CustomerResponseDTO update(String cpf, CustomerUpdateRequestDTO dto) {
-        Customer customer = customerRepository.findByCPF(cpf)
+        Customer customer = customerRepository.findByCpf(cpf)
                 .orElseThrow(() -> new RuntimeException("Customer not found" + cpf));
         customer.setName(dto.name());
         customer.setCpf(dto.cpf());
@@ -73,8 +74,8 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     @Transactional(readOnly = true)
-    public CustomerResponseDTO findByCPF(String cpf) {
-        return customerRepository.findByCPF(cpf)
+    public CustomerResponseDTO findByCpf(String cpf) {
+        return customerRepository.findByCpf(cpf)
                 .map(customerMapper::toResponseDTO)
                 .orElseThrow(() -> new RuntimeException("Customer not found" + cpf));
     }
