@@ -33,9 +33,9 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
-    public CustomerResponseDTO update(String username, CustomerUpdateRequestDTO dto) {
-        Customer customer = customerRepository.findByName(username)
-                .orElseThrow(() -> new RuntimeException("Customer not found" + username));
+    public CustomerResponseDTO update(String cpf, CustomerUpdateRequestDTO dto) {
+        Customer customer = customerRepository.findByCPF(cpf)
+                .orElseThrow(() -> new RuntimeException("Customer not found" + cpf));
         customer.setName(dto.name());
         customer.setCpf(dto.cpf());
         customer.setTelephone(dto.telephone());
@@ -49,10 +49,10 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<List<CustomerResponseDTO>> findAll() {
-        return Optional.of(customerRepository.findAll().stream()
+    public List<CustomerResponseDTO> findAll() {
+        return customerRepository.findAll().stream()
                 .map(customerMapper::toResponseDTO)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
     }
 
     @Override

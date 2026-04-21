@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.identity.api.controller;
 
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserPasswordUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
@@ -23,13 +24,14 @@ public class UserController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<UserResponseDTO>create(@Valid @RequestBody UserCreateRequestDTO requestDTO) {
+    public ResponseEntity<UserResponseDTO> create(@RequestBody @Valid UserCreateRequestDTO requestDTO) {
         UserResponseDTO userResponseDTO = userService.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
     }
 
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> findAll() {
+
         return ResponseEntity.ok(userService.findAll());
     }
 
@@ -39,14 +41,12 @@ public class UserController {
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<UserResponseDTO>findByUsername(@PathVariable String username) {
+    public ResponseEntity<UserResponseDTO> findByUsername(@PathVariable String username) {
         return ResponseEntity.ok(userService.findByUsername(username));
     }
 
     @PatchMapping("/{username}/password")
-    public ResponseEntity<UserResponseDTO>updatePassword(
-            @PathVariable String username,
-            @Valid @RequestBody UserPasswordUpdateRequestDTO requestDTO ){
+    public ResponseEntity<UserResponseDTO> updatePassword(@PathVariable String username, @RequestBody @Valid UserPasswordUpdateRequestDTO requestDTO) {
 
         return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPassword()));
     }
@@ -54,7 +54,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         userService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
 
