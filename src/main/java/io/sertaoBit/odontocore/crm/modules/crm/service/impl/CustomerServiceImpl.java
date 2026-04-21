@@ -13,12 +13,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class ICustomerServiceImpl implements ICustomerService {
+public class CustomerServiceImpl implements ICustomerService {
 
     private final ICustomerRepository customerRepository;
     private final ICustomerMapper customerMapper;
 
-    public ICustomerServiceImpl(ICustomerRepository customerRepository, ICustomerMapper customerMapper) {
+    public CustomerServiceImpl(ICustomerRepository customerRepository, ICustomerMapper customerMapper) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
     }
