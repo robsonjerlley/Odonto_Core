@@ -15,10 +15,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth ->auth
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/users/**").permitAll()
+                        .requestMatchers("/api/v1/customers/**").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
     }
+
 }
