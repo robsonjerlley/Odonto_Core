@@ -6,6 +6,7 @@ import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponse
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ICustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.ICustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.crm.service.ICustomerService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -25,7 +26,6 @@ public class CustomerServiceImpl implements ICustomerService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public CustomerResponseDTO create(CustomerCreateRequestDTO dto) {
         Customer newCustomer = customerMapper.toEntity(dto);
         Customer customerToSave = customerRepository.save(newCustomer);
@@ -33,7 +33,6 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CustomerResponseDTO update(String username, CustomerUpdateRequestDTO dto) {
         Customer customer = customerRepository.findByName(username)
                 .orElseThrow(() -> new RuntimeException("Customer not found" + username));
@@ -42,7 +41,7 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setTelephone(dto.telephone());
         customer.setCity(dto.city());
         customer.setAddress(dto.address());
-        customer.setTicket(dto.ticketStatus());
+        customer.setTicketStatus(dto.ticketStatus());
 
         Customer customerToUpdate = customerRepository.save(customer);
         return customerMapper.toResponseDTO(customerToUpdate);

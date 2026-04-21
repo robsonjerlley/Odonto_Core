@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.crm.service.impl;
+package io.sertaoBit.odontocore.crm.modules.crm.service;
 
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerUpdateRequestDTO;

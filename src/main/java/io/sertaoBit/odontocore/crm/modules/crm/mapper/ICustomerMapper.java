@@ -5,13 +5,18 @@ import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponse
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 
 
 @Mapper(componentModel = "spring")
 public interface ICustomerMapper {
 
 
-    @Mapping(target = "id", ignore = true )
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "createdAt", ignore = true),
+            @Mapping(target = "user", ignore = true),
+    })
     Customer toEntity(CustomerCreateRequestDTO dto);
 
 

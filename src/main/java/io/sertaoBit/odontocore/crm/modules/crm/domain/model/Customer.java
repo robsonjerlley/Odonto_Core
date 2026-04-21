@@ -33,7 +33,7 @@ public class Customer {
     @CreationTimestamp
     private LocalDateTime createdAt;
     @Enumerated(EnumType.STRING)
-    private TicketStatus ticket;
+    private TicketStatus ticketStatus;
 
     @OneToOne(fetch = FetchType.LAZY)
     private User user;
