@@ -3,23 +3,23 @@ package io.sertaoBit.odontocore.crm.modules.identity.service.impl;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.mapper.UserMapper;
+import io.sertaoBit.odontocore.crm.modules.identity.mapper.IUserMapper;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
-import io.sertaoBit.odontocore.crm.modules.identity.service.UserService;
-import org.springframework.transaction.annotation.Transactional;
+import io.sertaoBit.odontocore.crm.modules.identity.service.IUserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
-    private final UserMapper userMapper;
+    private final IUserMapper userMapper;
 
-    public UserServiceImpl(IUserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl(IUserRepository userRepository, IUserMapper userMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
     }
@@ -41,11 +41,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponseDTO updatePassword(String username, String Newpassword) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
         user.setPassword(Newpassword);
-        User userUpdate =  userRepository.save(user);
+        User userUpdate = userRepository.save(user);
 
         return userMapper.toResponseDTO(userUpdate);
     }
@@ -69,7 +70,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete(UUID id) {
-        if(!userRepository.existsById(id)) {
+        if (!userRepository.existsById(id)) {
             throw new RuntimeException("User not found!");
         }
         userRepository.deleteById(id);

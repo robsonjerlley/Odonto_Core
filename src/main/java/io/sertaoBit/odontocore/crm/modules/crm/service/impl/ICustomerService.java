@@ -1,10 +1,31 @@
 package io.sertaoBit.odontocore.crm.modules.crm.service.impl;
 
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponseDTO;
+import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+
+@Service
 public interface ICustomerService {
 
+    CustomerResponseDTO create(CustomerCreateRequestDTO dto);
 
+    CustomerResponseDTO update(String username, CustomerUpdateRequestDTO dto);
+
+    Optional<List<CustomerResponseDTO>> findAll();
+
+    CustomerResponseDTO findById(UUID id);
+
+    CustomerResponseDTO findByName(String name);
+
+    CustomerResponseDTO findByCPF(String cpf);
+
+    void deleteById(UUID id);
 
 
 }
