@@ -8,7 +8,7 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_users", schema = "crm_db")
+@Table(name = "tb_users", schema = "identity_db")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
