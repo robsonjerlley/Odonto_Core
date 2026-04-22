@@ -31,18 +31,24 @@ public class CustomerServiceImpl implements ICustomerService {
 
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public CustomerResponseDTO create(CustomerCreateRequestDTO dto) {
         User user = userRepository.findById(dto.userId())
                 .orElseThrow(() -> new RuntimeException("User not found by id: " + dto.userId()));
 
         Customer newCustomer = customerMapper.toEntity(dto);
+        newCustomer.setUser(user);
+
+        if(dto.description() != null){
+            newCustomer.getDescription().add(dto.description());
+        }
+
         Customer customerToSave = customerRepository.save(newCustomer);
         return customerMapper.toResponseDTO(customerToSave);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public CustomerResponseDTO update(String cpf, CustomerUpdateRequestDTO dto) {
         Customer customer = customerRepository.findByCpf(cpf)
                 .orElseThrow(() -> new RuntimeException("Customer not found " + cpf));
@@ -51,7 +57,9 @@ public class CustomerServiceImpl implements ICustomerService {
                 .isPresent()) {
             throw new RuntimeException("O novo CPF informado  " + dto.cpf() + " já pertence a outro cliente");
         }
-
+        if (dto.description() != null && !dto.description().isBlank()) {
+            customer.getDescription().add(dto.description());
+        }
         customer.setName(dto.name());
         customer.setCpf(dto.cpf());
         customer.setTelephone(dto.telephone());

@@ -15,10 +15,12 @@ public interface ICustomerMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "createdAt", ignore = true),
-            @Mapping(target = "user.id", source = "userId")
+            @Mapping(target = "user.id", source = "userId"),
+            @Mapping(target = "description", ignore = true)
     })
     Customer toEntity(CustomerCreateRequestDTO dto);
 
-    @Mapping(target = "id", source = "user.id")
+
+    @Mapping(target = "userId", source = "user.id")
     CustomerResponseDTO toResponseDTO(Customer customer);
 }
