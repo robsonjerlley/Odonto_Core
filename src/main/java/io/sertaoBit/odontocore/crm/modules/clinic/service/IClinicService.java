@@ -19,8 +19,6 @@ public interface IClinicService {
 
     List<ClinicResponseDTO> findAll();
 
-    List<ClinicResponseDTO> findByAllEmployees();
-
     void delete(UUID id);
 
 }

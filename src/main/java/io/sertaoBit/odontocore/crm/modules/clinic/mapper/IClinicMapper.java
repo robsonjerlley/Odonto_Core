@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.clinic.mapper;
 
 import io.sertaoBit.odontocore.crm.modules.clinic.api.dto.request.ClinicCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.clinic.api.dto.response.ClinicResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.clinic.domain.model.Clinic;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,6 +14,6 @@ public interface IClinicMapper {
     Clinic toEntity(ClinicCreateRequestDTO dto);
 
 
-    ClinicCreateRequestDTO toDto(Clinic entity);
+    ClinicResponseDTO toResponseDTO(Clinic entity);
 
 }
