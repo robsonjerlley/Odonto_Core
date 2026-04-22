@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.br.CPF;
 
+import java.util.UUID;
+
 public record CustomerCreateRequestDTO(
         @NotBlank String name,
         @CPF String cpf,
@@ -12,6 +14,7 @@ public record CustomerCreateRequestDTO(
         @NotBlank String city,
         @NotBlank String address,
         @NotBlank String description,
-        @NotNull TicketStatus ticketStatus
+        @NotNull TicketStatus ticketStatus,
+        @NotNull UUID userId
 ) {
 }

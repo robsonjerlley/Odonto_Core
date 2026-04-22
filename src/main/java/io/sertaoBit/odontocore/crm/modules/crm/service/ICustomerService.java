@@ -20,7 +20,7 @@ public interface ICustomerService {
 
     CustomerResponseDTO findById(UUID id);
 
-    CustomerResponseDTO findByName(String name);
+    List<CustomerResponseDTO> findByName(String name);
 
     CustomerResponseDTO findByCpf(String cpf);
 

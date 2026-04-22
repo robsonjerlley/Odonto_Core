@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +20,7 @@ public class CustomerController {
     private final ICustomerService customerService;
 
     public CustomerController(ICustomerService customerService) {
+
         this.customerService = customerService;
     }
 
@@ -38,6 +40,7 @@ public class CustomerController {
 
     @GetMapping
     public ResponseEntity<List<CustomerResponseDTO>> findAll() {
+
         return ResponseEntity.ok(customerService.findAll());
     }
 
@@ -53,8 +56,9 @@ public class CustomerController {
 
 
     @GetMapping("/name/{name}")
-    public ResponseEntity<CustomerResponseDTO> findByName(@PathVariable String name) {
-        return ResponseEntity.ok(customerService.findByName(name));
+    public ResponseEntity<List<CustomerResponseDTO>> findByName(@PathVariable String name) {
+       List<CustomerResponseDTO> customersDTO= customerService.findByName(name);
+       return ResponseEntity.ok(customersDTO);
     }
 
     @DeleteMapping("/{id}")
