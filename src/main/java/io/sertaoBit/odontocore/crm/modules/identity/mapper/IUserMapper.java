@@ -11,6 +11,7 @@ import org.mapstruct.Mapping;
 public interface IUserMapper {
 
     @Mapping(target = "id" , ignore = true)
+    @Mapping(target = "clinic",  ignore = true)
     User toEntity(UserCreateRequestDTO dto);
 
 

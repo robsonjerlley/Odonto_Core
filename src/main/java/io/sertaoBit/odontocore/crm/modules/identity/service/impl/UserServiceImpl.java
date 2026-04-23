@@ -1,5 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.identity.service.impl;
 
+import io.sertaoBit.odontocore.crm.modules.clinic.domain.model.Clinic;
+import io.sertaoBit.odontocore.crm.modules.clinic.repository.IClinicRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
@@ -18,18 +20,25 @@ public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
     private final IUserMapper userMapper;
+    private final IClinicRepository clinicRepository;
 
-    public UserServiceImpl(IUserRepository userRepository, IUserMapper userMapper) {
+    public UserServiceImpl(IUserRepository userRepository, IUserMapper userMapper, IClinicRepository clinicRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.clinicRepository = clinicRepository;
     }
 
     @Override
     @Transactional
     public UserResponseDTO create(UserCreateRequestDTO dto) {
         User newUser = userMapper.toEntity(dto);
-        User userToSave = userRepository.save(newUser);
-        return userMapper.toResponseDTO(userToSave);
+
+        if(dto.clinicID() != null){
+            Clinic clinic = clinicRepository.findById(dto.clinicID())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid clinic ID"));
+            newUser.setClinic(clinic);
+        }
+        return userMapper.toResponseDTO(userRepository.save(newUser));
     }
 
     @Override
@@ -46,9 +55,8 @@ public class UserServiceImpl implements IUserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
         user.setPassword(Newpassword);
-        User userUpdate = userRepository.save(user);
 
-        return userMapper.toResponseDTO(userUpdate);
+        return userMapper.toResponseDTO(userRepository.save(user));
     }
 
     @Override
