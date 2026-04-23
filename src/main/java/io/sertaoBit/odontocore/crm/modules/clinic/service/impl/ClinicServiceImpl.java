@@ -69,6 +69,11 @@ public class ClinicServiceImpl implements IClinicService {
                 .orElseThrow(()-> new RuntimeException("Clinic not found. " + id));
     }
 
+    public ClinicResponseDTO findByCnpj(String cnpj) {
+        return clinicRepository.findByCnpj(cnpj)
+                .map(clinicMapper::toResponseDTO)
+                .orElseThrow(() -> new RuntimeException("CNPJ não encontrado na base de dados. " + cnpj));
+    }
 
     @Override
     @Transactional(readOnly = true)

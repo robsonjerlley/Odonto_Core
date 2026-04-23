@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,7 +48,7 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.findById(id));
     }
 
-    @GetMapping("cpf/{cpf}")
+    @GetMapping("/cpf/{cpf}")
     public ResponseEntity<CustomerResponseDTO> findByCpf(@PathVariable String cpf) {
         return ResponseEntity.ok(customerService.findByCpf(cpf));
     }
@@ -57,8 +56,8 @@ public class CustomerController {
 
     @GetMapping("/name/{name}")
     public ResponseEntity<List<CustomerResponseDTO>> findByName(@PathVariable String name) {
-       List<CustomerResponseDTO> customersDTO= customerService.findByName(name);
-       return ResponseEntity.ok(customersDTO);
+        List<CustomerResponseDTO> customersDTO = customerService.findByName(name);
+        return ResponseEntity.ok(customersDTO);
     }
 
     @DeleteMapping("/{id}")

@@ -19,6 +19,8 @@ public interface IClinicService {
 
     List<ClinicResponseDTO> findAll();
 
+    ClinicResponseDTO findByCnpj(String cnpj);
+
     void delete(UUID id);
 
 }
