@@ -1,6 +1,8 @@
 package io.sertaoBit.odontocore.crm.modules.identity.service.impl;
 
+import io.sertaoBit.odontocore.crm.modules.clinic.api.dto.response.ClinicResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.clinic.domain.model.Clinic;
+import io.sertaoBit.odontocore.crm.modules.clinic.mapper.IClinicMapper;
 import io.sertaoBit.odontocore.crm.modules.clinic.repository.IClinicRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
@@ -21,11 +23,13 @@ public class UserServiceImpl implements IUserService {
     private final IUserRepository userRepository;
     private final IUserMapper userMapper;
     private final IClinicRepository clinicRepository;
+    private final IClinicMapper clinicMapper;
 
-    public UserServiceImpl(IUserRepository userRepository, IUserMapper userMapper, IClinicRepository clinicRepository) {
+    public UserServiceImpl(IUserRepository userRepository, IUserMapper userMapper, IClinicRepository clinicRepository, IClinicMapper clinicMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.clinicRepository = clinicRepository;
+        this.clinicMapper = clinicMapper;
     }
 
     @Override
@@ -82,6 +86,19 @@ public class UserServiceImpl implements IUserService {
             throw new RuntimeException("User not found!");
         }
         userRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClinicResponseDTO findClinicByUserId(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        Clinic clinic = user.getClinic();
+        if (clinic == null) {
+            throw new RuntimeException("User has no clinic assigned!");
+        }
+        return clinicMapper.toResponseDTO(clinic);
     }
 
 

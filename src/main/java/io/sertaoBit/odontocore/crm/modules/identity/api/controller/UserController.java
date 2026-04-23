@@ -1,6 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.identity.api.controller;
 
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.clinic.api.dto.response.ClinicResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserPasswordUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
@@ -49,6 +49,11 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> updatePassword(@PathVariable String username, @RequestBody @Valid UserPasswordUpdateRequestDTO requestDTO) {
 
         return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPassword()));
+    }
+
+    @GetMapping("/clinics/{id}")
+    public ResponseEntity<ClinicResponseDTO> findClinicByUserId(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.findClinicByUserId(id));
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.identity.service;
 
+import io.sertaoBit.odontocore.crm.modules.clinic.api.dto.response.ClinicResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,8 @@ public interface IUserService {
     UserResponseDTO findByUsername(String username);
 
     void delete(UUID id);
+
+    ClinicResponseDTO findClinicByUserId(UUID userId);
 
 
 }

@@ -1,6 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.clinic.api.dto.response;
 
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.br.CNPJ;
 
@@ -12,6 +12,6 @@ public record ClinicResponseDTO(
         @NotBlank String telephone,
         @NotBlank String address,
         @NotBlank String city,
-        List<User> employees
+        List<UserResponseDTO> employees
 ) {
 }
