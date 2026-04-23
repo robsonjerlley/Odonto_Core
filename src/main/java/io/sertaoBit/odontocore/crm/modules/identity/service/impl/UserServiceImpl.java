@@ -37,8 +37,8 @@ public class UserServiceImpl implements IUserService {
     public UserResponseDTO create(UserCreateRequestDTO dto) {
         User newUser = userMapper.toEntity(dto);
 
-        if(dto.clinicID() != null){
-            Clinic clinic = clinicRepository.findById(dto.clinicID())
+        if(dto.clinicId() != null){
+            Clinic clinic = clinicRepository.findById(dto.clinicId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid clinic ID"));
             newUser.setClinic(clinic);
         }

@@ -30,7 +30,7 @@ public class Clinic {
     private String address;
     private String city;
 
-    @OneToMany(mappedBy = "clinic")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "clinic")
     private List<User> employees = new ArrayList<>();
 
 
