@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.identity.domain.model;
 
 
+import io.sertaoBit.odontocore.crm.modules.clinic.domain.model.Clinic;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,5 +27,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @ManyToOne
+    @JoinColumn(name = "clinic_id")
+    private Clinic clinic;
 
 }
