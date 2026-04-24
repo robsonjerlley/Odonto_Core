@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record ProcedureUpdateRequestDTO(
         @NotNull UUID id,
+        @NotBlank String name,
         @NotBlank String description,
         @NotNull Double basePrice,
         @NotBlank String category

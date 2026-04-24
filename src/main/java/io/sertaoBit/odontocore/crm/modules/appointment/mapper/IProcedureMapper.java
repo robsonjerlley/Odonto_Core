@@ -12,5 +12,5 @@ public interface IProcedureMapper {
     @Mapping(target = "id", ignore = true)
     Procedure toEntity(ProcedureCreateRequestDTO dto);
 
-    ProcedureResponseDTO toResponseDTO(Procedure procedure);
+    ProcedureResponseDTO toResponseDTO(Procedure entity);
 }

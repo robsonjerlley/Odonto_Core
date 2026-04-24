@@ -19,6 +19,8 @@ public class Procedure {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @NotBlank
+    private String name;
+    @NotBlank
     @Column(length = 350)
     private String description;
     @NonNull

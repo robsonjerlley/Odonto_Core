@@ -1,13 +1,12 @@
 package io.sertaoBit.odontocore.crm.modules.appointment.repositoy;
 
-import io.sertaoBit.odontocore.crm.modules.appointment.api.dto.response.ProcedureResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.appointment.domain.model.Appointment;
+import io.sertaoBit.odontocore.crm.modules.appointment.domain.model.Procedure;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface IProcedureRepository extends JpaRepository<Appointment, UUID> {
+public interface IProcedureRepository extends JpaRepository<Procedure, UUID> {
 
-    List<ProcedureResponseDTO> finByName(String name);
+    List<Procedure> findByName(String name);
 }

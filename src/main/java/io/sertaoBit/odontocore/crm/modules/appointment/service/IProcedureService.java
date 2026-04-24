@@ -17,7 +17,7 @@ public interface IProcedureService {
 
     ProcedureResponseDTO findById(UUID id);
 
-    List<ProcedureResponseDTO> finByName(String name);
+    List<ProcedureResponseDTO> findByName(String name);
 
     void delete(UUID id);
 }
