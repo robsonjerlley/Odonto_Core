@@ -54,7 +54,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public UserResponseDTO updatePassword(String username, String Newpassword) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found!"));

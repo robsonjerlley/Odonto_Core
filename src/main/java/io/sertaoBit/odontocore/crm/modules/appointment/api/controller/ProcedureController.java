@@ -45,7 +45,7 @@ public class ProcedureController {
         return ResponseEntity.ok().body(procedureService.findAll());
     }
 
-    @GetMapping("/{name}")
+    @GetMapping("/name/{name}")
     public ResponseEntity<List<ProcedureResponseDTO>> findByName(@PathVariable String name) {
         return ResponseEntity.ok().body(procedureService.findByName(name));
     }

@@ -23,6 +23,7 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @NonNull
     private LocalDateTime createdAt;
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;

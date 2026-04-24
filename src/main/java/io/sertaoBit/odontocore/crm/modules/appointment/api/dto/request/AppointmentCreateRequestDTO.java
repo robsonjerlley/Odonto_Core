@@ -14,7 +14,7 @@ public record AppointmentCreateRequestDTO(
         @NotNull Clinic clinic,
         @NotNull User user,
         @NotNull Customer customer,
-        @NotNull List<Procedure> procedure,
+        @NotNull List<Procedure> procedures,
         @NotNull Double totalValue
 ) {
 }

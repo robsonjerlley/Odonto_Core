@@ -76,7 +76,7 @@ public class ClinicServiceImpl implements IClinicService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void delete(UUID id) {
         if(!clinicRepository.existsById(id)){
             throw new RuntimeException("Clinic not found. " + id);

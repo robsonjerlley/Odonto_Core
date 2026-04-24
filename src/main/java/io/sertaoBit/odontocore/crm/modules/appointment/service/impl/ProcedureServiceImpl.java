@@ -72,7 +72,7 @@ public class ProcedureServiceImpl implements IProcedureService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void delete(UUID id) {
         if (!procedureRepository.existsById(id)) {
             throw new RuntimeException("Procedure not found" + id);

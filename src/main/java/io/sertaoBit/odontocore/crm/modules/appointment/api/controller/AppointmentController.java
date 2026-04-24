@@ -24,15 +24,15 @@ public class AppointmentController {
 
     @PostMapping("/create")
     public ResponseEntity<AppointmentResponseDTO> create(
-            @RequestBody @Valid AppointmentCreateRequestDTO dot) {
-        AppointmentResponseDTO responseDTO = appointmentService.create(dot);
+            @RequestBody @Valid AppointmentCreateRequestDTO dto) {
+        AppointmentResponseDTO responseDTO = appointmentService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
     @PatchMapping("/update/{id}")
     public ResponseEntity<AppointmentResponseDTO> update(
-            @PathVariable UUID id, @RequestBody @Valid AppointmentUpdateRequestDTO dot) {
-        return ResponseEntity.ok().body(appointmentService.update(id, dot));
+            @PathVariable UUID id, @RequestBody @Valid AppointmentUpdateRequestDTO dto) {
+        return ResponseEntity.ok().body(appointmentService.update(id, dto));
     }
 
 
