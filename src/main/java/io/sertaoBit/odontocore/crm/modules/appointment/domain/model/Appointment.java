@@ -23,7 +23,7 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private LocalDateTime date;
+    private LocalDateTime createdAt;
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
     @ManyToOne(fetch = FetchType.LAZY)
