@@ -13,7 +13,7 @@ public interface IAppointmentService {
 
     AppointmentResponseDTO create(AppointmentCreateRequestDTO dto);
 
-    AppointmentResponseDTO update(AppointmentUpdateRequestDTO dto);
+    AppointmentResponseDTO update(UUID id, AppointmentUpdateRequestDTO dto);
 
     AppointmentResponseDTO findById(UUID id);
 

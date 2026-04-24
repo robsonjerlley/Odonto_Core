@@ -8,15 +8,13 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
-import java.util.UUID;
 
 public record AppointmentUpdateRequestDTO(
-        @NotNull UUID id,
         @NotNull AppointmentStatus status,
         @NotNull Clinic clinic,
         @NotNull User user,
         @NotNull Customer customer,
-        @NotNull List<Procedure> procedure,
+        @NotNull List<Procedure> procedures,
         @NotNull Double totalValue
 ) {
 }
