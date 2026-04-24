@@ -15,12 +15,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class ProduceServiceImpl implements IProcedureService {
+public class ProcedureServiceImpl implements IProcedureService {
 
     private final IProcedureRepository procedureRepository;
     private final IProcedureMapper procedureMapper;
 
-    public ProduceServiceImpl(IProcedureRepository procedureRepository, IProcedureMapper procedureMapper) {
+    public ProcedureServiceImpl(IProcedureRepository procedureRepository, IProcedureMapper procedureMapper) {
         this.procedureRepository = procedureRepository;
         this.procedureMapper = procedureMapper;
     }
@@ -53,6 +53,14 @@ public class ProduceServiceImpl implements IProcedureService {
         return procedureRepository.findById(id)
                 .map(procedureMapper::toResponseDTO)
                 .orElseThrow(() -> new RuntimeException("Procedure not found" + id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProcedureResponseDTO> findAll() {
+        return procedureRepository.findAll().stream()
+                .map(procedureMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
