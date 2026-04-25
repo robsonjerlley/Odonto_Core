@@ -5,6 +5,7 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDateTime;
@@ -31,17 +32,19 @@ public class Customer {
     private String address;
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "customer_descriptions",joinColumns = @JoinColumn(name = "customer_id"))
-    @Column(length = 350)
-    private List<String> description;
+    @Column(length = 500)
+    private List<String> descriptions;
     @CreationTimestamp
     private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
     @Enumerated(EnumType.STRING)
     private TicketStatus ticketStatus;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(referencedColumnName = "department.id")
+    private Department department;
 
 
 
