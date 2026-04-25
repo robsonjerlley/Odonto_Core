@@ -1,0 +1,36 @@
+package io.sertaoBit.odontocore.crm.modules.crm.domain.model;
+
+import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DepartmentName;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.UUID;
+@Entity
+@Table(name = "tb_departamentos", schema = "identity_db")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@EqualsAndHashCode(of ="id")
+public class Department {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, unique = true)
+    private DepartmentName name;
+    @Column(length = 350 , nullable = false)
+    private String description;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Column(name = "permission")
+    private Set<String> permissios;
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+}
