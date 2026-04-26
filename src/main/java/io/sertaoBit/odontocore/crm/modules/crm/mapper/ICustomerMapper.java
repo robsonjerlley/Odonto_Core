@@ -1,6 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.crm.mapper;
 
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import org.mapstruct.Mapper;
@@ -15,7 +15,7 @@ public interface ICustomerMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "createdAt", ignore = true),
-            @Mapping(target = "user.id", source = "userId"),
+            @Mapping(target = "user.id", source = "departmentId"),
             @Mapping(target = "description", ignore = true)
     })
     Customer toEntity(CustomerCreateRequestDTO dto);

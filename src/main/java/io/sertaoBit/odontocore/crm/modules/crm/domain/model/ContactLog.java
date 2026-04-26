@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -41,7 +42,7 @@ public class ContactLog {
     private ContactOutCome  contactOutCome;
     @CreationTimestamp
     private LocalDateTime contactDate;
-    private LocalDateTime nextFollowUp;
+    private LocalDate nextFollowUp;
 
     //CAMPOS PARA TESTES, AINDA NÃO DEFINIDOS COMO PERMANENTES
     private BigDecimal investmentAmount;

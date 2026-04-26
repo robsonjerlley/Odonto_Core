@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.crm.service.impl;
 
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerUpdateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer.CustomerCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ICustomerMapper;
@@ -33,8 +33,8 @@ public class CustomerServiceImpl implements ICustomerService {
     @Override
     @Transactional
     public CustomerResponseDTO create(CustomerCreateRequestDTO dto) {
-        User user = userRepository.findById(dto.userId())
-                .orElseThrow(() -> new RuntimeException("User not found by id: " + dto.userId()));
+        User user = userRepository.findById(dto.departmentId())
+                .orElseThrow(() -> new RuntimeException("User not found by id: " + dto.departmentId()));
 
         Customer newCustomer = customerMapper.toEntity(dto);
         newCustomer.setUser(user);

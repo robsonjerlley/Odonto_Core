@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.crm.api.controller;
 
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.CustomerUpdateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer.CustomerCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.service.ICustomerService;
 import jakarta.validation.Valid;

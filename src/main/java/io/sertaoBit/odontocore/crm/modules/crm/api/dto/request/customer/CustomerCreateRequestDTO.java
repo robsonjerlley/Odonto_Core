@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.crm.api.dto.request;
+package io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.TicketStatus;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +15,6 @@ public record CustomerCreateRequestDTO(
         @NotBlank String address,
         @NotBlank String description,
         @NotNull TicketStatus ticketStatus,
-        @NotNull UUID userId
+        @NotNull UUID departmentId
 ) {
 }
