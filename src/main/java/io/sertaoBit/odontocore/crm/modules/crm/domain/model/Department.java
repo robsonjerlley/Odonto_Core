@@ -35,4 +35,9 @@ public class Department {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
 }
