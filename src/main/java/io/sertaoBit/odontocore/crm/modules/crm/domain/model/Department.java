@@ -10,10 +10,12 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 @Entity
-@Table(name = "tb_departamentos", schema = "identity_db")
+@Table(name = "tb_departamentos", schema = "identity_db" ,
+uniqueConstraints = @UniqueConstraint(columnNames = "name"))
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(of ="id")
+@ToString(exclude = "permissions")
 public class Department {
 
     @Id
@@ -24,7 +26,7 @@ public class Department {
     private DepartmentName name;
     @Column(length = 350 , nullable = false)
     private String description;
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @Column(name = "permission")
     private Set<String> permissions;
     @CreationTimestamp

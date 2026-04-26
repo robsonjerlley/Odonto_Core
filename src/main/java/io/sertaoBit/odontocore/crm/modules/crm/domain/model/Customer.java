@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_clientes", schema = "crm_db")
+@Table(name = "tb_clientes", schema = "crm_db" , indexes = {
+        @Index(name = "idx_cpf" , columnList = "cpf"),
+        @Index(name = "idx_sector_status", columnList = "sector_id, ticket_status")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

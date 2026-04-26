@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 @Entity
-@Table(name = "tb_acordos" , schema = "crm_db")
+@Table(name = "tb_acordos" , schema = "crm_db" , indexes = {
+        @Index(name = "idx_customer_status", columnList = "customer_id, status"),
+        @Index(name = "idx_closed_date" , columnList = "closed_date")
+})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
