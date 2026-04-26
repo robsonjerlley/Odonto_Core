@@ -27,6 +27,7 @@ public class Ticket {
     private TicketStatus ticketStatus;
     @Enumerated(EnumType.STRING)
     private Priority priority;
+    private LocalDateTime dueDate;
     @ManyToOne(fetch = FetchType.LAZY)
     private User assigneTo;
     @Column(length = 350 , nullable = false)

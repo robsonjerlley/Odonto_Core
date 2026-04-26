@@ -24,8 +24,10 @@ public class Deal {
     private Customer customer;
     @Enumerated(EnumType.STRING)
     private DealStatus dealStatus;
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     private Set<String> procedures;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Double negotiationValue;
     @ManyToOne(fetch = FetchType.LAZY)
     private User closedBy;
     @Column(length = 350)
