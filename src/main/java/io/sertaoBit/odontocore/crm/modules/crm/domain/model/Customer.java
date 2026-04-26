@@ -44,7 +44,7 @@ public class Customer {
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(referencedColumnName = "department.id")
+    @JoinColumn(referencedColumnName = "department_id")
     private Department department;
 
 }
