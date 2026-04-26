@@ -26,7 +26,7 @@ public class Deal {
     private DealStatus dealStatus;
     @ElementCollection(fetch = FetchType.LAZY)
     private Set<String> procedures;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(nullable = false)
     private Double negotiationValue;
     @ManyToOne(fetch = FetchType.LAZY)
     private User closedBy;

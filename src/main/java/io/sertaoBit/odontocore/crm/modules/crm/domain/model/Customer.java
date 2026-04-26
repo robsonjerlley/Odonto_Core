@@ -32,7 +32,8 @@ public class Customer {
     private String city;
     private String address;
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "customer_descriptions", joinColumns = @JoinColumn(name = "customer_id"))
+    @CollectionTable(name = "customer_descriptions",
+            joinColumns = @JoinColumn(name = "customer_id"))
     @Column(length = 500)
     private List<String> descriptions;
     @CreationTimestamp
@@ -44,7 +45,7 @@ public class Customer {
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(referencedColumnName = "department_id")
+    @JoinColumn(name = "department_id")
     private Department department;
 
 }

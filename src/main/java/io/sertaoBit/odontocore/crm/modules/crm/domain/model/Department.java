@@ -26,7 +26,7 @@ public class Department {
     private String description;
     @ElementCollection(fetch = FetchType.EAGER)
     @Column(name = "permission")
-    private Set<String> permissios;
+    private Set<String> permissions;
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

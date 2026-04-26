@@ -9,11 +9,15 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name ="tb_logs_de_contato", schema = "crm_db")
+@Table(name ="tb_logs_de_contato", schema = "crm_db", indexes = {
+        @Index(name = "idx_customer_date", columnList = "customer_id, contact_date"),
+        @Index(name = "idx_channel_outcome", columnList = "contact_channel, contact_out_come")
+})
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(of= "id")
@@ -31,7 +35,6 @@ public class ContactLog {
     private User contactBy;
     @Enumerated(EnumType.STRING)
     private ContactChannel contactChannel;
-    @ManyToOne(fetch = FetchType.LAZY)
     @Column(length = 500)
     private String description;
     @Enumerated(EnumType.STRING)
@@ -39,5 +42,9 @@ public class ContactLog {
     @CreationTimestamp
     private LocalDateTime contactDate;
     private LocalDateTime nextFollowUp;
+
+    //CAMPOS PARA TESTES, AINDA NÃO DEFINIDOS COMO PERMANENTES
+    private BigDecimal investmentAmount;
+    private BigDecimal conversionValue;
 
 }
