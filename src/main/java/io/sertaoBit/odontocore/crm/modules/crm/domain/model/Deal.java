@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class Deal {
     @ElementCollection(fetch = FetchType.LAZY)
     private Set<String> procedures;
     @Column(nullable = false)
-    private Double negotiationValue;
+    private BigDecimal negotiationValue;
     @ManyToOne(fetch = FetchType.LAZY)
     private User closedBy;
     @Column(length = 350)

@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog;
+package io.sertaoBit.odontocore.crm.modules.crm.api.dto.response;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
@@ -10,18 +10,22 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-public record ContactLogUpdateRequestDTO(
+public record ContactLogResponseDTO(
         @NotNull UUID id,
-        @NotNull UUID customer,
-        @NotNull UUID ticket,
-        @NotNull UUID contactBy,
+        @NotNull Customer customer,
+        @NotNull Ticket ticket,
+        @NotNull User contactBy,
         @NotNull ContactChannel contactChannel,
-        @NotBlank String description,
+        @NotBlank List<String> description,
         @NotNull ContactOutcome contactOutcome,
+        @NotNull LocalDateTime contactDate,
         @NotNull LocalDate nextFollowUp,
         @NotNull BigDecimal investmentAmount,
         @NotNull BigDecimal conversionValue
+
 ) {
 }

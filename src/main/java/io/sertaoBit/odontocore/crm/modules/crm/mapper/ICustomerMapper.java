@@ -15,7 +15,7 @@ public interface ICustomerMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "createdAt", ignore = true),
-            @Mapping(target = "user.id", source = "departmentId"),
+            @Mapping(target = "userId.id", source = "departmentId"),
             @Mapping(target = "description", ignore = true)
     })
     Customer toEntity(CustomerCreateRequestDTO dto);

@@ -6,11 +6,13 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
+
 public record DealCreateRequestDTO(
         @NotNull Customer customer,
         @NotNull DealStatus dealStatus,
         @NotBlank String procedures,
-        @NotNull Double negotiationValue,
+        @NotNull BigDecimal negotiationValue,
         @NotNull User closedBy,
         @NotBlank String description
 ) {

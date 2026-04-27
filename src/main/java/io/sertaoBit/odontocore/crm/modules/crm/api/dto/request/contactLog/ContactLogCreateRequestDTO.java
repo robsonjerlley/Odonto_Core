@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutCome;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Ticket;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
@@ -17,7 +17,7 @@ public record ContactLogCreateRequestDTO(
         @NotNull User contactBy,
         @NotNull ContactChannel contactChannel,
         @NotBlank String description,
-        @NotNull ContactOutCome contactOutcome,
+        @NotNull ContactOutcome contactOutcome,
         @NotNull LocalDate nextFollowUp,
         @NotNull BigDecimal investmentAmount,
         @NotNull BigDecimal conversionValue

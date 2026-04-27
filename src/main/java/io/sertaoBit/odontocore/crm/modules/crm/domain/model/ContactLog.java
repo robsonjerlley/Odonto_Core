@@ -1,13 +1,12 @@
 package io.sertaoBit.odontocore.crm.modules.crm.domain.model;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutCome;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,13 +14,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name ="tb_logs_de_contato", schema = "crm_db", indexes = {
+@Table(name = "tb_logs_de_contato", schema = "crm_db", indexes = {
         @Index(name = "idx_customer_date", columnList = "customer_id, contact_date"),
         @Index(name = "idx_channel_outcome", columnList = "contact_channel, contact_out_come")
 })
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
-@EqualsAndHashCode(of= "id")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class ContactLog {
 
     @Id
@@ -39,7 +40,7 @@ public class ContactLog {
     @Column(length = 500)
     private String description;
     @Enumerated(EnumType.STRING)
-    private ContactOutCome  contactOutCome;
+    private ContactOutcome contactOutcome;
     @CreationTimestamp
     private LocalDateTime contactDate;
     private LocalDate nextFollowUp;

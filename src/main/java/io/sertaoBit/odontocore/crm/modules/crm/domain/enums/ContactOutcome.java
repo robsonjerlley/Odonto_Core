@@ -1,6 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.crm.domain.enums;
 
-public enum ContactOutCome {
+public enum ContactOutcome {
     SUCCESSFUL,
     NO_ANSWERS,
     NOT_INTERESTED,

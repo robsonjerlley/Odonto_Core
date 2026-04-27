@@ -33,7 +33,7 @@ public class Ticket {
     @Column(length = 350 , nullable = false)
     private String description;
     @CreationTimestamp
-    private LocalDateTime cratedAt;
+    private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
