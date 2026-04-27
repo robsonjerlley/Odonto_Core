@@ -24,7 +24,7 @@ public interface ITicketService {
 
     TicketResponseDTO findByTicketStatus(TicketStatus ticketStatus);
 
-    TicketResponseDTO findByAssingnedTo(UUID id);
+    TicketResponseDTO findByAssignedTo(UUID id);
 
     TicketResponseDTO updateStatus(UUID id, TicketStatus ticketStatus);
 

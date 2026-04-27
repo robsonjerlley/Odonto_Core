@@ -10,8 +10,11 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface IUserMapper {
 
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "department", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "id" , ignore = true)
-    @Mapping(target = "clinic",  ignore = true)
+
     User toEntity(UserCreateRequestDTO dto);
 
 
