@@ -23,6 +23,6 @@ public record SalesMetricsResponseDTO(
         @NotNull BigDecimal successRate,
         @NotNull BigDecimal conversionRate,
         @NotNull LocalDateTime createdAt,
-        @NotNull LocalDateTime updateAt
+        @NotNull LocalDateTime updatedAt
 ) {
 }
