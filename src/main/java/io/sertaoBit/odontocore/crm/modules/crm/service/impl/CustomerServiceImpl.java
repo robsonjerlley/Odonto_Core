@@ -1,11 +1,14 @@
 package io.sertaoBit.odontocore.crm.modules.crm.service.impl;
 
+import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Department;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ICustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.ICustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.crm.repository.IDepartmentRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.service.ICustomerService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
@@ -22,29 +25,36 @@ public class CustomerServiceImpl implements ICustomerService {
     private final ICustomerRepository customerRepository;
     private final ICustomerMapper customerMapper;
     private final IUserRepository userRepository;
+    private final IDepartmentRepository departmentRepository;
+    private final SecurityUtils securityUtils;
 
-    public CustomerServiceImpl(ICustomerRepository customerRepository, ICustomerMapper customerMapper, IUserRepository userRepository) {
+    public CustomerServiceImpl(ICustomerRepository customerRepository,
+                               ICustomerMapper customerMapper,
+                               IUserRepository userRepository,
+                               IDepartmentRepository departmentRepository,
+                               SecurityUtils securityUtils
+    ) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
         this.userRepository = userRepository;
+        this.departmentRepository = departmentRepository;
+        this.securityUtils = securityUtils;
     }
 
 
     @Override
     @Transactional
     public CustomerResponseDTO create(CustomerCreateRequestDTO dto) {
-        User user = userRepository.findById(dto.departmentId())
+        Department department = departmentRepository.findById(dto.departmentId())
                 .orElseThrow(() -> new RuntimeException("User not found by id: " + dto.departmentId()));
+        User currentUser = securityUtils.getCurrentUser();
 
-        Customer newCustomer = customerMapper.toEntity(dto);
-        newCustomer.setUser(user);
+        Customer customer = customerMapper.toEntity(dto);
+        customer.setDepartment(department);
+        customer.setCreatedByUser(currentUser);
 
-        if(dto.description() != null){
-            newCustomer.getDescription().add(dto.description());
-        }
 
-        Customer customerToSave = customerRepository.save(newCustomer);
-        return customerMapper.toResponseDTO(customerToSave);
+        return customerMapper.toResponseDTO(customerRepository.save(customer));
     }
 
     @Override
@@ -53,19 +63,19 @@ public class CustomerServiceImpl implements ICustomerService {
         Customer customer = customerRepository.findByCpf(cpf)
                 .orElseThrow(() -> new RuntimeException("Customer not found " + cpf));
 
-        if(!customer.getCpf().equals(dto.cpf()) && customerRepository.findByCpf(dto.cpf())
+        if (!customer.getCpf().equals(dto.cpf()) && customerRepository.findByCpf(dto.cpf())
                 .isPresent()) {
             throw new RuntimeException("O novo CPF informado  " + dto.cpf() + " já pertence a outro cliente");
         }
-        if (dto.description() != null && !dto.description().isBlank()) {
-            customer.getDescription().add(dto.description());
-        }
+
+
         customer.setName(dto.name());
         customer.setCpf(dto.cpf());
         customer.setTelephone(dto.telephone());
         customer.setCity(dto.city());
         customer.setAddress(dto.address());
         customer.setTicketStatus(dto.ticketStatus());
+
 
         Customer customerToUpdate = customerRepository.save(customer);
         return customerMapper.toResponseDTO(customerToUpdate);
