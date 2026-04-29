@@ -15,6 +15,7 @@ import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -53,7 +54,6 @@ public class CustomerServiceImpl implements ICustomerService {
         customer.setDepartment(department);
         customer.setCreatedByUser(currentUser);
 
-
         return customerMapper.toResponseDTO(customerRepository.save(customer));
     }
 
@@ -68,17 +68,15 @@ public class CustomerServiceImpl implements ICustomerService {
             throw new RuntimeException("O novo CPF informado  " + dto.cpf() + " já pertence a outro cliente");
         }
 
-
         customer.setName(dto.name());
         customer.setCpf(dto.cpf());
         customer.setTelephone(dto.telephone());
         customer.setCity(dto.city());
         customer.setAddress(dto.address());
+        customer.setDescriptions(Collections.singletonList(dto.description()));
         customer.setTicketStatus(dto.ticketStatus());
 
-
-        Customer customerToUpdate = customerRepository.save(customer);
-        return customerMapper.toResponseDTO(customerToUpdate);
+        return customerMapper.toResponseDTO(customerRepository.save(customer));
     }
 
     @Override

@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.crm.service;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.ContactLogResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import org.springframework.stereotype.Service;
 
@@ -21,15 +22,15 @@ public interface IContactLogService {
 
     List<ContactLogResponseDTO> findByAll();
 
-    ContactLogResponseDTO findByCustomer(UUID id);
+   List<ContactLogResponseDTO> findByCustomer(UUID id);
 
-    ContactLogResponseDTO findByContactBy(UUID id);
+    List<ContactLogResponseDTO> findByContactByUser(UUID id);
 
-    ContactLogResponseDTO findByChannelBy(UUID id);
+    ContactLogResponseDTO findByChannel(ContactChannel channel);
 
-    ContactLogResponseDTO findOutcome(ContactOutcome contactOutcome);
+    List<ContactLogResponseDTO> findOutcome(ContactOutcome contactOutcome);
 
-    ContactLogResponseDTO findByDateRange(LocalDateTime start, LocalDateTime end);
+    List<ContactLogResponseDTO> findByDateRange(LocalDateTime start, LocalDateTime end);
 
     List<ContactLogResponseDTO> findWithPendingFollowUp();
 
