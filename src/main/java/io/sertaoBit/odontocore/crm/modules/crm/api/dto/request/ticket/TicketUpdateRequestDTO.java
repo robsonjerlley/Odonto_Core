@@ -16,7 +16,7 @@ public record TicketUpdateRequestDTO(
         @NotNull TicketStatus ticketStatus,
         @NotNull Priority priority,
         @NotNull LocalDate dueDate,
-        @NotNull User assigneTo,
+        @NotNull UUID assigneToId,
         @NotBlank String description
 ) {
 }

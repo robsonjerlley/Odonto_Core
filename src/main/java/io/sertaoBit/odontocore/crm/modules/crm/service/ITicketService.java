@@ -20,11 +20,11 @@ public interface ITicketService {
 
     List<TicketResponseDTO> findAll();
 
-    TicketResponseDTO findByCustomer(UUID id);
+   List<TicketResponseDTO> findByCustomer(UUID customerId);
 
-    TicketResponseDTO findByTicketStatus(TicketStatus ticketStatus);
+   List<TicketResponseDTO> findByTicketStatus(TicketStatus ticketStatus);
 
-    TicketResponseDTO findByAssignedTo(UUID id);
+    List<TicketResponseDTO> findByAssignedTo(UUID userId);
 
     TicketResponseDTO updateStatus(UUID id, TicketStatus ticketStatus);
 
