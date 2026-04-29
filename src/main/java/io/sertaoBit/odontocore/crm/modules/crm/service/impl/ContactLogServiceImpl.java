@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ContactLogServiceImpl implements IContactLogService {
-    
+
     private final IContactLogRepository contactLogRepository;
     private final IContactLogMapper contactLogMapper;
     private final ICustomerRepository customerRepository;
@@ -114,7 +114,7 @@ public class ContactLogServiceImpl implements IContactLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ContactLogResponseDTO> findByAll() {
+    public List<ContactLogResponseDTO> findAll() {
         return contactLogRepository.findAll().stream()
                 .map(contactLogMapper::toResponseDTO)
                 .collect(Collectors.toList());
@@ -136,7 +136,6 @@ public class ContactLogServiceImpl implements IContactLogService {
     }
 
 
-
     @Override
     @Transactional(readOnly = true)
     public List<ContactLogResponseDTO> findByContactByUser(UUID id) {
@@ -144,7 +143,6 @@ public class ContactLogServiceImpl implements IContactLogService {
             throw new RuntimeException("User not found by id: " + id);
         }
 
-        // Retornar primeiro contacto
         return contactLogRepository.findAll().stream()
                 .filter(cl -> cl.getContactBy().getId().equals(id))
                 .map(contactLogMapper::toResponseDTO)
@@ -153,7 +151,7 @@ public class ContactLogServiceImpl implements IContactLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public ContactLogResponseDTO findByChannel(ContactChannel channel ) {
+    public ContactLogResponseDTO findByChannel(ContactChannel channel) {
         return contactLogRepository.findAll().stream()
                 .filter(cl -> cl.getContactChannel() == channel)
                 .map(contactLogMapper::toResponseDTO)
@@ -174,8 +172,8 @@ public class ContactLogServiceImpl implements IContactLogService {
     @Transactional(readOnly = true)
     public List<ContactLogResponseDTO> findByDateRange(LocalDateTime start, LocalDateTime end) {
         return contactLogRepository.findAll().stream()
-                .filter(cl -> cl.getContactDate() != null 
-                        && cl.getContactDate().isAfter(start) 
+                .filter(cl -> cl.getContactDate() != null
+                        && cl.getContactDate().isAfter(start)
                         && cl.getContactDate().isBefore(end))
                 .map(contactLogMapper::toResponseDTO)
                 .collect(Collectors.toList());
@@ -183,7 +181,7 @@ public class ContactLogServiceImpl implements IContactLogService {
 
     /**
      * Retorna TODOS os contactos com follow-up pendente.
-     * 
+     * <p>
      * Follow-up é pendente quando:
      * - nextFollowUp != null
      * - nextFollowUp <= hoje
@@ -192,7 +190,7 @@ public class ContactLogServiceImpl implements IContactLogService {
     @Transactional(readOnly = true)
     public List<ContactLogResponseDTO> findWithPendingFollowUp() {
         return contactLogRepository.findAll().stream()
-                .filter(cl -> cl.getNextFollowUp() != null 
+                .filter(cl -> cl.getNextFollowUp() != null
                         && !cl.getNextFollowUp().isAfter(java.time.LocalDate.now()))
                 .map(contactLogMapper::toResponseDTO)
                 .collect(Collectors.toList());

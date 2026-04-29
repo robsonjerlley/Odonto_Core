@@ -6,7 +6,7 @@ import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DealStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,13 +21,13 @@ public interface IDealService {
 
     List<DealResponseDTO> findAll();
 
-    DealResponseDTO findByCustomer(UUID id);
+   List<DealResponseDTO> findByCustomer(UUID customerId);
 
-    DealResponseDTO findByStaus(DealStatus status);
+   List<DealResponseDTO> findByStaus(DealStatus status);
 
-    DealResponseDTO findByClosed(UUID id);
+   List<DealResponseDTO> findByClosed(UUID userId);
 
-    DealResponseDTO findByDateRange(LocalDate start, LocalDate end);
+   List<DealResponseDTO> findByDateRange(LocalDateTime start, LocalDateTime end);
 
     DealResponseDTO updateStatus(UUID id, DealStatus status);
 

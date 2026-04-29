@@ -20,7 +20,7 @@ public interface IContactLogService {
 
     ContactLogResponseDTO findById(UUID id);
 
-    List<ContactLogResponseDTO> findByAll();
+    List<ContactLogResponseDTO> findAll();
 
    List<ContactLogResponseDTO> findByCustomer(UUID id);
 
