@@ -2,9 +2,12 @@ package io.sertaoBit.odontocore.crm.modules.crm.service.impl;
 
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.SalesMetricsResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.model.ContactLog;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Department;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.SalesMetrics;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ISalesMetricsMapper;
-import io.sertaoBit.odontocore.crm.modules.crm.repository.ICustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.crm.repository.IContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.IDepartmentRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.ISalesMetricsRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.service.ISalesMetricsService;
@@ -13,9 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,24 +26,24 @@ import java.util.stream.Collectors;
 public class SalesMetricsServiceImpl implements ISalesMetricsService {
 
     private final ISalesMetricsRepository salesMetricsRepository;
-    private final ICustomerRepository customerRepository;
     private final IUserRepository userRepository;
     private final ISalesMetricsMapper salesMetricsMapper;
     private final IDepartmentRepository departmentRepository;
+    private final IContactLogRepository contactLogRepository;
 
     public SalesMetricsServiceImpl(
             ISalesMetricsRepository salesMetricsRepository,
-            ICustomerRepository customerRepository,
             IUserRepository userRepository,
             ISalesMetricsMapper salesMetricsMapper,
-            IDepartmentRepository departmentRepository
+            IDepartmentRepository departmentRepository,
+            IContactLogRepository contactLogRepository
     ) {
         this.salesMetricsRepository = salesMetricsRepository;
-        this.customerRepository = customerRepository;
         this.userRepository = userRepository;
         this.salesMetricsMapper = salesMetricsMapper;
 
         this.departmentRepository = departmentRepository;
+        this.contactLogRepository = contactLogRepository;
     }
 
 
@@ -126,6 +129,7 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
             throw new RuntimeException("User not found by id: " + userId);
         }
         return salesMetricsRepository.findAll().stream()
+                .filter(sm -> sm.getUserId().equals(userId))
                 .map(salesMetricsMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -144,7 +148,8 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
         return salesMetricsRepository.findAll().stream()
                 .filter(sm -> {
                     LocalDate period = sm.getPeriod();
-                    return period.isAfter(startDate) && period.isBefore(endDate);
+
+                    return !period.isBefore(startDate) && !period.isAfter(endDate);
                 })
                 .map(salesMetricsMapper::toResponseDTO)
                 .collect(Collectors.toList());
@@ -206,6 +211,10 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
     @Override
     @Transactional(readOnly = true)
     public List<SalesMetricsResponseDTO> getTrendingData(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new RuntimeException("startDate or endDate cannot be null");
+        }
+
         if (startDate.isAfter(endDate)) {
             throw new RuntimeException("start date cannot be  after end date");
         }
@@ -213,7 +222,8 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
         return salesMetricsRepository.findAll().stream()
                 .filter(sm -> {
                     LocalDate period = sm.getPeriod();
-                    return !period.isAfter(startDate) && !period.isBefore(endDate);
+
+                    return !period.isBefore(startDate) && !period.isAfter(endDate);
                 })
                 .sorted(Comparator.comparing(SalesMetrics::getPeriod))
                 .map(salesMetricsMapper::toResponseDTO)
@@ -250,33 +260,133 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
                     "sucessfulRate", rate
             );
 
-            result.put("channelData", channelData);
+
+            result.put(channel.toString(), channelData);
         });
         return result;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getMetricsByDepartment() {
-        return Map.of();
+        Map<Department, List<SalesMetrics>> groupByDepartment =
+                salesMetricsRepository.findAll().stream()
+                        .collect(Collectors.groupingBy(SalesMetrics::getDepartment));
+
+        Map<String, Object> result = new HashMap<>();
+        groupByDepartment.forEach((department, metrics) -> {
+
+            Integer departmentTotal = metrics.stream()
+                    .mapToInt(SalesMetrics::getTotalContact)
+                    .sum();
+
+            Integer successful = metrics.stream()
+                    .mapToInt(SalesMetrics::getSuccessfulContact)
+                    .sum();
+
+            BigDecimal rate = departmentTotal > 0
+                    ? BigDecimal.valueOf((double) successful / departmentTotal * 100)
+                    : BigDecimal.ZERO;
+
+            Map<String, Object> departmentData = Map.of(
+                    "departmentId", department != null ? department.getId().toString() : "UNKNOWN",
+                    "totalContact", departmentTotal,
+                    "successful", successful,
+                    "successRate", rate
+            );
+
+
+            String key = department != null ? department.getId().toString() : "UNKNOWN";
+            result.put(key, departmentData);
+        });
+
+        return result;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SalesMetricsResponseDTO> getTopPerformingUsers(int limit) {
-        return List.of();
+
+        return salesMetricsRepository.findAll().stream()
+                .sorted((m1, m2) -> m2.getSuccessRate().compareTo(m1.getSuccessRate()))
+                .limit(limit)
+                .map(salesMetricsMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public void calculateAndUpdateMetrics() {
-
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        recalculateMetricsForDate(yesterday);
     }
 
     @Override
+    @Transactional
     public void recalculateMetricsForDate(LocalDate date) {
+        if (date == null) {
+            throw new RuntimeException("Date cannot be null");
+        }
 
+
+        List<ContactLog> contactLogs = contactLogRepository.findByContactDate(date);
+
+
+        Map<String, List<ContactLog>> grouped = contactLogs.stream()
+                .collect(Collectors.groupingBy(cl ->
+                        String.format("%s_%s_%s",
+                                cl.getContactChannel(),
+                                cl.getCustomer().getDepartment().getId(),
+                                cl.getContactBy().getId())
+                ));
+
+        grouped.forEach((key, logs) -> {
+            String[] parts = key.split("_");
+            ContactChannel contactChannel = ContactChannel.valueOf(parts[0]);
+            UUID departmentId = UUID.fromString(parts[1]);
+            UUID userId = UUID.fromString(parts[2]);
+
+            int total = logs.size();
+            int successful = (int) logs.stream()
+                    .filter(cl -> cl.getContactOutcome() ==
+                            ContactOutcome.SUCCESSFUL).count();
+
+
+            int failed = (int) logs.stream()
+                    .filter(cl -> cl.getContactOutcome() == ContactOutcome.NO_ANSWER
+                            || cl.getContactOutcome() == ContactOutcome.NOT_INTERESTED)
+                    .count();
+
+
+            int pending = (int) logs.stream()
+                    .filter(cl -> cl.getNextFollowUp() != null
+                            && cl.getNextFollowUp().isAfter(ChronoLocalDate.from(LocalDateTime.now())))
+                    .count();
+
+            BigDecimal successfulRate = total > 0
+                    ? BigDecimal.valueOf((double) successful / total * 100)
+                    : BigDecimal.ZERO;
+
+            SalesMetrics metrics = new SalesMetrics();
+            metrics.setId(UUID.randomUUID());
+            metrics.setPeriod(date);
+            metrics.setContactChannel(contactChannel);
+            metrics.setDepartment(departmentRepository.findById(departmentId).orElse(null));
+            metrics.setUserId(userRepository.findById(userId).orElse(null));
+            metrics.setTotalContact(total);
+            metrics.setSuccessfulContact(successful);
+            metrics.setFailedContact(failed);
+            metrics.setPendingFollowUp(pending);
+            metrics.setSuccessRate(successfulRate);
+            metrics.setConversionRate(successfulRate);
+
+            salesMetricsRepository.save(metrics);
+        });
     }
 
     @Override
+    @Transactional
     public void clearAllMetrics() {
-
+        salesMetricsRepository.deleteAll();
     }
 }

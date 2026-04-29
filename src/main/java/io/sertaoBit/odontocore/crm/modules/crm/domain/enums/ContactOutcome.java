@@ -2,7 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.crm.domain.enums;
 
 public enum ContactOutcome {
     SUCCESSFUL,
-    NO_ANSWERS,
+    NO_ANSWER,
     NOT_INTERESTED,
     SCHEDULED_EVALUATION,
     QUALIFIED_LEAD,
