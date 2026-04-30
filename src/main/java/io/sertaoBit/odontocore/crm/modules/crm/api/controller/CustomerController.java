@@ -30,7 +30,7 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerResponseDTO);
     }
 
-    @PatchMapping("/cpf/{cpf}")
+    @PatchMapping("/update/{cpf}")
     public ResponseEntity<CustomerResponseDTO> update(
             @PathVariable String cpf, @RequestBody
             @Valid CustomerUpdateRequestDTO requestDTO) {

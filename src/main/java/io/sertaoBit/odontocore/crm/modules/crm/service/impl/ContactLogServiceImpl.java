@@ -18,7 +18,9 @@ import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -155,7 +157,7 @@ public class ContactLogServiceImpl implements IContactLogService {
         return contactLogRepository.findAll().stream()
                 .filter(cl -> cl.getContactChannel() == channel)
                 .map(contactLogMapper::toResponseDTO)
-                .findFirst().orElseThrow(() -> new RuntimeException("ContactLog not found by channel : " + channel));
+                .findFirst().orElseThrow(()-> new RuntimeException("ContactLog not found by id: " + channel));
     }
 
     @Override
@@ -170,11 +172,11 @@ public class ContactLogServiceImpl implements IContactLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ContactLogResponseDTO> findByDateRange(LocalDateTime start, LocalDateTime end) {
+    public List<ContactLogResponseDTO> findByDateRange(LocalDate start, LocalDate end) {
         return contactLogRepository.findAll().stream()
                 .filter(cl -> cl.getContactDate() != null
-                        && cl.getContactDate().isAfter(start)
-                        && cl.getContactDate().isBefore(end))
+                        && cl.getContactDate().isAfter(ChronoLocalDateTime.from(start))
+                        && cl.getContactDate().isBefore(ChronoLocalDateTime.from(end)))
                 .map(contactLogMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }

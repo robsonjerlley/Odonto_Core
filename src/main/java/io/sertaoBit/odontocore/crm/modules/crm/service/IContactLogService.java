@@ -7,7 +7,7 @@ import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +22,7 @@ public interface IContactLogService {
 
     List<ContactLogResponseDTO> findAll();
 
-   List<ContactLogResponseDTO> findByCustomer(UUID id);
+    List<ContactLogResponseDTO> findByCustomer(UUID id);
 
     List<ContactLogResponseDTO> findByContactByUser(UUID id);
 
@@ -30,7 +30,7 @@ public interface IContactLogService {
 
     List<ContactLogResponseDTO> findOutcome(ContactOutcome contactOutcome);
 
-    List<ContactLogResponseDTO> findByDateRange(LocalDateTime start, LocalDateTime end);
+    List<ContactLogResponseDTO> findByDateRange(LocalDate start, LocalDate end);
 
     List<ContactLogResponseDTO> findWithPendingFollowUp();
 

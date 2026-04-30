@@ -73,6 +73,8 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
         salesMetricsRepository.deleteById(id);
     }
 
+
+
     // ====== Query Metrics ====== //
 
     @Override
@@ -256,8 +258,8 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
             Map<String, Object> channelData = Map.of(
                     "channel", channel.toString(),
                     "totalContact", totalContacts,
-                    "sucessful", successful,
-                    "sucessfulRate", rate
+                    "successful", successful,
+                    "successfulRate", rate
             );
 
 
@@ -387,6 +389,7 @@ public class SalesMetricsServiceImpl implements ISalesMetricsService {
     @Override
     @Transactional
     public void clearAllMetrics() {
+
         salesMetricsRepository.deleteAll();
     }
 }
