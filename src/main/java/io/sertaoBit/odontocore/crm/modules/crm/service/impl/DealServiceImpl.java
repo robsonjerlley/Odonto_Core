@@ -14,7 +14,8 @@ import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -110,7 +111,7 @@ public class DealServiceImpl implements IDealService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DealResponseDTO> findByStaus(DealStatus status) {
+    public List<DealResponseDTO> findByStatus(DealStatus status) {
         if (status == null) {
             throw new RuntimeException("Deal Status Not Found");
         }
@@ -123,7 +124,7 @@ public class DealServiceImpl implements IDealService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DealResponseDTO> findByClosed(UUID userId) {
+    public List<DealResponseDTO> findClosedByUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new RuntimeException("User Not Found by id " + userId);
         }
@@ -136,11 +137,11 @@ public class DealServiceImpl implements IDealService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DealResponseDTO> findByDateRange(LocalDateTime start, LocalDateTime end) {
+    public List<DealResponseDTO> findByDateRange(LocalDate start, LocalDate end) {
         return dealRepository.findAll().stream()
                 .filter(deal -> deal.getClosedDate() != null
-                        && deal.getClosedDate().isAfter(start)
-                        && deal.getClosedDate().isBefore(end))
+                        && deal.getClosedDate().isAfter(ChronoLocalDateTime.from(start))
+                        && deal.getClosedDate().isBefore(ChronoLocalDateTime.from(end)))
                 .map(dealMapper::toResponseDTO)
                 .collect(Collectors.toList());
 

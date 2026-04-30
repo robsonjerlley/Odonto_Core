@@ -127,7 +127,7 @@ public class TicketServiceImpl implements ITicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TicketResponseDTO> findByAssignedTo(UUID userId) {
+    public List<TicketResponseDTO> findByAssignedToUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new RuntimeException("User not found by id: " + userId);
         }
