@@ -1,7 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.crm.service;
 
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.deal.DealCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DealStatus;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
@@ -20,10 +19,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +34,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("DealServiceTest - Testes Unitários do Serviço de Deals")
 class DealServiceTest {
 
+    @Mock
     private DealServiceImpl dealService;
 
     @Mock
@@ -51,6 +52,10 @@ class DealServiceTest {
     private UUID dealId;
     private UUID customerId;
     private UUID userId;
+    private Deal deal;
+    private DealResponseDTO dealResponseDTO;
+    private Customer customer;
+    private User user;
 
     @BeforeEach
     void setUp() {
@@ -64,6 +69,27 @@ class DealServiceTest {
         dealId = UUID.randomUUID();
         customerId = UUID.randomUUID();
         userId = UUID.randomUUID();
+
+        customer = new Customer();
+        customer.setId(customerId);
+
+        user = new User();
+        user.setId(userId);
+
+        deal = new Deal();
+        deal.setId(dealId);
+        deal.setCustomer(customer);
+        deal.setClosedBy(user);
+        deal.setDealStatus(DealStatus.NEGOTIATING);
+        deal.setNegotiationValue(BigDecimal.valueOf(5000));
+        deal.setDescription("Test Deal");
+        deal.setProcedures(Set.of("procedure1", "procedure2"));
+        deal.setClosedDate(LocalDateTime.now());
+
+        dealResponseDTO = new DealResponseDTO(
+                deal.getId(dealId),
+
+        );
     }
 
     // ========== CREATE TESTS ==========
@@ -72,32 +98,20 @@ class DealServiceTest {
     @DisplayName("Deve criar deal com sucesso")
     void testCreateDealSuccess() {
         // Arrange
-        Customer customer = new Customer();
-        customer.setId(customerId);
-
-        Deal deal = new Deal();
-        deal.setId(dealId);
-        deal.setCustomer(customer);
-        deal.setDealStatus(DealStatus.NEGOTIATING);
-
-        DealResponseDTO responseDTO = new DealResponseDTO(
-                dealId, null, DealStatus.NEGOTIATING, BigDecimal.valueOf(5000), null, null, null, null
-        );
-
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(dealMapper.toEntity(any())).thenReturn(deal);
-        when(dealRepository.save(any(Deal.class))).thenReturn(deal);
-        when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);
-
-        DealCreateRequestDTO dto = new DealCreateRequestDTO(
-                new Object() { public UUID getId() { return customerId; } },
+        DealCreateRequestDTO createDTO = new DealCreateRequestDTO(
+                customerId,
                 "Deal description",
                 BigDecimal.valueOf(5000),
                 Set.of("procedure1", "procedure2")
         );
 
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(dealMapper.toEntity(any(DealCreateRequestDTO.class))).thenReturn(deal);
+        when(dealRepository.save(any(Deal.class))).thenReturn(deal);
+        when(dealMapper.toResponseDTO(any(Deal.class))).thenReturn(dealResponseDTO);
+
         // Act
-        DealResponseDTO result = dealService.create(dto);
+        DealResponseDTO result = dealService.create(createDTO);
 
         // Assert
         assertNotNull(result);
@@ -108,23 +122,16 @@ class DealServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar erro quando customer não encontrado")
+    @DisplayName("Deve lançar erro quando customer não encontrado na criação")
     void testCreateDealCustomerNotFound() {
         // Arrange
+        DealCreateRequestDTO createDTO = new DealCreateRequestDTO(
+                customerId, "Deal", BigDecimal.valueOf(5000), Set.of()
+        );
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
 
-        DealCreateRequestDTO dto = new DealCreateRequestDTO(
-                new Object() { public UUID getId() { return customerId; } },
-                "Deal",
-                BigDecimal.valueOf(5000),
-                Set.of()
-        );
-
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            dealService.create(dto);
-        });
-
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> dealService.create(createDTO));
         assertTrue(exception.getMessage().contains("Customer Not Found"));
         verify(dealRepository, never()).save(any());
     }
@@ -135,16 +142,8 @@ class DealServiceTest {
     @DisplayName("Deve buscar deal por ID com sucesso")
     void testFindByIdSuccess() {
         // Arrange
-        Deal deal = new Deal();
-        deal.setId(dealId);
-        deal.setDealStatus(DealStatus.NEGOTIATING);
-
-        DealResponseDTO responseDTO = new DealResponseDTO(
-                dealId, null, DealStatus.NEGOTIATING, BigDecimal.valueOf(5000), null, null, null, null
-        );
-
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
-        when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);
+        when(dealMapper.toResponseDTO(deal)).thenReturn(dealResponseDTO);
 
         // Act
         DealResponseDTO result = dealService.findById(dealId);
@@ -154,37 +153,32 @@ class DealServiceTest {
         assertEquals(dealId, result.id());
         verify(dealRepository, times(1)).findById(dealId);
     }
+    
+    @Test
+    @DisplayName("Deve lançar erro quando deal não encontrado por ID")
+    void testFindByIdNotFound() {
+        // Arrange
+        when(dealRepository.findById(dealId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> dealService.findById(dealId));
+    }
 
     @Test
     @DisplayName("Deve buscar deals por status com sucesso")
     void testFindByStatusSuccess() {
         // Arrange
-        Deal deal1 = new Deal();
-        deal1.setId(UUID.randomUUID());
-        deal1.setDealStatus(DealStatus.WON);
-
-        Deal deal2 = new Deal();
-        deal2.setId(UUID.randomUUID());
-        deal2.setDealStatus(DealStatus.WON);
-
-        DealResponseDTO dto1 = new DealResponseDTO(
-                deal1.getId(), null, DealStatus.WON, BigDecimal.valueOf(5000), null, null, null, null
-        );
-        DealResponseDTO dto2 = new DealResponseDTO(
-                deal2.getId(), null, DealStatus.WON, BigDecimal.valueOf(7000), null, null, null, null
-        );
-
-        when(dealRepository.findAll()).thenReturn(List.of(deal1, deal2));
-        when(dealMapper.toResponseDTO(deal1)).thenReturn(dto1);
-        when(dealMapper.toResponseDTO(deal2)).thenReturn(dto2);
+        deal.setDealStatus(DealStatus.WON);
+        when(dealRepository.findByDealStatus(DealStatus.WON)).thenReturn(List.of(deal));
+        when(dealMapper.toResponseDTO(deal)).thenReturn(dealResponseDTO);
 
         // Act
-        List<DealResponseDTO> results = dealService.findByStaus(DealStatus.WON);
+        List<DealResponseDTO> results = dealService.findByStatus(DealStatus.WON);
 
         // Assert
         assertNotNull(results);
-        assertEquals(2, results.size());
-        verify(dealRepository, times(1)).findAll();
+        assertEquals(1, results.size());
+        verify(dealRepository, times(1)).findByDealStatus(DealStatus.WON);
     }
 
     // ========== UPDATE STATUS TESTS ==========
@@ -193,24 +187,16 @@ class DealServiceTest {
     @DisplayName("Deve atualizar status do deal com sucesso")
     void testUpdateStatusSuccess() {
         // Arrange
-        Deal deal = new Deal();
-        deal.setId(dealId);
-        deal.setDealStatus(DealStatus.NEGOTIATING);
-
-        DealResponseDTO responseDTO = new DealResponseDTO(
-                dealId, null, DealStatus.WON, BigDecimal.valueOf(5000), null, null, null, null
-        );
-
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(dealRepository.save(any(Deal.class))).thenReturn(deal);
-        when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);
+        when(dealMapper.toResponseDTO(any(Deal.class))).thenReturn(dealResponseDTO);
 
         // Act
         DealResponseDTO result = dealService.updateStatus(dealId, DealStatus.WON);
 
         // Assert
         assertNotNull(result);
-        assertEquals(DealStatus.WON, result.dealStatus());
+        assertEquals(dealResponseDTO, result);
         verify(dealRepository, times(1)).save(any(Deal.class));
     }
 
@@ -218,17 +204,12 @@ class DealServiceTest {
     @DisplayName("Deve lançar erro ao atualizar status com null")
     void testUpdateStatusWithNull() {
         // Arrange
-        Deal deal = new Deal();
-        deal.setId(dealId);
-
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            dealService.updateStatus(dealId, null);
-        });
-
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> dealService.updateStatus(dealId, null));
         assertTrue(exception.getMessage().contains("cannot not be null"));
+        verify(dealRepository, never()).save(any());
     }
 
     // ========== DELETE TESTS ==========
@@ -238,6 +219,7 @@ class DealServiceTest {
     void testDeleteDealSuccess() {
         // Arrange
         when(dealRepository.existsById(dealId)).thenReturn(true);
+        doNothing().when(dealRepository).deleteById(dealId);
 
         // Act
         dealService.delete(dealId);
@@ -253,10 +235,7 @@ class DealServiceTest {
         when(dealRepository.existsById(dealId)).thenReturn(false);
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            dealService.delete(dealId);
-        });
-
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> dealService.delete(dealId));
         assertTrue(exception.getMessage().contains("not found"));
         verify(dealRepository, never()).deleteById(any());
     }
@@ -267,20 +246,9 @@ class DealServiceTest {
     @DisplayName("Deve buscar deals por customer ID com sucesso")
     void testFindByCustomerSuccess() {
         // Arrange
-        Customer customer = new Customer();
-        customer.setId(customerId);
-
-        Deal deal = new Deal();
-        deal.setId(dealId);
-        deal.setCustomer(customer);
-
-        DealResponseDTO responseDTO = new DealResponseDTO(
-                dealId, null, DealStatus.NEGOTIATING, BigDecimal.valueOf(5000), null, null, null, null
-        );
-
         when(customerRepository.existsById(customerId)).thenReturn(true);
-        when(dealRepository.findAll()).thenReturn(List.of(deal));
-        when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);
+        when(dealRepository.findByCustomerId(customerId)).thenReturn(List.of(deal));
+        when(dealMapper.toResponseDTO(deal)).thenReturn(dealResponseDTO);
 
         // Act
         List<DealResponseDTO> results = dealService.findByCustomer(customerId);
@@ -288,8 +256,25 @@ class DealServiceTest {
         // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        verify(customerRepository, times(1)).existsById(customerId);
+        verify(dealRepository, times(1)).findByCustomerId(customerId);
     }
+    
+    @Test
+    @DisplayName("Deve retornar lista vazia se cliente não tiver deals")
+    void testFindByCustomerNoDeals() {
+        // Arrange
+        when(customerRepository.existsById(customerId)).thenReturn(true);
+        when(dealRepository.findByCustomerId(customerId)).thenReturn(Collections.emptyList());
+
+        // Act
+        List<DealResponseDTO> results = dealService.findByCustomer(customerId);
+
+        // Assert
+        assertNotNull(results);
+        assertTrue(results.isEmpty());
+        verify(dealRepository, times(1)).findByCustomerId(customerId);
+    }
+
 
     // ========== FIND BY DATE RANGE TESTS ==========
 
@@ -297,19 +282,13 @@ class DealServiceTest {
     @DisplayName("Deve buscar deals por intervalo de datas com sucesso")
     void testFindByDateRangeSuccess() {
         // Arrange
-        Deal deal = new Deal();
-        deal.setId(dealId);
-        deal.setClosedDate(LocalDateTime.now());
-
-        DealResponseDTO responseDTO = new DealResponseDTO(
-                dealId, null, DealStatus.WON, BigDecimal.valueOf(5000), null, null, null, null
-        );
-
         LocalDateTime start = LocalDateTime.now().minusDays(7);
         LocalDateTime end = LocalDateTime.now().plusDays(1);
-
-        when(dealRepository.findAll()).thenReturn(List.of(deal));
-        when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);
+        
+        deal.setClosedDate(LocalDateTime.now());
+        
+        when(dealRepository.findByClosedDateBetween(start, end)).thenReturn(List.of(deal));
+        when(dealMapper.toResponseDTO(deal)).thenReturn(dealResponseDTO);
 
         // Act
         List<DealResponseDTO> results = dealService.findByDateRange(start, end);
@@ -317,7 +296,6 @@ class DealServiceTest {
         // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        verify(dealRepository, times(1)).findAll();
+        verify(dealRepository, times(1)).findByClosedDateBetween(start, end);
     }
 }
-
