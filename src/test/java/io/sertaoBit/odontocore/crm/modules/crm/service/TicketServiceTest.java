@@ -81,9 +81,7 @@ class TicketServiceTest {
         ticket.setCustomer(customer);
         ticket.setAssigneTo(user);
 
-        TicketResponseDTO responseDTO = new TicketResponseDTO(
-                ticketId, "Ticket Test", TicketStatus.OPEN, Priority.HIGH, null, null, null
-        );
+        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -91,14 +89,7 @@ class TicketServiceTest {
         when(ticketRepository.save(any(Ticket.class))).thenReturn(ticket);
         when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
 
-        TicketCreateRequestDTO dto = new TicketCreateRequestDTO(
-                new Object() { public UUID getId() { return customerId; } },
-                new Object() { public UUID getId() { return userId; } },
-                "Ticket Test Description",
-                TicketStatus.OPEN,
-                Priority.HIGH,
-                null
-        );
+        TicketCreateRequestDTO dto = mock(TicketCreateRequestDTO.class);
 
         // Act
         TicketResponseDTO result = ticketService.create(dto);
@@ -117,14 +108,7 @@ class TicketServiceTest {
         // Arrange
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
 
-        TicketCreateRequestDTO dto = new TicketCreateRequestDTO(
-                new Object() { public UUID getId() { return customerId; } },
-                new Object() { public UUID getId() { return userId; } },
-                "Ticket Test",
-                TicketStatus.OPEN,
-                Priority.HIGH,
-                null
-        );
+        TicketCreateRequestDTO dto = mock(TicketCreateRequestDTO.class);
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -143,11 +127,10 @@ class TicketServiceTest {
         // Arrange
         Ticket ticket = new Ticket();
         ticket.setId(ticketId);
-        ticket.setTicketStatus(TicketStatus.OPEN);
-
-        TicketResponseDTO responseDTO = new TicketResponseDTO(
-                ticketId, "Ticket Test", TicketStatus.OPEN, Priority.HIGH, null, null, null
+        ticket.setTicketStatus(TicketStatus.TICKET_OPEN
         );
+
+        TicketResponseDTO responseDTO =  mock(TicketResponseDTO.class);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
@@ -167,27 +150,25 @@ class TicketServiceTest {
         // Arrange
         Ticket ticket1 = new Ticket();
         ticket1.setId(UUID.randomUUID());
-        ticket1.setTicketStatus(TicketStatus.OPEN);
+        ticket1.setTicketStatus(TicketStatus.TICKET_OPEN);
 
         Ticket ticket2 = new Ticket();
         ticket2.setId(UUID.randomUUID());
-        ticket2.setTicketStatus(TicketStatus.OPEN);
+        ticket2.setTicketStatus(TicketStatus.TICKET_OPEN);
 
         List<Ticket> tickets = List.of(ticket1, ticket2);
 
-        TicketResponseDTO dto1 = new TicketResponseDTO(
-                ticket1.getId(), "Ticket 1", TicketStatus.OPEN, Priority.HIGH, null, null, null
-        );
-        TicketResponseDTO dto2 = new TicketResponseDTO(
-                ticket2.getId(), "Ticket 2", TicketStatus.OPEN, Priority.MEDIUM, null, null, null
-        );
+        TicketResponseDTO dto1 = mock(TicketResponseDTO.class);
+
+        TicketResponseDTO dto2 = mock(TicketResponseDTO.class);
+
 
         when(ticketRepository.findAll()).thenReturn(tickets);
         when(ticketMapper.toResponseDTO(ticket1)).thenReturn(dto1);
         when(ticketMapper.toResponseDTO(ticket2)).thenReturn(dto2);
 
         // Act
-        List<TicketResponseDTO> results = ticketService.findByTicketStatus(TicketStatus.OPEN);
+        List<TicketResponseDTO> results = ticketService.findByTicketStatus(TicketStatus.TICKET_OPEN);
 
         // Assert
         assertNotNull(results);
@@ -203,22 +184,20 @@ class TicketServiceTest {
         // Arrange
         Ticket ticket = new Ticket();
         ticket.setId(ticketId);
-        ticket.setTicketStatus(TicketStatus.OPEN);
+        ticket.setTicketStatus(TicketStatus.TICKET_OPEN);
 
-        TicketResponseDTO responseDTO = new TicketResponseDTO(
-                ticketId, "Ticket Test", TicketStatus.IN_PROGRESS, Priority.HIGH, null, null, null
-        );
+        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any(Ticket.class))).thenReturn(ticket);
         when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
 
         // Act
-        TicketResponseDTO result = ticketService.updateStatus(ticketId, TicketStatus.IN_PROGRESS);
+        TicketResponseDTO result = ticketService.updateStatus(ticketId, TicketStatus.TICKET_IN_PROGRESS);
 
         // Assert
         assertNotNull(result);
-        assertEquals(TicketStatus.IN_PROGRESS, result.ticketStatus());
+        assertEquals(TicketStatus.TICKET_IN_PROGRESS , result.ticketStatus());
         verify(ticketRepository, times(1)).save(any(Ticket.class));
     }
 
@@ -282,9 +261,7 @@ class TicketServiceTest {
         ticket.setId(ticketId);
         ticket.setCustomer(customer);
 
-        TicketResponseDTO responseDTO = new TicketResponseDTO(
-                ticketId, "Ticket Test", TicketStatus.OPEN, Priority.HIGH, null, null, null
-        );
+        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
         when(customerRepository.existsById(customerId)).thenReturn(true);
         when(ticketRepository.findAll()).thenReturn(List.of(ticket));

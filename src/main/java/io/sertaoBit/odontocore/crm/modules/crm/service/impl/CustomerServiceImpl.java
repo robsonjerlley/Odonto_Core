@@ -9,6 +9,7 @@ import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Department;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ICustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.IDepartmentRepository;
+import io.sertaoBit.odontocore.crm.modules.crm.repository.ITicketRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.service.ICustomerService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
@@ -27,13 +28,13 @@ public class CustomerServiceImpl implements ICustomerService {
     private final ICustomerMapper customerMapper;
     private final IUserRepository userRepository;
     private final IDepartmentRepository departmentRepository;
-    private final SecurityUtils securityUtils;
+    private final ITicketRepository securityUtils;
 
     public CustomerServiceImpl(ICustomerRepository customerRepository,
                                ICustomerMapper customerMapper,
                                IUserRepository userRepository,
                                IDepartmentRepository departmentRepository,
-                               SecurityUtils securityUtils
+                               ITicketRepository securityUtils
     ) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
@@ -48,7 +49,7 @@ public class CustomerServiceImpl implements ICustomerService {
     public CustomerResponseDTO create(CustomerCreateRequestDTO dto) {
         Department department = departmentRepository.findById(dto.departmentId())
                 .orElseThrow(() -> new RuntimeException("User not found by id: " + dto.departmentId()));
-        User currentUser = securityUtils.getCurrentUser();
+        User currentUser = (User) departmentRepository.findAll().stream().map(Department::getPermissions);
 
         Customer customer = customerMapper.toEntity(dto);
         customer.setDepartment(department);

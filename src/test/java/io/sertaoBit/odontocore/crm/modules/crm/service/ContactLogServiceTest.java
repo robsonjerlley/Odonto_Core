@@ -96,10 +96,7 @@ class ContactLogServiceTest {
         contactLog.setTicket(ticket);
         contactLog.setContactBy(user);
 
-        ContactLogResponseDTO responseDTO = new ContactLogResponseDTO(
-                contactLogId, null, null, null, ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL, null, null, null, null, null
-        );
+        ContactLogResponseDTO responseDTO = mock(ContactLogResponseDTO.class);
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
@@ -108,14 +105,7 @@ class ContactLogServiceTest {
         when(contactLogRepository.save(any(ContactLog.class))).thenReturn(contactLog);
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
 
-        ContactLogCreateRequestDTO dto = new ContactLogCreateRequestDTO(
-                new Object() { public UUID getId() { return customerId; } },
-                new Object() { public UUID getId() { return ticketId; } },
-                new Object() { public UUID getId() { return userId; } },
-                ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL,
-                "Test description"
-        );
+        ContactLogCreateRequestDTO dto = mock(ContactLogCreateRequestDTO.class);
 
         // Act
         ContactLogResponseDTO result = contactLogService.create(dto);
@@ -133,14 +123,7 @@ class ContactLogServiceTest {
         // Arrange
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
 
-        ContactLogCreateRequestDTO dto = new ContactLogCreateRequestDTO(
-                new Object() { public UUID getId() { return customerId; } },
-                new Object() { public UUID getId() { return ticketId; } },
-                new Object() { public UUID getId() { return userId; } },
-                ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL,
-                "Test"
-        );
+        ContactLogCreateRequestDTO dto = mock(ContactLogCreateRequestDTO.class);
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -163,19 +146,13 @@ class ContactLogServiceTest {
 
         Ticket ticket = new Ticket();
         ticket.setId(ticketId);
-        ticket.setCustomer(otherCustomer);  // Ticket pertence a outro customer
+        ticket.setCustomer(otherCustomer);  // Ticket pertence  outro customer
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        ContactLogCreateRequestDTO dto = new ContactLogCreateRequestDTO(
-                new Object() { public UUID getId() { return customerId; } },
-                new Object() { public UUID getId() { return ticketId; } },
-                new Object() { public UUID getId() { return userId; } },
-                ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL,
-                "Test"
-        );
+        ContactLogCreateRequestDTO dto = mock(ContactLogCreateRequestDTO.class);
+
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -194,10 +171,7 @@ class ContactLogServiceTest {
         ContactLog contactLog = new ContactLog();
         contactLog.setId(contactLogId);
 
-        ContactLogResponseDTO responseDTO = new ContactLogResponseDTO(
-                contactLogId, null, null, null, ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL, null, null, null, null, null
-        );
+        ContactLogResponseDTO responseDTO = mock(ContactLogResponseDTO.class);
 
         when(contactLogRepository.findById(contactLogId)).thenReturn(Optional.of(contactLog));
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
@@ -222,10 +196,7 @@ class ContactLogServiceTest {
         contactLog.setId(contactLogId);
         contactLog.setCustomer(customer);
 
-        ContactLogResponseDTO responseDTO = new ContactLogResponseDTO(
-                contactLogId, null, null, null, ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL, null, null, null, null, null
-        );
+        ContactLogResponseDTO responseDTO = mock(ContactLogResponseDTO.class);
 
         when(customerRepository.existsById(customerId)).thenReturn(true);
         when(contactLogRepository.findAll()).thenReturn(List.of(contactLog));
@@ -248,10 +219,7 @@ class ContactLogServiceTest {
         contactLog.setId(contactLogId);
         contactLog.setContactChannel(ContactChannel.WHATSAPP);
 
-        ContactLogResponseDTO responseDTO = new ContactLogResponseDTO(
-                contactLogId, null, null, null, ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL, null, null, null, null, null
-        );
+        ContactLogResponseDTO responseDTO = mock(ContactLogResponseDTO.class);
 
         when(contactLogRepository.findAll()).thenReturn(List.of(contactLog));
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
@@ -273,10 +241,7 @@ class ContactLogServiceTest {
         contactLog.setId(contactLogId);
         contactLog.setContactOutcome(ContactOutcome.SUCCESSFUL);
 
-        ContactLogResponseDTO responseDTO = new ContactLogResponseDTO(
-                contactLogId, null, null, null, ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL, null, null, null, null, null
-        );
+        ContactLogResponseDTO responseDTO = mock(ContactLogResponseDTO.class);
 
         when(contactLogRepository.findAll()).thenReturn(List.of(contactLog));
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
@@ -300,18 +265,10 @@ class ContactLogServiceTest {
         contactLog.setId(contactLogId);
         contactLog.setDescription("Old description");
 
-        ContactLogResponseDTO responseDTO = new ContactLogResponseDTO(
-                contactLogId, null, null, null, ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL, "New description", null, null, null, null
-        );
+        ContactLogResponseDTO responseDTO = mock(ContactLogResponseDTO.class);
 
-        ContactLogUpdateRequestDTO dto = new ContactLogUpdateRequestDTO(
-                "New description",
-                ContactOutcome.SUCCESSFUL,
-                LocalDateTime.now().plusDays(1),
-                null,
-                null
-        );
+        ContactLogUpdateRequestDTO dto = mock(ContactLogUpdateRequestDTO.class);
+
 
         when(contactLogRepository.findById(contactLogId)).thenReturn(Optional.of(contactLog));
         when(contactLogRepository.save(any(ContactLog.class))).thenReturn(contactLog);
@@ -363,12 +320,9 @@ class ContactLogServiceTest {
         // Arrange
         ContactLog contactLog = new ContactLog();
         contactLog.setId(contactLogId);
-        contactLog.setNextFollowUp(LocalDateTime.now().minusDays(1));  // No passado = vencido
+        contactLog.setNextFollowUp(LocalDate.from(LocalDateTime.now().minusDays(1)));  // No passado = vencido
 
-        ContactLogResponseDTO responseDTO = new ContactLogResponseDTO(
-                contactLogId, null, null, null, ContactChannel.WHATSAPP,
-                ContactOutcome.SUCCESSFUL, null, null, null, null, null
-        );
+        ContactLogResponseDTO responseDTO = mock(ContactLogResponseDTO.class);
 
         when(contactLogRepository.findAll()).thenReturn(List.of(contactLog));
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);

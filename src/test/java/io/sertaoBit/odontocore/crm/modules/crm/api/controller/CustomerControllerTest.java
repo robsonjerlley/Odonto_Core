@@ -51,12 +51,15 @@ class CustomerControllerTest {
         CustomerCreateRequestDTO requestDTO = new CustomerCreateRequestDTO(
                 "João Silva", "123.456.789-00", "11999999999",
                 "São Paulo", "Rua A, 123", "Cliente importante",
-                TicketStatus.OPEN, departmentId
+                TicketStatus.TICKET_OPEN, departmentId
         );
 
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, "João Silva", "123.456.789-00", null, null, null, TicketStatus.OPEN, null
+              UUID.randomUUID(),
+
+
         );
+
 
         when(customerService.create(any(CustomerCreateRequestDTO.class))).thenReturn(responseDTO);
 
@@ -78,12 +81,9 @@ class CustomerControllerTest {
     @DisplayName("GET /api/v1/customers - Deve retornar lista de customers")
     void testFindAllCustomers() throws Exception {
         // Arrange
-        CustomerResponseDTO dto1 = new CustomerResponseDTO(
-                UUID.randomUUID(), "João", "123.456.789-00", null, null, null, TicketStatus.OPEN, null
-        );
-        CustomerResponseDTO dto2 = new CustomerResponseDTO(
-                UUID.randomUUID(), "Maria", "987.654.321-00", null, null, null, TicketStatus.OPEN, null
-        );
+        CustomerResponseDTO dto1 = mock(CustomerResponseDTO.class);
+
+        CustomerResponseDTO dto2 = mock(CustomerResponseDTO.class);
 
         when(customerService.findAll()).thenReturn(List.of(dto1, dto2));
 
@@ -104,9 +104,7 @@ class CustomerControllerTest {
     @DisplayName("GET /api/v1/customers/{id} - Deve retornar customer por ID")
     void testFindByIdCustomer() throws Exception {
         // Arrange
-        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, "João Silva", "123.456.789-00", null, null, null, TicketStatus.OPEN, null
-        );
+        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
 
         when(customerService.findById(customerId)).thenReturn(responseDTO);
 
@@ -143,9 +141,7 @@ class CustomerControllerTest {
     void testFindByNameCustomer() throws Exception {
         // Arrange
         String name = "João";
-        CustomerResponseDTO dto = new CustomerResponseDTO(
-                customerId, "João Silva", "123.456.789-00", null, null, null, TicketStatus.OPEN, null
-        );
+        CustomerResponseDTO dto = mock(CustomerResponseDTO.class);
 
         when(customerService.findByName(name)).thenReturn(List.of(dto));
 
@@ -167,9 +163,7 @@ class CustomerControllerTest {
     void testFindByCpfCustomer() throws Exception {
         // Arrange
         String cpf = "123.456.789-00";
-        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, "João Silva", cpf, null, null, null, TicketStatus.OPEN, null
-        );
+        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
 
         when(customerService.findByCpf(cpf)).thenReturn(responseDTO);
 

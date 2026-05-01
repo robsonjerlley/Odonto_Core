@@ -10,6 +10,7 @@ import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Department;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ICustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.repository.IDepartmentRepository;
+import io.sertaoBit.odontocore.crm.modules.crm.repository.ITicketRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.service.impl.CustomerServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
@@ -45,6 +46,8 @@ class CustomerServiceTest {
     @Mock
     private ICustomerMapper customerMapper;
 
+    private ITicketRepository  ticketRepository;
+
     private UUID customerId;
     private UUID departmentId;
     private UUID userId;
@@ -55,7 +58,9 @@ class CustomerServiceTest {
                 customerRepository,
                 customerMapper,
                 userRepository,
-                departmentRepository
+                departmentRepository,
+                ticketRepository
+
         );
 
         customerId = UUID.randomUUID();
@@ -79,9 +84,7 @@ class CustomerServiceTest {
         customer.setId(customerId);
         customer.setName("João Silva");
 
-        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, "João Silva", "123.456.789-00", null, null, null, TicketStatus.OPEN, null
-        );
+        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
 
         when(departmentRepository.findById(departmentId)).thenReturn(Optional.of(department));
         when(userRepository.findById(any())).thenReturn(Optional.of(user));
@@ -92,7 +95,7 @@ class CustomerServiceTest {
         CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
                 "João Silva", "123.456.789-00", "11999999999",
                 "São Paulo", "Rua A, 123", "Cliente importante",
-                TicketStatus.OPEN, departmentId
+                TicketStatus.TICKET_OPEN, departmentId
         );
 
         // Act
@@ -112,11 +115,8 @@ class CustomerServiceTest {
         // Arrange
         when(departmentRepository.findById(departmentId)).thenReturn(Optional.empty());
 
-        CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
-                "João Silva", "123.456.789-00", "11999999999",
-                "São Paulo", "Rua A, 123", "Cliente importante",
-                TicketStatus.OPEN, departmentId
-        );
+        CustomerCreateRequestDTO dto = mock(CustomerCreateRequestDTO.class);
+
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -137,10 +137,7 @@ class CustomerServiceTest {
         customer.setId(customerId);
         customer.setName("João Silva");
 
-        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, "João Silva", "123.456.789-00", null, null, null, TicketStatus.OPEN, null
-        );
-
+        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(customerMapper.toResponseDTO(customer)).thenReturn(responseDTO);
 
@@ -177,9 +174,8 @@ class CustomerServiceTest {
         customer.setId(customerId);
         customer.setCpf(cpf);
 
-        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, "João Silva", cpf, null, null, null, TicketStatus.OPEN, null
-        );
+        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
+
 
         when(customerRepository.findByCpf(cpf)).thenReturn(Optional.of(customer));
         when(customerMapper.toResponseDTO(customer)).thenReturn(responseDTO);
@@ -205,14 +201,9 @@ class CustomerServiceTest {
         existingCustomer.setCpf(cpf);
         existingCustomer.setName("João Silva");
 
-        CustomerUpdateRequestDTO dto = new CustomerUpdateRequestDTO(
-                "João Silva Atualizado", cpf, "11988888888",
-                "São Paulo", "Rua B, 456", "Descrição atualizada", TicketStatus.IN_PROGRESS
-        );
+        CustomerUpdateRequestDTO dto = mock(CustomerUpdateRequestDTO.class);
 
-        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, "João Silva Atualizado", cpf, null, null, null, TicketStatus.IN_PROGRESS, null
-        );
+        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
 
         when(customerRepository.findByCpf(cpf)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.save(any(Customer.class))).thenReturn(existingCustomer);
@@ -242,10 +233,7 @@ class CustomerServiceTest {
         otherCustomer.setId(UUID.randomUUID());
         otherCustomer.setCpf(newCpf);
 
-        CustomerUpdateRequestDTO dto = new CustomerUpdateRequestDTO(
-                "João Silva", newCpf, "11988888888",
-                "São Paulo", "Rua B, 456", "Descrição", TicketStatus.OPEN
-        );
+        CustomerUpdateRequestDTO dto = mock(CustomerUpdateRequestDTO.class);
 
         when(customerRepository.findByCpf(oldCpf)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.findByCpf(newCpf)).thenReturn(Optional.of(otherCustomer));

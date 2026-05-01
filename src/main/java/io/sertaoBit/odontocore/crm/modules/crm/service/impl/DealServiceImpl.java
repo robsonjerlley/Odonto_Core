@@ -136,7 +136,6 @@ public class DealServiceImpl implements IDealService {
                 .collect(Collectors.toList());
     }
 
-    @Override
     @Transactional(readOnly = true)
     public List<DealResponseDTO> findByDateRange(LocalDate start, LocalDate end) {
         return dealRepository.findAll().stream()
