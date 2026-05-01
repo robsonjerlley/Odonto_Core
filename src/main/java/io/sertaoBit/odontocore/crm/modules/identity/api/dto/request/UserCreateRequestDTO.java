@@ -10,7 +10,6 @@ import java.util.UUID;
 public record UserCreateRequestDTO(
         @NotBlank(message = "A senha não pode estar em branco.") String username,
         @NotBlank @Size(min = 8, message = "A senha deve conter no mínimo 8 caracteres.") String password,
-        @NotNull Role role,
-        UUID clinicId
+        @NotNull Role role
 ) {
 }

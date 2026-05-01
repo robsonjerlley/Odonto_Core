@@ -7,13 +7,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.Set;
 import java.util.UUID;
 
 public record DealUpdateRequestDTO(
         @NotNull UUID id,
         @NotNull Customer customer,
         @NotNull DealStatus dealStatus,
-        @NotBlank String procedures,
+        @NotBlank Set<String> procedures,
         @NotNull BigDecimal negotiationValue,
         @NotNull User closedBy,
         @NotBlank String description

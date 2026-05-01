@@ -7,11 +7,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 public record DealCreateRequestDTO(
         @NotNull Customer customer,
         @NotNull DealStatus dealStatus,
-        @NotBlank String procedures,
+        @NotBlank Set<String> procedures,
         @NotNull BigDecimal negotiationValue,
         @NotNull User closedBy,
         @NotBlank String description

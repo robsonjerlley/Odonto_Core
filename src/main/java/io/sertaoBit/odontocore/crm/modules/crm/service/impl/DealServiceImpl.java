@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -72,8 +73,8 @@ public class DealServiceImpl implements IDealService {
             deal.setNegotiationValue(dto.negotiationValue());
         }
 
-        if (dto.procedures() != null && !dto.procedures().isBlank()) {
-            deal.setProcedures(java.util.Set.of(dto.procedures()));
+        if (dto.procedures() != null && !dto.procedures().isEmpty()) {
+            deal.setProcedures(Set.of(dto.procedures().toString()));
         }
 
         Deal updated = dealRepository.save(deal);

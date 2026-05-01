@@ -8,17 +8,17 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record DealResponseDTO(
         @NotNull UUID id,
         @NotNull Customer customer,
         @NotNull DealStatus dealStatus,
-        @NotBlank List<String> procedures,
+        @NotBlank Set<String> procedures,
         @NotNull BigDecimal negotiationValue,
         @NotNull User closedBy,
-        @NotBlank List<String> description,
+        @NotBlank String description,
         @NotNull LocalDateTime closedDate,
         @NotNull LocalDateTime targetDate
 ) {

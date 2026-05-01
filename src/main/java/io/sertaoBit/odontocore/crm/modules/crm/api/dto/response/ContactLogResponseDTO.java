@@ -11,7 +11,6 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 public record ContactLogResponseDTO(
@@ -20,7 +19,7 @@ public record ContactLogResponseDTO(
         @NotNull Ticket ticket,
         @NotNull User contactBy,
         @NotNull ContactChannel contactChannel,
-        @NotBlank List<String> description,
+        @NotBlank String description,
         @NotNull ContactOutcome contactOutcome,
         @NotNull LocalDateTime contactDate,
         @NotNull LocalDate nextFollowUp,

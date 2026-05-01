@@ -44,6 +44,7 @@ public interface ISalesMetricsService {
 
     BigDecimal getConversionRate();
 
+    // ====== TRENDING & AGGREGATIONS ======
 
     List<SalesMetricsResponseDTO> getTrendingData(LocalDate startDate, LocalDate endDate);
 

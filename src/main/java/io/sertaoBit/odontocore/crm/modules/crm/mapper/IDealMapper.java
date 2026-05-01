@@ -10,9 +10,10 @@ import org.mapstruct.Mappings;
 @Mapper(componentModel = "spring")
 public interface IDealMapper {
     @Mappings({
-            @Mapping(target = "targetDate", ignore = true),
+
             @Mapping(target = "closedDate", ignore = true),
-            @Mapping(target = "id", ignore = true)
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "targetDate", ignore = true),
     })
     Deal toEntity(DealCreateRequestDTO dto);
 

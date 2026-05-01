@@ -6,26 +6,17 @@ import io.sertaoBit.odontocore.crm.modules.crm.domain.model.ContactLog;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
-import org.mapstruct.Named;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface IContactLogMapper {
     @Mappings({
             @Mapping(target = "contactDate", ignore = true),
             @Mapping(target = "id", ignore = true),
-            @Mapping(target = "description", source = "description", qualifiedByName = "stringToList")
+            @Mapping(target = "description", source = "description")
     })
     ContactLog toEntity(ContactLogCreateRequestDTO dto);
 
-
+    @Mapping(target = "description" , source = "description")
     ContactLogResponseDTO toResponseDTO(ContactLog entity);
 
-    @Named("stringToList")
-    default List<String> stringToList(String description) {
-        return description != null && !description.isBlank()
-                ? List.of(description)
-                : List.of();
-    }
 }

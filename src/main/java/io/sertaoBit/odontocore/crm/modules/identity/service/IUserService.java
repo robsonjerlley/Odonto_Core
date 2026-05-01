@@ -23,5 +23,4 @@ public interface IUserService {
     void delete(UUID id);
 
 
-
 }
