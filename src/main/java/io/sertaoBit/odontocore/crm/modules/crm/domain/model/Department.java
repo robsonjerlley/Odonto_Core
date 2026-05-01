@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.crm.domain.model;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DepartmentName;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -32,12 +33,10 @@ public class Department {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
 }

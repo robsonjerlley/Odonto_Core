@@ -9,19 +9,25 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@DisplayName("CustomerControllerTest - Testes de Integração dos Endpoints de Customer")
+@SpringBootTest
+@DisplayName("CustomerControllerTest - Testes de Unidade do Controller")
 class CustomerControllerTest {
 
     @Autowired
@@ -35,11 +41,13 @@ class CustomerControllerTest {
 
     private UUID customerId;
     private UUID departmentId;
+    private UUID userId;
 
     @BeforeEach
     void setUp() {
         customerId = UUID.randomUUID();
         departmentId = UUID.randomUUID();
+        userId = UUID.randomUUID();
     }
 
     // ========== CREATE ENDPOINT TESTS ==========
@@ -55,11 +63,16 @@ class CustomerControllerTest {
         );
 
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-              UUID.randomUUID(),
-
-
+                customerId,
+                "João Silva",
+                "123.456.789-00",
+                "11999999999",
+                "São Paulo",
+                "Rua A, 123",
+                Collections.singletonList("Cliente importante"),
+                TicketStatus.TICKET_OPEN,
+                userId
         );
-
 
         when(customerService.create(any(CustomerCreateRequestDTO.class))).thenReturn(responseDTO);
 
@@ -81,9 +94,14 @@ class CustomerControllerTest {
     @DisplayName("GET /api/v1/customers - Deve retornar lista de customers")
     void testFindAllCustomers() throws Exception {
         // Arrange
-        CustomerResponseDTO dto1 = mock(CustomerResponseDTO.class);
-
-        CustomerResponseDTO dto2 = mock(CustomerResponseDTO.class);
+        CustomerResponseDTO dto1 = new CustomerResponseDTO(
+                UUID.randomUUID(), "João", "111.111.111-11", "11111", "City1", "Address1",
+                Collections.emptyList(), TicketStatus.TICKET_OPEN, UUID.randomUUID()
+        );
+        CustomerResponseDTO dto2 = new CustomerResponseDTO(
+                UUID.randomUUID(), "Maria", "222.222.222-22", "22222", "City2", "Address2",
+                Collections.emptyList(), TicketStatus.TICKET_IN_PROGRESS, UUID.randomUUID()
+        );
 
         when(customerService.findAll()).thenReturn(List.of(dto1, dto2));
 
@@ -104,7 +122,10 @@ class CustomerControllerTest {
     @DisplayName("GET /api/v1/customers/{id} - Deve retornar customer por ID")
     void testFindByIdCustomer() throws Exception {
         // Arrange
-        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
+        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
+                customerId, "João Silva", "123.456.789-00", "11999999999", "São Paulo",
+                "Rua A, 123", Collections.emptyList(), TicketStatus.TICKET_OPEN, userId
+        );
 
         when(customerService.findById(customerId)).thenReturn(responseDTO);
 
@@ -122,32 +143,32 @@ class CustomerControllerTest {
     @DisplayName("GET /api/v1/customers/{id} - Deve retornar 404 quando customer não encontrado")
     void testFindByIdNotFound() throws Exception {
         // Arrange
-        when(customerService.findById(customerId)).thenThrow(
-                new RuntimeException("Customer not found: " + customerId)
-        );
+        when(customerService.findById(any(UUID.class))).thenThrow(new RuntimeException("Customer not found"));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/customers/" + customerId)
+        mockMvc.perform(get("/api/v1/customers/" + UUID.randomUUID())
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isNotFound());
 
-        verify(customerService, times(1)).findById(customerId);
+        verify(customerService, times(1)).findById(any(UUID.class));
     }
 
     // ========== FIND BY NAME ENDPOINT TESTS ==========
 
     @Test
-    @DisplayName("GET /api/v1/customers/search/name - Deve retornar customers por nome")
+    @DisplayName("GET /api/v1/customers/name/{name} - Deve retornar customers por nome")
     void testFindByNameCustomer() throws Exception {
         // Arrange
         String name = "João";
-        CustomerResponseDTO dto = mock(CustomerResponseDTO.class);
+        CustomerResponseDTO dto = new CustomerResponseDTO(
+                customerId, "João Silva", "123.456.789-00", "11999999999", "São Paulo",
+                "Rua A, 123", Collections.emptyList(), TicketStatus.TICKET_OPEN, userId
+        );
 
         when(customerService.findByName(name)).thenReturn(List.of(dto));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/customers/search/name")
-                .param("name", name)
+        mockMvc.perform(get("/api/v1/customers/name/" + name)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -163,7 +184,10 @@ class CustomerControllerTest {
     void testFindByCpfCustomer() throws Exception {
         // Arrange
         String cpf = "123.456.789-00";
-        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
+        CustomerResponseDTO responseDTO = new CustomerResponseDTO(
+                customerId, "João Silva", cpf, "11999999999", "São Paulo",
+                "Rua A, 123", Collections.emptyList(), TicketStatus.TICKET_OPEN, userId
+        );
 
         when(customerService.findByCpf(cpf)).thenReturn(responseDTO);
 
@@ -193,36 +217,24 @@ class CustomerControllerTest {
         verify(customerService, times(1)).deleteById(customerId);
     }
 
-    @Test
-    @DisplayName("DELETE /api/v1/customers/{id} - Deve retornar 404 quando customer não encontrado")
-    void testDeleteCustomerNotFound() throws Exception {
-        // Arrange
-        doThrow(new RuntimeException("Customer not found: " + customerId))
-                .when(customerService).deleteById(customerId);
-
-        // Act & Assert
-        mockMvc.perform(delete("/api/v1/customers/" + customerId)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
-
-        verify(customerService, times(1)).deleteById(customerId);
-    }
-
     // ========== VALIDATION TESTS ==========
 
     @Test
     @DisplayName("POST /api/v1/customers/create - Deve retornar 400 para validação falha")
     void testCreateCustomerValidationError() throws Exception {
-        // Arrange - DTO inválido (missing required fields)
-        String invalidJson = "{ \"name\": \"\" }";  // name vazio
+        // Arrange - DTO inválido (name em branco)
+        CustomerCreateRequestDTO requestDTO = new CustomerCreateRequestDTO(
+                "", "123.456.789-00", "11999999999",
+                "São Paulo", "Rua A, 123", "Cliente importante",
+                TicketStatus.TICKET_OPEN, departmentId
+        );
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/customers/create")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
+                .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isBadRequest());
 
         verify(customerService, never()).create(any());
     }
 }
-

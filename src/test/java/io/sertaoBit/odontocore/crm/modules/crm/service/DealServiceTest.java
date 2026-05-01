@@ -73,14 +73,12 @@ class DealServiceTest {
         deal = new Deal();
         deal.setId(dealId);
         deal.setCustomer(customer);
-        deal.setResponsible(user);
         deal.setDealStatus(DealStatus.NEGOTIATING);
-        deal.setValue(BigDecimal.valueOf(5000));
         deal.setDescription("Test Deal");
         deal.setProcedures(Set.of("procedure1"));
-        deal.setCreatedAt(LocalDateTime.now());
+        deal.setNegotiationValue(BigDecimal.valueOf(5000));
         deal.setTargetDate(LocalDateTime.now().plusDays(10));
-        deal.setClosedBy(null);
+        deal.setClosedBy(user);
         deal.setClosedDate(null);
     }
 
@@ -102,10 +100,10 @@ class DealServiceTest {
         when(dealRepository.save(any(Deal.class))).thenReturn(deal);
 
         DealResponseDTO responseDTO = new DealResponseDTO(
-                deal.getId(), deal.getCustomer(), deal.getDealStatus(), deal.getProcedures(),
-                deal.getValue(), deal.getResponsible(), deal.getDescription(),
-                deal.getClosedDate(), deal.getTargetDate()
-        );
+                        deal.getId(), deal.getCustomer(), deal.getDealStatus(), deal.getProcedures(),
+                deal.getNegotiationValue(),deal.getClosedBy(), deal.getDescription(),
+                        deal.getClosedDate(), deal.getTargetDate()
+                );
         when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);
 
         // Act
@@ -127,7 +125,7 @@ class DealServiceTest {
 
         DealResponseDTO responseDTO = new DealResponseDTO(
                 deal.getId(), deal.getCustomer(), deal.getDealStatus(), deal.getProcedures(),
-                deal.getValue(), deal.getResponsible(), deal.getDescription(),
+                deal.getNegotiationValue(), deal.getClosedBy(), deal.getDescription(),
                 deal.getClosedDate(), deal.getTargetDate()
         );
         when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);

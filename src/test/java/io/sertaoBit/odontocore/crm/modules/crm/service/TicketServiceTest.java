@@ -1,9 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.crm.service;
 
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.ticket.TicketCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.ticket.TicketUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.TicketResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.Priority;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Ticket;
@@ -16,9 +14,9 @@ import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 @DisplayName("TicketServiceTest - Testes Unitários do Serviço de Tickets")
 class TicketServiceTest {
 
@@ -130,7 +128,7 @@ class TicketServiceTest {
         ticket.setTicketStatus(TicketStatus.TICKET_OPEN
         );
 
-        TicketResponseDTO responseDTO =  mock(TicketResponseDTO.class);
+        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
@@ -197,7 +195,7 @@ class TicketServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(TicketStatus.TICKET_IN_PROGRESS , result.ticketStatus());
+        assertEquals(TicketStatus.TICKET_IN_PROGRESS, result.ticketStatus());
         verify(ticketRepository, times(1)).save(any(Ticket.class));
     }
 
