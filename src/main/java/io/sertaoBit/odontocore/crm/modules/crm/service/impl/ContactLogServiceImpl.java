@@ -130,11 +130,9 @@ public class ContactLogServiceImpl implements IContactLogService {
     @Override
     @Transactional(readOnly = true)
     public List<ContactLogResponseDTO> findByCustomer(UUID id) {
-        if (!customerRepository.existsById(id)) {
-            throw new RuntimeException("Customer not found by id: " + id);
-        }
+        Objects.requireNonNull(id, "Customer id must not be null");
 
-        return contactLogRepository.findAll().stream()
+        return contactLogRepository.findByCustomerId(id).stream()
                 .filter(cl -> cl.getCustomer().getId().equals(id))
                 .map(contactLogMapper::toResponseDTO)
                 .collect(Collectors.toList());
@@ -145,9 +143,7 @@ public class ContactLogServiceImpl implements IContactLogService {
     @Override
     @Transactional(readOnly = true)
     public List<ContactLogResponseDTO> findByContactByUser(UUID id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found by id: " + id);
-        }
+        Objects.requireNonNull(id, "Contact id must not be null");
 
         return contactLogRepository.findAll().stream()
                 .filter(cl -> cl.getContactBy().getId().equals(id))
@@ -157,11 +153,13 @@ public class ContactLogServiceImpl implements IContactLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public ContactLogResponseDTO findByChannel(ContactChannel channel) {
-        return contactLogRepository.findAll().stream()
-                .filter(cl -> cl.getContactChannel() == channel)
+    public List<ContactLogResponseDTO> findByChannel(ContactChannel channel) {
+        Objects.requireNonNull(channel, "Channel must not be null");
+
+        return contactLogRepository.findByContactChannel(channel).stream()
+                .filter(cl -> cl.getContactChannel().equals(channel))
                 .map(contactLogMapper::toResponseDTO)
-                .findFirst().orElseThrow(()-> new RuntimeException("ContactLog not found by id: " + channel));
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -1,8 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.crm.service;
 
-import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
@@ -20,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -136,7 +133,7 @@ class ContactLogServiceTest {
                 .customer(contactLog.getCustomer())
                 .ticket(contactLog.getTicket())
                 .contactBy(contactLog.getContactBy())
-                .contactChannel(contactLog.getContactChannel())
+                .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
                 .contactOutcome(contactLog.getContactOutcome())
                 .contactDate(contactLog.getContactDate())
@@ -226,7 +223,7 @@ class ContactLogServiceTest {
                 .customer(contactLog.getCustomer())
                 .ticket(ticket)
                 .contactBy(contactLog.getContactBy())
-                .contactChannel(contactLog.getContactChannel())
+                .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
                 .contactOutcome(contactLog.getContactOutcome())
                 .nextFollowUp(LocalDate.now())
@@ -256,7 +253,7 @@ class ContactLogServiceTest {
                 .customer(contactLog.getCustomer())
                 .ticket(ticket)
                 .contactBy(contactLog.getContactBy())
-                .contactChannel(contactLog.getContactChannel())
+                .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
                 .contactOutcome(contactLog.getContactOutcome())
                 .nextFollowUp(LocalDate.now())
@@ -274,13 +271,13 @@ class ContactLogServiceTest {
         // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertEquals(contactLog.getId(), results.get(0).id());
+        assertEquals(contactLog.getId(), results.getFirst().id());
         verify(customerRepository, times(1)).existsById(customer.getId());
         verify(contactLogRepository, times(1)).findByCustomerId(customer.getId());
     }
 
 
-    /*
+
 
     @Test
     @DisplayName("Deve buscar contact logs por canal com sucesso")
@@ -292,7 +289,7 @@ class ContactLogServiceTest {
                 .customer(contactLog.getCustomer())
                 .ticket(ticket)
                 .contactBy(contactLog.getContactBy())
-                .contactChannel(contactLog.getContactChannel())
+                .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
                 .contactOutcome(contactLog.getContactOutcome())
                 .nextFollowUp(LocalDate.now())
@@ -300,16 +297,18 @@ class ContactLogServiceTest {
                 .conversionValue(BigDecimal.valueOf(15000))
                 .build();
 
-        when(contactLogRepository.findByChannel(ContactChannel.WHATSAPP)).thenReturn(List.of(contactLog));
+        when(contactLogRepository.findByContactChannel(ContactChannel.WHATSAPP)).thenReturn((List.of(contactLog)));
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
 
         // Act
-        ContactLogResponseDTO results = contactLogService.findByChannel(ContactChannel.WHATSAPP);
+        ContactLogResponseDTO results = contactLogService.findByChannel(contactLog.getContactChannel()).getFirst();
 
         // Assert
         assertNotNull(results);
-        assertEquals(ContactChannel.WHATSAPP, results.contactChannel());
+        assertEquals(List.of(ContactChannel.WHATSAPP), results.contactChannel());
     }
+
+    /*
 
     @Test
     @DisplayName("Deve buscar contact logs por outcome com sucesso")

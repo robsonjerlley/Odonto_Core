@@ -26,7 +26,7 @@ public interface IContactLogService {
 
     List<ContactLogResponseDTO> findByContactByUser(UUID id);
 
-    ContactLogResponseDTO findByChannel(ContactChannel channel);
+    List<ContactLogResponseDTO> findByChannel(ContactChannel channel);
 
     List<ContactLogResponseDTO> findOutcome(ContactOutcome contactOutcome);
 

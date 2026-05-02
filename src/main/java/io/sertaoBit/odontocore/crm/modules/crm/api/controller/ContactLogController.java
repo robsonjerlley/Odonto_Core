@@ -61,7 +61,7 @@ public class ContactLogController {
     }
 
     @GetMapping("/contactChannel/{channel}")
-    public ResponseEntity<ContactLogResponseDTO> findByChannel(@PathVariable ContactChannel channel) {
+    public ResponseEntity<List<ContactLogResponseDTO>>findByChannel(@PathVariable ContactChannel channel) {
         return ResponseEntity.ok(contactLogService.findByChannel(channel));
     }
 

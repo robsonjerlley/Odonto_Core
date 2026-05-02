@@ -18,4 +18,6 @@ public interface IContactLogRepository extends JpaRepository<ContactLog, UUID> {
 
   List<ContactLog> findByCustomerId(UUID customerId);
 
+  List<ContactLog>findByContactChannel(ContactChannel channel);
+
 }

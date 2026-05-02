@@ -12,6 +12,7 @@ import lombok.Builder;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -20,7 +21,7 @@ public record ContactLogResponseDTO(
         @NotNull Customer customer,
         @NotNull Ticket ticket,
         @NotNull User contactBy,
-        @NotNull ContactChannel contactChannel,
+        @NotNull List<ContactChannel> contactChannel,
         @NotBlank String description,
         @NotNull ContactOutcome contactOutcome,
         @NotNull LocalDateTime contactDate,
