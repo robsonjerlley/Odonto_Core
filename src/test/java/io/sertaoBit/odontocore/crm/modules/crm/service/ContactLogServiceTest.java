@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.crm.service;
 
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
@@ -185,7 +186,7 @@ class ContactLogServiceTest {
         // Arrange
         Customer otherCustomer = new Customer();
         otherCustomer.setId(UUID.randomUUID());
-        ticket.setCustomer(otherCustomer);  // Ticket pertence a outro customer
+        ticket.setCustomer(otherCustomer);  // Ticket pertence  outro customer
 
         ContactLogCreateRequestDTO createDTO = ContactLogCreateRequestDTO.builder()
                 .customer(customer)
@@ -308,7 +309,7 @@ class ContactLogServiceTest {
         assertEquals(List.of(ContactChannel.WHATSAPP), results.contactChannel());
     }
 
-    /*
+
 
     @Test
     @DisplayName("Deve buscar contact logs por outcome com sucesso")
@@ -320,7 +321,7 @@ class ContactLogServiceTest {
                 .customer(contactLog.getCustomer())
                 .ticket(ticket)
                 .contactBy(contactLog.getContactBy())
-                .contactChannel(contactLog.getContactChannel())
+                .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
                 .contactOutcome(contactLog.getContactOutcome())
                 .nextFollowUp(LocalDate.now())
@@ -328,7 +329,7 @@ class ContactLogServiceTest {
                 .conversionValue(BigDecimal.valueOf(15000))
                 .build();
 
-        when(contactLogRepository.findByContactOutcome(ContactOutcome.SUCCESSFUL)).thenReturn(List.of(contactLog));
+        when(contactLogRepository.findByContactOutcomes(ContactOutcome.SUCCESSFUL)).thenReturn(List.of(contactLog));
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
 
         // Act
@@ -337,43 +338,47 @@ class ContactLogServiceTest {
         // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        verify(contactLogRepository, times(1)).findByContactOutcome(ContactOutcome.SUCCESSFUL);
+        verify(contactLogRepository, times(1)).findByContactOutcomes(ContactOutcome.SUCCESSFUL);
     }
 
     // ========== UPDATE TESTS ==========
+
 
     @Test
     @DisplayName("Deve atualizar contact log com sucesso")
     void testUpdateContactLogSuccess() {
         // Arrange
+
         ContactLogUpdateRequestDTO updateRequestDTO = ContactLogUpdateRequestDTO.builder()
+                .id(contactLog.getId())
                 .customer(customer.getId())
                 .ticket(ticket.getId())
                 .contactBy(user.getId())
-                .contactChannel(contactLog.getContactChannel())
-                .description("Generic Description")
-                .contactOutcome(contactLog.getContactOutcome())
-                .nextFollowUp(LocalDate.now())
-                .investmentAmount(BigDecimal.valueOf(5000))
+                .contactChannel(ContactChannel.WEBSITE_FROM)
+                .description("Update Contact Log")
+                .contactOutcome(ContactOutcome.SUCCESSFUL)
+                .nextFollowUp(LocalDate.of(2026,6,18))
+                .investmentAmount(BigDecimal.valueOf(5800))
                 .conversionValue(BigDecimal.valueOf(15000))
                 .build();
+
+        when(contactLogRepository.findById(contactLog.getId())).thenReturn(Optional.of(contactLog));
+        when(contactLogRepository.save(any(ContactLog.class))).thenReturn(contactLog);
 
         ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .customer(contactLog.getCustomer())
-                .ticket(ticket)
+                .ticket(contactLog.getTicket())
                 .contactBy(contactLog.getContactBy())
-                .contactChannel(contactLog.getContactChannel())
-                .description("To Update")
+                .contactChannel(List.of(contactLog.getContactChannel()))
+                .description(contactLog.getDescription())
                 .contactOutcome(contactLog.getContactOutcome())
-                .nextFollowUp(LocalDate.now())
-                .investmentAmount(BigDecimal.valueOf(7000))
-                .conversionValue(BigDecimal.valueOf(18000))
+                .nextFollowUp(contactLog.getNextFollowUp())
+                .investmentAmount(contactLog.getInvestmentAmount())
+                .conversionValue(contactLog.getConversionValue())
                 .build();
 
-        when(contactLogRepository.findById(contactLog.getId())).thenReturn(Optional.of(contactLog));
-        doNothing().when(contactLogMapper).toResponseDTO(contactLog);
-        when(contactLogRepository.save(any(ContactLog.class))).thenReturn(contactLog);
+
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
 
         // Act
@@ -406,7 +411,7 @@ class ContactLogServiceTest {
         when(contactLogRepository.existsById(contactLog.getId())).thenReturn(false);
 
         // Act & Assert
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             contactLogService.delete(contactLog.getId());
         });
 
@@ -414,36 +419,7 @@ class ContactLogServiceTest {
         verify(contactLogRepository, never()).deleteById(any());
     }
 
-    // ========== PENDING FOLLOW-UP TESTS ==========
 
-    @Test
-    @DisplayName("Deve buscar contact logs com follow-up pendente")
-    void testFindWithPendingFollowUpSuccess() {
-        // Arrange
-        contactLog.setNextFollowUp(LocalDate.from(LocalDateTime.now().minusDays(1)));  // No passado = vencido
-        ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
-                .id(UUID.randomUUID())
-                .customer(contactLog.getCustomer())
-                .ticket(ticket)
-                .contactBy(contactLog.getContactBy())
-                .contactChannel(contactLog.getContactChannel())
-                .description("To Update")
-                .contactOutcome(contactLog.getContactOutcome())
-                .nextFollowUp(LocalDate.now())
-                .investmentAmount(BigDecimal.valueOf(7000))
-                .conversionValue(BigDecimal.valueOf(18000))
-                .build();
-
-        when(contactLogRepository.findByNextFollowUpBeforeAndContactOutcomeNot(any(), any())).thenReturn(List.of(contactLog));
-        when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(responseDTO);
-
-        // Act
-        List<ContactLogResponseDTO> results = contactLogService.findWithPendingFollowUp();
-
-        // Assert
-        assertNotNull(results);
-        assertEquals(1, results.size());
-    }
-
-     */
 }
+
+

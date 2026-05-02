@@ -165,7 +165,7 @@ public class ContactLogServiceImpl implements IContactLogService {
     @Override
     @Transactional(readOnly = true)
     public List<ContactLogResponseDTO> findOutcome(ContactOutcome contactOutcome) {
-        return contactLogRepository.findAll().stream()
+        return contactLogRepository.findByContactOutcomes(contactOutcome).stream()
                 .filter(cl -> cl.getContactOutcome() == contactOutcome)
                 .map(contactLogMapper::toResponseDTO)
                 .collect(Collectors.toList());
