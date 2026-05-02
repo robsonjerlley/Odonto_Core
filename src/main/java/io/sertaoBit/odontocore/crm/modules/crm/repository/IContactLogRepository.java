@@ -1,5 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.crm.repository;
 
+import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.ContactLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,4 +15,7 @@ import java.util.UUID;
 public interface IContactLogRepository extends JpaRepository<ContactLog, UUID> {
 
   List<ContactLog> findByContactDate(LocalDate date);
+
+  List<ContactLog> findByCustomerId(UUID customerId);
+
 }

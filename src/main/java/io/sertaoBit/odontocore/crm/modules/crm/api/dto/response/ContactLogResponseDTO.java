@@ -7,12 +7,14 @@ import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Ticket;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Builder
 public record ContactLogResponseDTO(
         @NotNull UUID id,
         @NotNull Customer customer,

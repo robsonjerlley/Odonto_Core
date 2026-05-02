@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,9 @@ public class ContactLogServiceImpl implements IContactLogService {
     @Override
     @Transactional
     public ContactLogResponseDTO create(ContactLogCreateRequestDTO dto) {
+        Objects.requireNonNull(dto.customer(), "Customer must not be null");
+        Objects.requireNonNull(dto.customer().getId(), "Customer id must not be null");
+
         Customer customer = customerRepository.findById(dto.customer().getId())
                 .orElseThrow(() -> new RuntimeException("Customer not found by id: " + dto.customer().getId()));
 
