@@ -2,7 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.identity.domain.model;
 
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Department;
-import io.sertaoBit.odontocore.crm.modules.identity.domain.enums.Role;
+import io.sertaoBit.odontocore.crm.shared.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -36,6 +36,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
     private boolean active;
+    private UUID createdBy;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
