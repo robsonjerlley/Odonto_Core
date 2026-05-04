@@ -24,14 +24,18 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @Column(nullable = false)
+    private String name;
     @Column(unique = true, nullable = false)
     private String username;
     @Column(nullable = false, unique = true)
     private String password;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Department department;
     @Enumerated(EnumType.STRING)
     private Role role;
+    private boolean active;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp

@@ -22,6 +22,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
+@Builder
 public class Customer {
 
     @Id

@@ -4,7 +4,6 @@ import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.Contac
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Ticket;

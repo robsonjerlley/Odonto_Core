@@ -1,4 +1,5 @@
-package io.sertaoBit.odontocore.crm.modules.crm.domain.enums;
+package io.sertaoBit.odontocore.crm.shared.enums;
+
 
 public enum ContactChannel {
     ORGANIC,

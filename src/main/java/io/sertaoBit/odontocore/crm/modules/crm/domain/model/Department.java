@@ -1,7 +1,5 @@
 package io.sertaoBit.odontocore.crm.modules.crm.domain.model;
 
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DepartmentName;
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -24,7 +22,7 @@ public class Department {
     private UUID id;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private DepartmentName name;
+    private io.sertaoBit.odontocore.crm.shared.enums.Department name;
     @Column(length = 350 , nullable = false)
     private String description;
     @ElementCollection(fetch = FetchType.LAZY)

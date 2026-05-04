@@ -10,9 +10,12 @@ import org.mapstruct.Mappings;
 @Mapper(componentModel = "spring")
 public interface IContactLogMapper {
     @Mappings({
-            @Mapping(target = "contactDate", ignore = true),
             @Mapping(target = "id", ignore = true),
-            @Mapping(target = "description", source = "description")
+            @Mapping(target = "customer" , ignore = true),
+            @Mapping(target = "ticket" ,ignore = true ),
+            @Mapping(target = "contactBy", ignore = true),
+            @Mapping(target = "description", source = "description"),
+            @Mapping(target = "contactDate", ignore = true),
     })
     ContactLog toEntity(ContactLogCreateRequestDTO dto);
 

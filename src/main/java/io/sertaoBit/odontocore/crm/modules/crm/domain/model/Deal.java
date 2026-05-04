@@ -1,13 +1,12 @@
 package io.sertaoBit.odontocore.crm.modules.crm.domain.model;
 
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DealStatus;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +18,7 @@ import java.util.UUID;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
+@Builder
 public class Deal {
 
     @Id
@@ -38,7 +38,7 @@ public class Deal {
     private String description;
     @CreationTimestamp
     private LocalDateTime closedDate;
-    @UpdateTimestamp
-    private LocalDateTime targetDate;
+
+    private LocalDate targetDate;
 
 }

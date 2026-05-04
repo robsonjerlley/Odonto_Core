@@ -2,7 +2,6 @@ package io.sertaoBit.odontocore.crm.modules.crm.service.impl;
 
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.SalesMetricsResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Department;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.SalesMetrics;

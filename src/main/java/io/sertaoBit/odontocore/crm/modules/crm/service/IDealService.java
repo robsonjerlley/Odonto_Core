@@ -3,7 +3,6 @@ package io.sertaoBit.odontocore.crm.modules.crm.service;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.DealResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DealStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

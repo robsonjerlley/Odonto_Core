@@ -1,7 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.crm.api.dto.response;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Ticket;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
@@ -12,7 +11,6 @@ import lombok.Builder;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -21,7 +19,7 @@ public record ContactLogResponseDTO(
         @NotNull Customer customer,
         @NotNull Ticket ticket,
         @NotNull User contactBy,
-        @NotNull List<ContactChannel> contactChannel,
+        @NotNull ContactChannel contactChannel,
         @NotBlank String description,
         @NotNull ContactOutcome contactOutcome,
         @NotNull LocalDateTime contactDate,

@@ -4,7 +4,6 @@ import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.Contac
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Ticket;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -53,23 +51,23 @@ public class ContactLogServiceImpl implements IContactLogService {
     @Transactional
     public ContactLogResponseDTO create(ContactLogCreateRequestDTO dto) {
         Objects.requireNonNull(dto.customer(), "Customer must not be null");
-        Objects.requireNonNull(dto.customer().getId(), "Customer id must not be null");
+        Objects.requireNonNull(dto.customer(), "Customer id must not be null");
 
-        Customer customer = customerRepository.findById(dto.customer().getId())
-                .orElseThrow(() -> new RuntimeException("Customer not found by id: " + dto.customer().getId()));
+        Customer customer = customerRepository.findById(dto.customer())
+                .orElseThrow(() -> new RuntimeException("Customer not found by id: " + dto.customer()));
 
         Ticket ticket = null;
-        if (dto.ticket() != null && dto.ticket().getId() != null) {
-            ticket = ticketRepository.findById(dto.ticket().getId())
-                    .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + dto.ticket().getId()));
+        if (dto.ticket() != null ) {
+            ticket = ticketRepository.findById(dto.ticket())
+                    .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + dto.ticket()));
 
             if (!ticket.getCustomer().getId().equals(customer.getId())) {
                 throw new RuntimeException("Ticket does not belong to this Customer");
             }
         }
 
-        User contactBy = userRepository.findById(dto.contactBy().getId())
-                .orElseThrow(() -> new RuntimeException("User not found by id: " + dto.contactBy().getId()));
+        User contactBy = userRepository.findById(dto.contactBy())
+                .orElseThrow(() -> new RuntimeException("User not found by id: " + dto.contactBy()));
 
         ContactLog contactLog = contactLogMapper.toEntity(dto);
 

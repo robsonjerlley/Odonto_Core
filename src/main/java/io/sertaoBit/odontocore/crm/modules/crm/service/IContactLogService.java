@@ -4,7 +4,6 @@ import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.Contac
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

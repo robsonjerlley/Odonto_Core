@@ -1,7 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.crm.domain.model;
 
 import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.ContactOutcome;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;

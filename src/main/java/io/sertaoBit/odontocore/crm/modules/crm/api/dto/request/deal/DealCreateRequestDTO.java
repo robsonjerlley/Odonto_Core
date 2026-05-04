@@ -1,12 +1,12 @@
 package io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.deal;
 
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.DealStatus;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Set;
 
 public record DealCreateRequestDTO(
@@ -15,6 +15,7 @@ public record DealCreateRequestDTO(
         @NotBlank Set<String> procedures,
         @NotNull BigDecimal negotiationValue,
         @NotNull User closedBy,
-        @NotBlank String description
+        @NotBlank String description,
+        @NotNull LocalDate targetDate
 ) {
 }
