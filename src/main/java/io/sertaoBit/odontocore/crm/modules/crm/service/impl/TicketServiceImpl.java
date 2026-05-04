@@ -3,7 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.crm.service.impl;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.ticket.TicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.request.ticket.TicketUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.crm.api.dto.response.TicketResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.crm.domain.enums.TicketStatus;
+
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.crm.domain.model.Ticket;
 import io.sertaoBit.odontocore.crm.modules.crm.mapper.ITicketMapper;
@@ -12,6 +12,7 @@ import io.sertaoBit.odontocore.crm.modules.crm.repository.ITicketRepository;
 import io.sertaoBit.odontocore.crm.modules.crm.service.ITicketService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
+import io.sertaoBit.odontocore.crm.shared.enums.TicketStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

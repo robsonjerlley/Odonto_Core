@@ -1,7 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.identity.repository;
 
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.PermissionRule;
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.shared.enums.Action;
 import io.sertaoBit.odontocore.crm.shared.enums.Department;
 import io.sertaoBit.odontocore.crm.shared.enums.Resource;
@@ -20,7 +19,9 @@ public interface IPermissionRuleRepository extends JpaRepository<PermissionRule,
     );
 
 
-    Optional<PermissionRule> findByRoleAndSectorAndResourceAndAction(
+    Optional<PermissionRule> findByRoleAndDepartmentAndResourceAndAction(
             Role role, Department department, Resource resource, Action action
     );
+
+    List<PermissionRule> findAllByRole(Role role);
 }
