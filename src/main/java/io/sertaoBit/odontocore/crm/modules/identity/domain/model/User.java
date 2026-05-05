@@ -1,13 +1,12 @@
 package io.sertaoBit.odontocore.crm.modules.identity.domain.model;
 
 
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Department;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,7 +32,7 @@ public class User implements UserDetails {
     private String password;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Department department;
+    private Sector sector;
     @Enumerated(EnumType.STRING)
     private Role role;
     private boolean active;
