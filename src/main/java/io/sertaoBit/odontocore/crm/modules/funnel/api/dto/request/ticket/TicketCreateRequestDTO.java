@@ -1,0 +1,17 @@
+package io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket;
+
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public record TicketCreateRequestDTO(
+        @NotNull Customer customer,
+        @NotNull User assigneToUser,
+        @NotNull TicketStatus ticketStatus,
+        @NotNull Priority priority,
+        @NotBlank String description
+
+) {
+}

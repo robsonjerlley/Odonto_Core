@@ -1,0 +1,24 @@
+package io.sertaoBit.odontocore.crm.modules.funnel.mapper;
+
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Ticket;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+
+@Mapper(componentModel = "spring")
+public interface ITicketMapper {
+
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "createdAt", ignore = true),
+            @Mapping(target = "updatedAt", ignore = true),
+            @Mapping(target = "assigneToUser", ignore = true),
+            @Mapping(target = "customer", ignore = true),
+    })
+    Ticket toEntity(TicketCreateRequestDTO dto);
+
+    @Mapping(target = "updateAt", ignore = true)
+    TicketResponseDTO toResponseDTO(Ticket ticket);
+}

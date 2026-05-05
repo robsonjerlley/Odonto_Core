@@ -7,7 +7,7 @@ Este documento descreve a estratégia de testes automáticos para o módulo CRM 
 ### ✅ Testes Criados
 
 1. **CustomerServiceTest.java** (5 test cases)
-   - CREATE: testar criação com sucesso, validações de department
+   - CREATE: testar criação com sucesso, validações de sector
    - FIND: buscar por ID, por CPF
    - UPDATE: atualizar com validação de CPF duplicado
    - DELETE: deletar com validação de existência
