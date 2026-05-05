@@ -19,7 +19,7 @@ Este documento descreve a estratégia de testes automáticos para o módulo CRM 
    - DELETE: deletar com validação
 
 3. **ContactLogServiceTest.java** (8 test cases)
-   - CREATE: criar com validações de customer, ticket, user
+   - CREATE: criar com validações de customer, leadTicket, user
    - FIND: buscar por ID, por customer, por canal, por outcome
    - UPDATE: atualizar campos
    - DELETE: deletar

@@ -1,8 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.ContactChannel;
 import org.springframework.stereotype.Service;
 

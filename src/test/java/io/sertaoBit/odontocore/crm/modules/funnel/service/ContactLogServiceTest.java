@@ -1,12 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Ticket;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IContactLogMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
@@ -55,7 +53,7 @@ class ContactLogServiceTest {
 
     private ContactLog contactLog;
     private Customer customer;
-    private Ticket ticket;
+    private LeadTicket leadTicket;
     private User user;
 
     @BeforeEach
@@ -74,9 +72,9 @@ class ContactLogServiceTest {
         customer.setId(customerId);
 
         UUID ticketId = UUID.randomUUID();
-        ticket = new Ticket();
-        ticket.setId(ticketId);
-        ticket.setCustomer(customer);
+        leadTicket = new LeadTicket();
+        leadTicket.setId(ticketId);
+        leadTicket.setCustomer(customer);
 
 
         UUID userId = UUID.randomUUID();
@@ -87,7 +85,7 @@ class ContactLogServiceTest {
         contactLog = new ContactLog();
         contactLog.setId(contactLogId);
         contactLog.setCustomer(customer);
-        contactLog.setTicket(ticket);
+        contactLog.setLeadTicket(leadTicket);
         contactLog.setContactBy(user);
         contactLog.setContactChannel(ContactChannel.WHATSAPP);
         contactLog.setDescription("Generic Description");
@@ -107,7 +105,7 @@ class ContactLogServiceTest {
         // Arrange
         ContactLogCreateRequestDTO createDTO = ContactLogCreateRequestDTO.builder()
                 .customer(customer)
-                .ticket(ticket)
+                .ticket(leadTicket)
                 .contactBy(user)
                 .contactChannel(contactLog.getContactChannel())
                 .description("Create Contact Log")
@@ -120,7 +118,7 @@ class ContactLogServiceTest {
 
 
         when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
-        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.findById(leadTicket.getId())).thenReturn(Optional.of(leadTicket));
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(contactLogMapper.toEntity(createDTO)).thenReturn(contactLog);
         when(contactLogRepository.save(any(ContactLog.class))).thenReturn(contactLog);
@@ -131,7 +129,7 @@ class ContactLogServiceTest {
         ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
                 .id(contactLog.getId())
                 .customer(contactLog.getCustomer())
-                .ticket(contactLog.getTicket())
+                .leadTicket(contactLog.getLeadTicket())
                 .contactBy(contactLog.getContactBy())
                 .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
@@ -162,7 +160,7 @@ class ContactLogServiceTest {
         // Arrange
         ContactLogCreateRequestDTO createDTO = ContactLogCreateRequestDTO.builder()
                 .customer(null)
-                .ticket(ticket)
+                .ticket(leadTicket)
                 .contactBy(user)
                 .build();
 
@@ -185,11 +183,11 @@ class ContactLogServiceTest {
         // Arrange
         Customer otherCustomer = new Customer();
         otherCustomer.setId(UUID.randomUUID());
-        ticket.setCustomer(otherCustomer);  // Ticket pertence  outro customer
+        leadTicket.setCustomer(otherCustomer);  // Ticket pertence  outro customer
 
         ContactLogCreateRequestDTO createDTO = ContactLogCreateRequestDTO.builder()
                 .customer(customer)
-                .ticket(ticket)
+                .ticket(leadTicket)
                 .contactBy(user)
                 .contactChannel(contactLog.getContactChannel())
                 .description("Generic Description")
@@ -200,7 +198,7 @@ class ContactLogServiceTest {
                 .build();
 
         when(customerRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
-        when(ticketRepository.findById(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.findById(leadTicket.getId())).thenReturn(Optional.of(leadTicket));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -221,7 +219,7 @@ class ContactLogServiceTest {
         ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
                 .id(contactLog.getId())
                 .customer(contactLog.getCustomer())
-                .ticket(ticket)
+                .leadTicket(leadTicket)
                 .contactBy(contactLog.getContactBy())
                 .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
@@ -251,7 +249,7 @@ class ContactLogServiceTest {
         ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
                 .id(contactLog.getId())
                 .customer(contactLog.getCustomer())
-                .ticket(ticket)
+                .leadTicket(leadTicket)
                 .contactBy(contactLog.getContactBy())
                 .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
@@ -287,7 +285,7 @@ class ContactLogServiceTest {
         ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .customer(contactLog.getCustomer())
-                .ticket(ticket)
+                .leadTicket(leadTicket)
                 .contactBy(contactLog.getContactBy())
                 .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
@@ -318,7 +316,7 @@ class ContactLogServiceTest {
         ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .customer(contactLog.getCustomer())
-                .ticket(ticket)
+                .leadTicket(leadTicket)
                 .contactBy(contactLog.getContactBy())
                 .contactChannel(List.of(contactLog.getContactChannel()))
                 .description("Generic Description")
@@ -351,7 +349,7 @@ class ContactLogServiceTest {
         ContactLogUpdateRequestDTO updateRequestDTO = ContactLogUpdateRequestDTO.builder()
                 .id(contactLog.getId())
                 .customer(customer.getId())
-                .ticket(ticket.getId())
+                .ticket(leadTicket.getId())
                 .contactBy(user.getId())
                 .contactChannel(ContactChannel.WEBSITE_FROM)
                 .description("Update Contact Log")
@@ -367,7 +365,7 @@ class ContactLogServiceTest {
         ContactLogResponseDTO responseDTO = ContactLogResponseDTO.builder()
                 .id(UUID.randomUUID())
                 .customer(contactLog.getCustomer())
-                .ticket(contactLog.getTicket())
+                .leadTicket(contactLog.getLeadTicket())
                 .contactBy(contactLog.getContactBy())
                 .contactChannel(List.of(contactLog.getContactChannel()))
                 .description(contactLog.getDescription())

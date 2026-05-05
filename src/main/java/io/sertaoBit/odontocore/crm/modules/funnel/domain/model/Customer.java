@@ -1,8 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.domain.model;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
+import io.sertaoBit.odontocore.crm.core.enums.CustomerSource;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -13,8 +15,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_clientes", schema = "crm_db" , indexes = {
-        @Index(name = "idx_cpf" , columnList = "cpf"),
+@Table(name = "tb_clientes", schema = "crm_db", indexes = {
+        @Index(name = "idx_cpf", columnList = "cpf"),
         @Index(name = "idx_sector_status", columnList = "sector_id, ticket_status")
 })
 @NoArgsConstructor
@@ -28,34 +30,34 @@ public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @NotBlank
     private String name;
     @Column(unique = true)
     @CPF
     private String cpf;
-    @Column(unique = true)
+    @NotBlank
     private String telephone;
+    @Column(nullable = false)
+    @NotBlank
     private String city;
     private String address;
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "customer_descriptions"
-            ,joinColumns = @JoinColumn(name = "customer_id"))
+            , joinColumns = @JoinColumn(name = "customer_id"))
     @Column(length = 500)
     private List<String> descriptions;
+    @Enumerated(EnumType.STRING)
+    private CustomerSource source;
+    @Enumerated(EnumType.STRING)
+    private AdsChannel adsChannel;
+    private String adCampaign;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
     @Enumerated(EnumType.STRING)
-    private TicketStatus ticketStatus;
-    private Long version;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
-    private User createdByUser;
+    private UUID createdByUser;
 
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id")
-    private Department department;
 
 }

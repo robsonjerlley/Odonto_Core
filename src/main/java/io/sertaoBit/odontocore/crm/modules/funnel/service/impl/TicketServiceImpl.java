@@ -5,7 +5,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketU
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Ticket;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ITicketMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ITicketRepository;
@@ -50,39 +50,39 @@ public class TicketServiceImpl implements ITicketService {
         User user = userRepository.findById(dto.assigneTo().getId())
                 .orElseThrow(() -> new RuntimeException("User with id: " + dto.assigneTo().getId() + " not found"));
 
-        Ticket ticket = ticketMapper.toEntity(dto);
+        LeadTicket leadTicket = ticketMapper.toEntity(dto);
 
-        ticket.setCustomer(customer);
-        ticket.setAssigneTo(user);
+        leadTicket.setCustomer(customer);
+        leadTicket.setAssigneTo(user);
 
-        return ticketMapper.toResponseDTO(ticketRepository.save(ticket));
+        return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
     }
 
     @Override
     @Transactional
     public TicketResponseDTO update(UUID id, TicketUpdateRequestDTO dto) {
-        Ticket ticket = ticketRepository.findById(id)
+        LeadTicket leadTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
 
         if (dto.assigneToId() != null) {
             User assignedTo = userRepository.findById(dto.assigneToId())
                     .orElseThrow(() -> new RuntimeException("User with id: " + dto.assigneToId() + " not found"));
-            ticket.setAssigneTo(assignedTo);
+            leadTicket.setAssigneTo(assignedTo);
         }
 
         if (dto.description() != null && !dto.description().isBlank()) {
-            ticket.setDescription(dto.description());
+            leadTicket.setDescription(dto.description());
         }
 
         if (dto.ticketStatus() != null) {
-            ticket.setTicketStatus(dto.ticketStatus());
+            leadTicket.setTicketStatus(dto.ticketStatus());
         }
 
         if (dto.priority() != null) {
-            ticket.setPriority(dto.priority());
+            leadTicket.setPriority(dto.priority());
         }
 
-        return ticketMapper.toResponseDTO(ticketRepository.save(ticket));
+        return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
     }
 
     @Override
@@ -142,16 +142,16 @@ public class TicketServiceImpl implements ITicketService {
     @Override
     @Transactional
     public TicketResponseDTO updateStatus(UUID id, TicketStatus ticketStatus) {
-        Ticket ticket = ticketRepository.findById(id)
+        LeadTicket leadTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
 
         if (ticketStatus == null) {
             throw new RuntimeException("ticketStatus cannot not be null");
         }
 
-        ticket.setTicketStatus(ticketStatus);
+        leadTicket.setTicketStatus(ticketStatus);
 
-        return ticketMapper.toResponseDTO(ticketRepository.save(ticket));
+        return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
     }
 
     @Override

@@ -2,7 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.mapper;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Ticket;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -17,8 +17,8 @@ public interface ITicketMapper {
             @Mapping(target = "assigneToUser", ignore = true),
             @Mapping(target = "customer", ignore = true),
     })
-    Ticket toEntity(TicketCreateRequestDTO dto);
+    LeadTicket toEntity(TicketCreateRequestDTO dto);
 
     @Mapping(target = "updateAt", ignore = true)
-    TicketResponseDTO toResponseDTO(Ticket ticket);
+    TicketResponseDTO toResponseDTO(LeadTicket leadTicket);
 }

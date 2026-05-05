@@ -1,9 +1,12 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.domain.model;
 
+import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -29,24 +32,23 @@ public class ContactLog {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @ManyToOne(fetch = FetchType.LAZY)
-    private Customer customer;
+    private UUID ticketId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @Nullable
-    private Ticket ticket;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User contactBy;
+    private UUID userId;
     @Enumerated(EnumType.STRING)
-    private ContactChannel contactChannel;
+    @NotNull
+    private ContactChannel  contactChannel;
     @Column(length = 500)
+    @NotNull
     private String description;
     @Enumerated(EnumType.STRING)
-    private ContactOutcome contactOutcome;
+    private TicketStatus statusBefore;
+    @Enumerated(EnumType.STRING)
+    private TicketStatus statusAfter;
+    @NotNull
+    private LocalDateTime occurredAt;
     @CreationTimestamp
-    private LocalDateTime contactDate;
-    private LocalDate nextFollowUp;
+    private LocalDateTime createdAt;
 
-    //CAMPOS PARA TESTES, AINDA NÃO DEFINIDOS COMO PERMANENTES
-    private BigDecimal investmentAmount;
-    private BigDecimal conversionValue;
 
 }

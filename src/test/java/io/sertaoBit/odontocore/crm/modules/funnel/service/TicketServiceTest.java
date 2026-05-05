@@ -4,7 +4,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketC
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Ticket;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ITicketMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ITicketRepository;
@@ -73,18 +73,18 @@ class TicketServiceTest {
         User user = new User();
         user.setId(userId);
 
-        Ticket ticket = new Ticket();
-        ticket.setId(ticketId);
-        ticket.setCustomer(customer);
-        ticket.setAssigneTo(user);
+        LeadTicket leadTicket = new LeadTicket();
+        leadTicket.setId(ticketId);
+        leadTicket.setCustomer(customer);
+        leadTicket.setAssigneTo(user);
 
         TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(ticketMapper.toEntity(any())).thenReturn(ticket);
-        when(ticketRepository.save(any(Ticket.class))).thenReturn(ticket);
-        when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
+        when(ticketMapper.toEntity(any())).thenReturn(leadTicket);
+        when(ticketRepository.save(any(LeadTicket.class))).thenReturn(leadTicket);
+        when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
         TicketCreateRequestDTO dto = mock(TicketCreateRequestDTO.class);
 
@@ -96,7 +96,7 @@ class TicketServiceTest {
         assertEquals(ticketId, result.id());
         verify(customerRepository, times(1)).findById(customerId);
         verify(userRepository, times(1)).findById(userId);
-        verify(ticketRepository, times(1)).save(any(Ticket.class));
+        verify(ticketRepository, times(1)).save(any(LeadTicket.class));
     }
 
     @Test
@@ -122,15 +122,15 @@ class TicketServiceTest {
     @DisplayName("Deve buscar ticket por ID com sucesso")
     void testFindByIdSuccess() {
         // Arrange
-        Ticket ticket = new Ticket();
-        ticket.setId(ticketId);
-        ticket.setTicketStatus(TicketStatus.TICKET_OPEN
+        LeadTicket leadTicket = new LeadTicket();
+        leadTicket.setId(ticketId);
+        leadTicket.setTicketStatus(TicketStatus.TICKET_OPEN
         );
 
         TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
-        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-        when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(leadTicket));
+        when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
         // Act
         TicketResponseDTO result = ticketService.findById(ticketId);
@@ -145,24 +145,24 @@ class TicketServiceTest {
     @DisplayName("Deve buscar tickets por status com sucesso")
     void testFindByStatusSuccess() {
         // Arrange
-        Ticket ticket1 = new Ticket();
-        ticket1.setId(UUID.randomUUID());
-        ticket1.setTicketStatus(TicketStatus.TICKET_OPEN);
+        LeadTicket leadTicket1 = new LeadTicket();
+        leadTicket1.setId(UUID.randomUUID());
+        leadTicket1.setTicketStatus(TicketStatus.TICKET_OPEN);
 
-        Ticket ticket2 = new Ticket();
-        ticket2.setId(UUID.randomUUID());
-        ticket2.setTicketStatus(TicketStatus.TICKET_OPEN);
+        LeadTicket leadTicket2 = new LeadTicket();
+        leadTicket2.setId(UUID.randomUUID());
+        leadTicket2.setTicketStatus(TicketStatus.TICKET_OPEN);
 
-        List<Ticket> tickets = List.of(ticket1, ticket2);
+        List<LeadTicket> leadTickets = List.of(leadTicket1, leadTicket2);
 
         TicketResponseDTO dto1 = mock(TicketResponseDTO.class);
 
         TicketResponseDTO dto2 = mock(TicketResponseDTO.class);
 
 
-        when(ticketRepository.findAll()).thenReturn(tickets);
-        when(ticketMapper.toResponseDTO(ticket1)).thenReturn(dto1);
-        when(ticketMapper.toResponseDTO(ticket2)).thenReturn(dto2);
+        when(ticketRepository.findAll()).thenReturn(leadTickets);
+        when(ticketMapper.toResponseDTO(leadTicket1)).thenReturn(dto1);
+        when(ticketMapper.toResponseDTO(leadTicket2)).thenReturn(dto2);
 
         // Act
         List<TicketResponseDTO> results = ticketService.findByTicketStatus(TicketStatus.TICKET_OPEN);
@@ -179,15 +179,15 @@ class TicketServiceTest {
     @DisplayName("Deve atualizar status do ticket com sucesso")
     void testUpdateStatusSuccess() {
         // Arrange
-        Ticket ticket = new Ticket();
-        ticket.setId(ticketId);
-        ticket.setTicketStatus(TicketStatus.TICKET_OPEN);
+        LeadTicket leadTicket = new LeadTicket();
+        leadTicket.setId(ticketId);
+        leadTicket.setTicketStatus(TicketStatus.TICKET_OPEN);
 
         TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
-        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-        when(ticketRepository.save(any(Ticket.class))).thenReturn(ticket);
-        when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(leadTicket));
+        when(ticketRepository.save(any(LeadTicket.class))).thenReturn(leadTicket);
+        when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
         // Act
         TicketResponseDTO result = ticketService.updateStatus(ticketId, TicketStatus.TICKET_IN_PROGRESS);
@@ -195,17 +195,17 @@ class TicketServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(TicketStatus.TICKET_IN_PROGRESS, result.ticketStatus());
-        verify(ticketRepository, times(1)).save(any(Ticket.class));
+        verify(ticketRepository, times(1)).save(any(LeadTicket.class));
     }
 
     @Test
     @DisplayName("Deve lançar erro ao atualizar status com null")
     void testUpdateStatusWithNull() {
         // Arrange
-        Ticket ticket = new Ticket();
-        ticket.setId(ticketId);
+        LeadTicket leadTicket = new LeadTicket();
+        leadTicket.setId(ticketId);
 
-        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(leadTicket));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -254,15 +254,15 @@ class TicketServiceTest {
         Customer customer = new Customer();
         customer.setId(customerId);
 
-        Ticket ticket = new Ticket();
-        ticket.setId(ticketId);
-        ticket.setCustomer(customer);
+        LeadTicket leadTicket = new LeadTicket();
+        leadTicket.setId(ticketId);
+        leadTicket.setCustomer(customer);
 
         TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
 
         when(customerRepository.existsById(customerId)).thenReturn(true);
-        when(ticketRepository.findAll()).thenReturn(List.of(ticket));
-        when(ticketMapper.toResponseDTO(ticket)).thenReturn(responseDTO);
+        when(ticketRepository.findAll()).thenReturn(List.of(leadTicket));
+        when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
         // Act
         List<TicketResponseDTO> results = ticketService.findByCustomer(customerId);

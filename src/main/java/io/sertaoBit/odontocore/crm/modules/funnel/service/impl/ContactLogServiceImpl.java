@@ -1,12 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Ticket;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IContactLogMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
@@ -56,12 +54,12 @@ public class ContactLogServiceImpl implements IContactLogService {
         Customer customer = customerRepository.findById(dto.customer())
                 .orElseThrow(() -> new RuntimeException("Customer not found by id: " + dto.customer()));
 
-        Ticket ticket = null;
+        LeadTicket leadTicket = null;
         if (dto.ticket() != null ) {
-            ticket = ticketRepository.findById(dto.ticket())
+            leadTicket = ticketRepository.findById(dto.ticket())
                     .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + dto.ticket()));
 
-            if (!ticket.getCustomer().getId().equals(customer.getId())) {
+            if (!leadTicket.getCustomer().getId().equals(customer.getId())) {
                 throw new RuntimeException("Ticket does not belong to this Customer");
             }
         }
@@ -72,7 +70,7 @@ public class ContactLogServiceImpl implements IContactLogService {
         ContactLog contactLog = contactLogMapper.toEntity(dto);
 
         contactLog.setCustomer(customer);
-        contactLog.setTicket(ticket);
+        contactLog.setLeadTicket(leadTicket);
         contactLog.setContactBy(contactBy);
 
         return contactLogMapper.toResponseDTO(contactLogRepository.save(contactLog));
