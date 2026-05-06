@@ -54,7 +54,7 @@ public class CustomerController {
     }
 
 
-    @GetMapping("/name/{name}")
+    @GetMapping("/username/{username}")
     public ResponseEntity<List<CustomerResponseDTO>> findByName(@PathVariable String name) {
         List<CustomerResponseDTO> customersDTO = customerService.findByName(name);
         return ResponseEntity.ok(customersDTO);

@@ -1,7 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.identity.service;
 
 
-import io.sertaoBit.odontocore.crm.core.enums.*;
+import io.sertaoBit.odontocore.crm.core.enums.Action;
+import io.sertaoBit.odontocore.crm.core.enums.Resource;
+import io.sertaoBit.odontocore.crm.core.enums.Role;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.PermissionRule;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.PermissionRuleRepository;
@@ -27,35 +30,45 @@ public class PermissionService {
             UUID targetOwnerId) {
 
         Optional<PermissionRule> ruleOpt =
-                ruleRepository.findByRoleAndResourceAndAction(user.getRole(), resource, action);
+                ruleRepository.findByRoleAndSectorAndResourceAndAction(
+                        user.getRole(), user.getSector(), resource, action);
+
+        if (ruleOpt.isEmpty()) {
+            ruleOpt = ruleRepository.findByRoleAndResourceAndAction(
+                    user.getRole(), resource, action);
+        }
 
         if (ruleOpt.isEmpty() || !ruleOpt.get().isAllowed()) {
             return false;
         }
 
-        PermissionRule rule = ruleOpt.get();
+        return resolveScope(ruleOpt.get(), user, targetSector, targetOwnerId);
+    }
+
+
+    public List<PermissionRule> getPermission(Role role) {
+        return ruleRepository.findAllByRole(role);
+
+    }
+
+
+    public void seedDefaultRules() {
+
+
+    }
+
+    private Boolean resolveScope(
+            PermissionRule rule,
+            User user,
+            Sector targetSector,
+            UUID targetOwnerId
+    ) {
 
         return switch (rule.getScope()) {
             case GLOBAL -> true;
             case SECTOR -> user.getSector().equals(targetSector);
-            case OWNER -> user.getId().equals(targetOwnerId);
+            case OWN -> user.getId().equals(targetOwnerId);
         };
-
-
-    }
-
-
-    public List<PermissionRule> getPermission(Role role, Sector sector, Action action) {
-
-        return null;
-
-    }
-
-    public void seedDefaultRules() {
-
-        return;
-
-
 
     }
 

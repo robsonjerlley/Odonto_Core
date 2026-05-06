@@ -30,18 +30,19 @@ public class User {
     @Column(unique = true, nullable = false)
     @NotNull
     private String username;
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @NotNull
-    private String password;
+    private String passwordHash;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @NotNull
     private Sector sector;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @NotNull
     private Role role;
+    @Column(columnDefinition = "boolean default true")
     private boolean active;
-    @NotNull
     private UUID createdBy;
     @CreationTimestamp
     private LocalDateTime createdAt;

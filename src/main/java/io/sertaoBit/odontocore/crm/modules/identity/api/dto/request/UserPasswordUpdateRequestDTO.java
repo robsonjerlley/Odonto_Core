@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 
 public record UserPasswordUpdateRequestDTO(
-        @NotBlank @NotNull String name,
+        @NotBlank @NotNull String username,
         @NotBlank(message = "A senha não pode estar em branco.") String oldPassword,
         @NotBlank(message = "A nova senha não pode estar em branco.")
         @Size(min = 8, message = "A senha deve conter no mínimo 8 caracteres.") String newPassword) {

@@ -23,5 +23,7 @@ public interface PermissionRuleRepository extends JpaRepository<PermissionRule, 
             Role role, Sector sector, Resource resource, Action action
     );
 
+
+
     List<PermissionRule> findAllByRole(Role role);
 }

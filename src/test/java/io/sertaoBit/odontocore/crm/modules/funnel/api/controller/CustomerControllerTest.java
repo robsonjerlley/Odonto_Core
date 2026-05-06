@@ -82,7 +82,7 @@ class CustomerControllerTest {
                 .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(customerId.toString()))
-                .andExpect(jsonPath("$.name").value("João Silva"))
+                .andExpect(jsonPath("$.username").value("João Silva"))
                 .andExpect(jsonPath("$.cpf").value("123.456.789-00"));
 
         verify(customerService, times(1)).create(any(CustomerCreateRequestDTO.class));
@@ -110,8 +110,8 @@ class CustomerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("João"))
-                .andExpect(jsonPath("$[1].name").value("Maria"));
+                .andExpect(jsonPath("$[0].username").value("João"))
+                .andExpect(jsonPath("$[1].username").value("Maria"));
 
         verify(customerService, times(1)).findAll();
     }
@@ -134,7 +134,7 @@ class CustomerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(customerId.toString()))
-                .andExpect(jsonPath("$.name").value("João Silva"));
+                .andExpect(jsonPath("$.username").value("João Silva"));
 
         verify(customerService, times(1)).findById(customerId);
     }
@@ -156,7 +156,7 @@ class CustomerControllerTest {
     // ========== FIND BY NAME ENDPOINT TESTS ==========
 
     @Test
-    @DisplayName("GET /api/v1/customers/name/{name} - Deve retornar customers por nome")
+    @DisplayName("GET /api/v1/customers/username/{username} - Deve retornar customers por nome")
     void testFindByNameCustomer() throws Exception {
         // Arrange
         String name = "João";
@@ -168,11 +168,11 @@ class CustomerControllerTest {
         when(customerService.findByName(name)).thenReturn(List.of(dto));
 
         // Act & Assert
-        mockMvc.perform(get("/api/v1/customers/name/" + name)
+        mockMvc.perform(get("/api/v1/customers/username/" + name)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("João Silva"));
+                .andExpect(jsonPath("$[0].username").value("João Silva"));
 
         verify(customerService, times(1)).findByName(name);
     }
@@ -196,7 +196,7 @@ class CustomerControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cpf").value(cpf))
-                .andExpect(jsonPath("$.name").value("João Silva"));
+                .andExpect(jsonPath("$.username").value("João Silva"));
 
         verify(customerService, times(1)).findByCpf(cpf);
     }
@@ -222,7 +222,7 @@ class CustomerControllerTest {
     @Test
     @DisplayName("POST /api/v1/customers/create - Deve retornar 400 para validação falha")
     void testCreateCustomerValidationError() throws Exception {
-        // Arrange - DTO inválido (name em branco)
+        // Arrange - DTO inválido (username em branco)
         CustomerCreateRequestDTO requestDTO = new CustomerCreateRequestDTO(
                 "", "123.456.789-00", "11999999999",
                 "São Paulo", "Rua A, 123", "Cliente importante",

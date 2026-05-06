@@ -6,10 +6,13 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_regras_de_premissoes", schema = "identity_db")
+@Table(name = "tb_permission_rules", schema = "identity_db",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"role", "sector", "resource", "action"})
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -22,9 +25,10 @@ public class PermissionRule {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Sector sector;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -35,8 +39,10 @@ public class PermissionRule {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PermissionScope scope;
+    @Column(columnDefinition = "jsonb")
+    private Map<String, Object> conditions;
     private boolean allowed;
     @CreationTimestamp
-    private LocalDateTime created;
+    private LocalDateTime createdAt;
 
 }
