@@ -1,10 +1,12 @@
 package io.sertaoBit.odontocore.crm.modules.identity.api.controller;
 
+import io.sertaoBit.odontocore.crm.core.enums.Role;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserPasswordUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.service.IUserService;
+import io.sertaoBit.odontocore.crm.modules.identity.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +19,10 @@ import java.util.UUID;
 @RequestMapping("/api/v1/users")
 public class UserController {
 
-    private final IUserService userService;
+    private final UserService userService;
 
-    public UserController(IUserService userService) {
+    public UserController(UserService userService) {
+
         this.userService = userService;
     }
 
@@ -32,25 +35,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
     }
 
-    @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> findAll() {
-
-        return ResponseEntity.ok(userService.findAll());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> findById(@PathVariable UUID id) {
-
-        return ResponseEntity.ok(userService.findById(id));
-    }
-
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserResponseDTO> findByUsername(@PathVariable String username) {
-
-        return ResponseEntity.ok(userService.findByUsername(username));
-    }
-
-    @PatchMapping("/{username}/password")
+    @PatchMapping("/updatePassword/{username}/password")
     public ResponseEntity<UserResponseDTO> updatePassword(
             @PathVariable String username,
             @RequestBody @Valid UserPasswordUpdateRequestDTO requestDTO
@@ -58,6 +43,32 @@ public class UserController {
 
         return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPassword()));
     }
+
+
+    @GetMapping("/{username}")
+    public ResponseEntity<UserResponseDTO> findByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(userService.findByUsername(username));
+    }
+
+
+    @GetMapping("/{sector}")
+    public ResponseEntity<List<UserResponseDTO>> findBySector(@PathVariable Sector sector) {
+        return ResponseEntity.ok(userService.findBySector(sector));
+    }
+
+    @GetMapping("/finBySectorAndRole/{sector}/{role}")
+    public ResponseEntity<List<UserResponseDTO>> findBySectorAndRole(
+            @PathVariable Sector sector, @PathVariable Role role) {
+
+        return ResponseEntity.ok(userService.findAllBySectorAndRole(sector, role));
+    }
+
+    @GetMapping("/existsByUsername/{username}")
+    public ResponseEntity<UserResponseDTO> existsByUsername(@PathVariable String username) {
+
+        return ResponseEntity.ok(userService.findByUsername(username));
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {

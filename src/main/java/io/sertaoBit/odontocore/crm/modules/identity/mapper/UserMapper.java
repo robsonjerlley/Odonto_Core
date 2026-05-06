@@ -8,10 +8,11 @@ import org.mapstruct.Mapping;
 
 
 @Mapper(componentModel = "spring")
-public interface IUserMapper {
+public interface UserMapper {
 
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "active", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "department", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "id" , ignore = true)
 

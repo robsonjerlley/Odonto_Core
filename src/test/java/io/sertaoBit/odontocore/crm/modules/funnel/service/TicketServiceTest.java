@@ -10,7 +10,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.TicketServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class TicketServiceTest {
     private ICustomerRepository customerRepository;
 
     @Mock
-    private IUserRepository userRepository;
+    private UserRepository userRepository;
 
     @Mock
     private ITicketMapper ticketMapper;

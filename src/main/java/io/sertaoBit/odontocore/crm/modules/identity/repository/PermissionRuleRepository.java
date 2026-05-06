@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface IPermissionRuleRepository extends JpaRepository<PermissionRule, UUID> {
+public interface PermissionRuleRepository extends JpaRepository<PermissionRule, UUID> {
 
 
     Optional<PermissionRule> findByRoleAndResourceAndAction(

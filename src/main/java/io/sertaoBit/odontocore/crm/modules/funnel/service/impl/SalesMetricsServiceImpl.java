@@ -10,7 +10,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.IContactLogReposito
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDepartmentRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ISalesMetricsRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ISalesMetricsService;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,14 +25,14 @@ import java.util.stream.Collectors;
 public class SalesMetricsServiceImpl implements ISalesMetricsService {
 
     private final ISalesMetricsRepository salesMetricsRepository;
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
     private final ISalesMetricsMapper salesMetricsMapper;
     private final IDepartmentRepository departmentRepository;
     private final IContactLogRepository contactLogRepository;
 
     public SalesMetricsServiceImpl(
             ISalesMetricsRepository salesMetricsRepository,
-            IUserRepository userRepository,
+            UserRepository userRepository,
             ISalesMetricsMapper salesMetricsMapper,
             IDepartmentRepository departmentRepository,
             IContactLogRepository contactLogRepository

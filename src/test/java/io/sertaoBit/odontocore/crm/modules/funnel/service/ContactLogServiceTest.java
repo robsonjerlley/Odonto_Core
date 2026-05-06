@@ -11,7 +11,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.ContactLogServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ class ContactLogServiceTest {
     private ILeadTicketRepository ticketRepository;
 
     @Mock
-    private IUserRepository userRepository;
+    private UserRepository userRepository;
 
     @Mock
     private IContactLogMapper contactLogMapper;

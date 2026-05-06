@@ -11,7 +11,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.IContactLogService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,14 +29,14 @@ public class ContactLogServiceImpl implements IContactLogService {
     private final IContactLogMapper contactLogMapper;
     private final ICustomerRepository customerRepository;
     private final ILeadTicketRepository ticketRepository;
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
 
     public ContactLogServiceImpl(
             IContactLogRepository contactLogRepository,
             IContactLogMapper contactLogMapper,
             ICustomerRepository customerRepository,
             ILeadTicketRepository ticketRepository,
-            IUserRepository userRepository
+            UserRepository userRepository
     ) {
         this.contactLogRepository = contactLogRepository;
         this.contactLogMapper = contactLogMapper;

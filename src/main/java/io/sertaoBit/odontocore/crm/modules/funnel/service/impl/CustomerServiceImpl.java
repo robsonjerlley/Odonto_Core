@@ -11,7 +11,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDepartmentReposito
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ICustomerService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,13 +25,13 @@ public class CustomerServiceImpl implements ICustomerService {
 
     private final ICustomerRepository customerRepository;
     private final ICustomerMapper customerMapper;
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
     private final IDepartmentRepository departmentRepository;
     private final ILeadTicketRepository securityUtils;
 
     public CustomerServiceImpl(ICustomerRepository customerRepository,
                                ICustomerMapper customerMapper,
-                               IUserRepository userRepository,
+                               UserRepository userRepository,
                                IDepartmentRepository departmentRepository,
                                ILeadTicketRepository securityUtils
     ) {

@@ -4,7 +4,7 @@ package io.sertaoBit.odontocore.crm.modules.identity.service;
 import io.sertaoBit.odontocore.crm.core.enums.*;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.PermissionRule;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.IPermissionRuleRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.repository.PermissionRuleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PermissionService {
 
-    private final IPermissionRuleRepository ruleRepository;
+    private final PermissionRuleRepository ruleRepository;
 
 
     public Boolean canAccess(

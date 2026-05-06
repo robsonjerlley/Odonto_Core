@@ -9,7 +9,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IDealMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDealRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.IDealService;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 public class DealServiceImpl implements IDealService {
 
     private final IDealRepository dealRepository;
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
     private final ICustomerRepository customerRepository;
     private final IDealMapper dealMapper;
 
     public DealServiceImpl(
             IDealRepository dealRepository,
-            IUserRepository userRepository,
+            UserRepository userRepository,
             ICustomerRepository customerRepository,
             IDealMapper dealMapper
     ) {

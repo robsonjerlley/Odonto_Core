@@ -11,13 +11,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface IUserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByUsername(String username);
 
-    List<User> findByDepartment(Sector sector);
+    List<User> findBySector(Sector sector);
 
-    List<User> findAlByDepartmentAndRole(Sector sector, Role role);
+    List<User> findAllBySectorAndRole(Sector sector, Role role);
 
     Boolean existsByUsername(String username);
 

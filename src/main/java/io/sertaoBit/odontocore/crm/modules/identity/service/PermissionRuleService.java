@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public interface IPermissionRuleService {
+public interface PermissionRuleService {
 
     Boolean canAccess(
             User user, Resource resource,
