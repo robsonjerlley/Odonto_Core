@@ -19,7 +19,7 @@ public interface PermissionRuleRepository extends JpaRepository<PermissionRule, 
     );
 
 
-    Optional<PermissionRule> findByRoleAndDepartmentAndResourceAndAction(
+    Optional<PermissionRule> findByRoleAndSectorAndResourceAndAction(
             Role role, Sector sector, Resource resource, Action action
     );
 

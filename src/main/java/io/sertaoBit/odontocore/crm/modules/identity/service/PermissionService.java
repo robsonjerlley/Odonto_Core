@@ -29,7 +29,7 @@ public class PermissionService {
         Optional<PermissionRule> ruleOpt =
                 ruleRepository.findByRoleAndResourceAndAction(user.getRole(), resource, action);
 
-        if (ruleOpt.isEmpty() || ruleOpt.get().isAllowed()) {
+        if (ruleOpt.isEmpty() || !ruleOpt.get().isAllowed()) {
             return false;
         }
 
@@ -37,7 +37,7 @@ public class PermissionService {
 
         return switch (rule.getScope()) {
             case GLOBAL -> true;
-            case DEPARTMENT -> user.getDepartment().equals(targetSector);
+            case SECTOR -> user.getSector().equals(targetSector);
             case OWNER -> user.getId().equals(targetOwnerId);
         };
 
@@ -45,20 +45,18 @@ public class PermissionService {
     }
 
 
-    public List<PermissionRule> getPermission(Role role, Sector sector) {
+    public List<PermissionRule> getPermission(Role role, Sector sector, Action action) {
+
         return null;
+
     }
 
     public void seedDefaultRules() {
 
+        return;
+
+
+
     }
 
-    private boolean resolveScope(
-            PermissionRule rule,
-            User user,
-            Sector targetSector,
-            UUID targetOwnerId
-    ) {
-        return true;
-    }
 }
