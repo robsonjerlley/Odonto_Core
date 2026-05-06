@@ -4,6 +4,7 @@ import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 public class MainUser implements UserDetails {
 
     private UUID id;
@@ -24,6 +26,7 @@ public class MainUser implements UserDetails {
     private String passwordHash;
     private Role role;
     private Sector sector;
+    private boolean active;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -49,16 +52,17 @@ public class MainUser implements UserDetails {
     @Override
     public boolean isEnabled() {
 
-        return true;
+        return this.active;
     }
 
     public static MainUser form(User u) {
         return new MainUser(
                 u.getId(),
                 u.getUsername(),
-                u.getPassword(),
+                u.getPasswordHash(),
                 u.getRole(),
-                u.getSector()
+                u.getSector(),
+                u.isActive()
         );
     }
 }

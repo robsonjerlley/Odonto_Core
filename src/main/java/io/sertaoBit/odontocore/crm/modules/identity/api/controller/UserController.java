@@ -26,37 +26,36 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/create")
+    @PostMapping("/create/{user}")
     public ResponseEntity<UserResponseDTO> create(
-            @RequestBody @Valid UserCreateRequestDTO requestDTO, User user
+            @RequestBody @Valid UserCreateRequestDTO requestDTO
     ) {
-
-        UserResponseDTO userResponseDTO = userService.create(requestDTO, user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(userService.create(requestDTO));
     }
 
-    @PatchMapping("/updatePassword/{username}/password")
+    @PatchMapping("/updatePassword/{username}/passwordHash")
     public ResponseEntity<UserResponseDTO> updatePassword(
             @PathVariable String username,
-            @RequestBody @Valid UserPasswordUpdateRequestDTO requestDTO
+            @Valid UserPasswordUpdateRequestDTO requestDTO
     ) {
 
-        return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPassword()));
+        return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPasswordHash()));
     }
 
 
-    @GetMapping("/{username}")
+    @GetMapping("/findByUsername/{username}")
     public ResponseEntity<UserResponseDTO> findByUsername(@PathVariable String username) {
         return ResponseEntity.ok(userService.findByUsername(username));
     }
 
 
-    @GetMapping("/{sector}")
+    @GetMapping("/findBySector/{sector}")
     public ResponseEntity<List<UserResponseDTO>> findBySector(@PathVariable Sector sector) {
         return ResponseEntity.ok(userService.findBySector(sector));
     }
 
-    @GetMapping("/finBySectorAndRole/{sector}/{role}")
+    @GetMapping("/findBySectorAndRole/{sector}/{role}")
     public ResponseEntity<List<UserResponseDTO>> findBySectorAndRole(
             @PathVariable Sector sector, @PathVariable Role role) {
 
@@ -64,11 +63,10 @@ public class UserController {
     }
 
     @GetMapping("/existsByUsername/{username}")
-    public ResponseEntity<UserResponseDTO> existsByUsername(@PathVariable String username) {
+    public ResponseEntity<Boolean> existsByUsername(@PathVariable String username) {
 
-        return ResponseEntity.ok(userService.findByUsername(username));
+        return ResponseEntity.ok(userService.existsByUsername(username));
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
