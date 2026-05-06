@@ -10,7 +10,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Department;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ICustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDepartmentRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ITicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.CustomerServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
@@ -46,7 +46,7 @@ class CustomerServiceTest {
     @Mock
     private ICustomerMapper customerMapper;
 
-    private ITicketRepository  ticketRepository;
+    private ILeadTicketRepository ticketRepository;
 
     private UUID customerId;
     private UUID departmentId;

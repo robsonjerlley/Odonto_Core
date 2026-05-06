@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.repository;
 
+import io.sertaoBit.odontocore.crm.core.enums.CustomerSource;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,5 +13,8 @@ import java.util.UUID;
 public interface ICustomerRepository extends JpaRepository<Customer, UUID> {
 
     List<Customer> findByNameContainingIgnoreCase(String name);
+
     Optional<Customer> findByCpf(String cpf);
+
+    List<Customer> findBySource(CustomerSource source);
 }

@@ -8,7 +8,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IContactLogMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ITicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.IContactLogService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
@@ -28,14 +28,14 @@ public class ContactLogServiceImpl implements IContactLogService {
     private final IContactLogRepository contactLogRepository;
     private final IContactLogMapper contactLogMapper;
     private final ICustomerRepository customerRepository;
-    private final ITicketRepository ticketRepository;
+    private final ILeadTicketRepository ticketRepository;
     private final IUserRepository userRepository;
 
     public ContactLogServiceImpl(
             IContactLogRepository contactLogRepository,
             IContactLogMapper contactLogMapper,
             ICustomerRepository customerRepository,
-            ITicketRepository ticketRepository,
+            ILeadTicketRepository ticketRepository,
             IUserRepository userRepository
     ) {
         this.contactLogRepository = contactLogRepository;

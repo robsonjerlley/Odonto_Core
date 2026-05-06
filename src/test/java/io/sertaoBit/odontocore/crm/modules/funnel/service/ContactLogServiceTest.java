@@ -8,7 +8,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IContactLogMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ITicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.ContactLogServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
@@ -43,7 +43,7 @@ class ContactLogServiceTest {
     private ICustomerRepository customerRepository;
 
     @Mock
-    private ITicketRepository ticketRepository;
+    private ILeadTicketRepository ticketRepository;
 
     @Mock
     private IUserRepository userRepository;

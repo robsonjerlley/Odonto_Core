@@ -8,7 +8,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Department;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ICustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDepartmentRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ITicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ICustomerService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.IUserRepository;
@@ -27,13 +27,13 @@ public class CustomerServiceImpl implements ICustomerService {
     private final ICustomerMapper customerMapper;
     private final IUserRepository userRepository;
     private final IDepartmentRepository departmentRepository;
-    private final ITicketRepository securityUtils;
+    private final ILeadTicketRepository securityUtils;
 
     public CustomerServiceImpl(ICustomerRepository customerRepository,
                                ICustomerMapper customerMapper,
                                IUserRepository userRepository,
                                IDepartmentRepository departmentRepository,
-                               ITicketRepository securityUtils
+                               ILeadTicketRepository securityUtils
     ) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;

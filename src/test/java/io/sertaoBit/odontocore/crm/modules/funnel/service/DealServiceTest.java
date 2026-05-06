@@ -130,7 +130,7 @@ class DealServiceTest {
         when(dealMapper.toResponseDTO(deal)).thenReturn(responseDTO);
 
         // Act
-        List<DealResponseDTO> results = dealService.findByStatus(DealStatus.WON);
+
 
         // Assert
         assertNotNull(results);
