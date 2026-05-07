@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_lead_tickets", schema = "crm_db")
+@Table(name = "lead_tickets", schema = "crm_db")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,25 +23,26 @@ public class LeadTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(nullable = false)
     private UUID customerId;
     @Enumerated(EnumType.STRING)
-    private TicketStatus ticketStatus;
+    @Column(nullable = false)
+    private TicketStatus status;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Sector currentSector;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private UUID assigneToUser;
-    @Column(length = 350, nullable = false)
-    private String description;
+    private UUID assignedTo;
     private LocalDateTime scheduledAt;
     private LocalDateTime pendingAt;
-    @CreationTimestamp
     private LocalDateTime closedAt;
-    private UUID createdByUser;
+    @Column(nullable = false)
+    private UUID createdBy;
+    private UUID previousTicketId;
     @CreationTimestamp
+    @Column(nullable = false)
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
+    private LocalDateTime recycledAt;
 
 }
