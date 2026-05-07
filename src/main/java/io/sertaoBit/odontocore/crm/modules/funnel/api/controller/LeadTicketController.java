@@ -61,11 +61,11 @@ public class LeadTicketController {
         return ResponseEntity.ok(ticketService.findByAssignedToUser(userId));
     }
 
-    @PatchMapping("/updateStatus/{id}/{ticketStatus}")
+    @PatchMapping("/changeStatus/{id}/{ticketStatus}")
     public ResponseEntity<LeadTicketResponseDTO> updateStatus(
             @PathVariable UUID Id,
             @RequestBody @Validated TicketStatus ticketStatus) {
-        return ResponseEntity.ok(ticketService.updateStatus(Id, ticketStatus));
+        return ResponseEntity.ok(ticketService.changeStatus(Id, ticketStatus));
     }
 
     @DeleteMapping("/{id}")

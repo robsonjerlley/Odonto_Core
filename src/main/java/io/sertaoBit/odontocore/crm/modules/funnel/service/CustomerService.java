@@ -3,13 +3,11 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 
-@Service
 public interface CustomerService {
 
     CustomerResponseDTO create(CustomerCreateRequestDTO dto);

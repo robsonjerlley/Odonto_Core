@@ -68,7 +68,7 @@ public class DealController {
         return ResponseEntity.ok(dealService.findByDateRange(startDate, endDate));
     }
 
-    @PatchMapping("/updateStatus/{id}/{status}")
+    @PatchMapping("/changeStatus/{id}/{status}")
     public ResponseEntity<DealResponseDTO> updateStatus(
             @PathVariable UUID id,
             @RequestBody @Validated DealStatus status) {

@@ -18,13 +18,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Service
+
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final UserRepository userRepository;
-    private final IDepartmentRepository departmentRepository;
     private final LeadTicketRepository securityUtils;
 
     public CustomerServiceImpl(CustomerRepository customerRepository,
