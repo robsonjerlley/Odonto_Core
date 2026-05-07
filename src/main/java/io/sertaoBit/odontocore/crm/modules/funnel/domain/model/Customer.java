@@ -4,21 +4,15 @@ package io.sertaoBit.odontocore.crm.modules.funnel.domain.model;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.CustomerSource;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_clientes", schema = "crm_db", indexes = {
-        @Index(name = "idx_cpf", columnList = "cpf"),
-        @Index(name = "idx_sector_status", columnList = "sector_id, ticket_status")
-})
+@Table(name = "customers", schema = "crm_db")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -30,34 +24,28 @@ public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    @NotBlank
+    @Column(nullable = false)
     private String name;
     @Column(unique = true)
-    @CPF
     private String cpf;
-    @NotBlank
-    private String telephone;
     @Column(nullable = false)
-    @NotBlank
-    private String city;
-    private String address;
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "customer_descriptions"
-            , joinColumns = @JoinColumn(name = "customer_id"))
-    @Column(length = 500)
-    private List<String> descriptions;
+    private String phone;
+    private String email;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CustomerSource source;
     @Enumerated(EnumType.STRING)
     private AdsChannel adChannel;
     private String adCampaign;
     @CreationTimestamp
+    @Column(nullable = false)
     private LocalDateTime createdAt;
     @UpdateTimestamp
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
-    @Enumerated(EnumType.STRING)
-    @JoinColumn(name = "created_by_user_id")
-    private UUID createdByUser;
+    @Column(nullable = false)
+    private UUID createdBy;
+    private UUID referredBy;
 
 
 }
