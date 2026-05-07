@@ -13,12 +13,12 @@ public interface ContactLogMapper {
             @Mapping(target = "customerId" , ignore = true),
             @Mapping(target = "leadTicket",ignore = true ),
             @Mapping(target = "contactBy", ignore = true),
-            @Mapping(target = "description", source = "description"),
+            @Mapping(target = "note", source = "note"),
             @Mapping(target = "contactDate", ignore = true),
     })
     ContactLog toEntity(ContactLogCreateRequestDTO dto);
 
-    @Mapping(target = "description" , source = "description")
+    @Mapping(target = "note" , source = "note")
     ContactLogResponseDTO toResponseDTO(ContactLog entity);
 
 }

@@ -20,14 +20,14 @@ public interface CustomerMapper {
             @Mapping(target = "version", ignore = true),
             @Mapping(target = "createdByUser", ignore = true),
             @Mapping(target = "department", ignore = true),
-            @Mapping(target = "descriptions", source = "description", qualifiedByName = "stringToList")
+            @Mapping(target = "descriptions", source = "note", qualifiedByName = "stringToList")
     })
     Customer toEntity(CustomerCreateRequestDTO dto);
 
 
     @Mappings({
             @Mapping(target = "userId", source = "createdByUser.id"),
-            @Mapping(target = "description", source = "descriptions")
+            @Mapping(target = "note", source = "descriptions")
     })
     CustomerResponseDTO toResponseDTO(Customer customer);
 
