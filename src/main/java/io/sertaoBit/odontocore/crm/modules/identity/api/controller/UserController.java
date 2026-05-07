@@ -26,7 +26,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/create/{user}")
+    @PostMapping("/create")
     public ResponseEntity<UserResponseDTO> create(
             @RequestBody @Valid UserCreateRequestDTO requestDTO
     ) {
@@ -37,7 +37,7 @@ public class UserController {
     @PatchMapping("/updatePassword/{username}/passwordHash")
     public ResponseEntity<UserResponseDTO> updatePassword(
             @PathVariable String username,
-            @Valid UserPasswordUpdateRequestDTO requestDTO
+            @RequestBody @Valid UserPasswordUpdateRequestDTO requestDTO
     ) {
 
         return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPasswordHash()));

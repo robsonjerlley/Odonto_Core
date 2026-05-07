@@ -48,6 +48,17 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponseDTO(userRepository.save(newUser));
     }
 
+
+    @Override
+    @Transactional
+    public UserResponseDTO register(UserCreateRequestDTO dto) {
+        User newUser = userMapper.toEntity(dto);
+        newUser.setRole(Role.USER_ATTENDANT);
+        newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
+        return userMapper.toResponseDTO(userRepository.save(newUser));
+    }
+
+
     @Override
     @Transactional
     public UserResponseDTO updatePassword(String username, String newpassword) {
@@ -94,13 +105,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Boolean existsByUsername(String username) {
         Objects.requireNonNull(username, "username must not be null");
-
-        boolean exists = userRepository.existsByUsername(username);
-        if (!exists)
-            throw new ResourceNotFoundException("User not found!");
-
-        return exists;
-
+        return userRepository.existsByUsername(username);
     }
 
 
