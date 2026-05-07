@@ -47,7 +47,7 @@ public class DealController {
         return ResponseEntity.ok(dealService.findById(id));
     }
 
-    @GetMapping("/customer/{customerId}")
+    @GetMapping("/customerId/{customerId}")
     public ResponseEntity<List<DealResponseDTO>> findByCustomer(@PathVariable UUID customerId) {
         return ResponseEntity.ok(dealService.findByCustomer(customerId));
     }

@@ -1,8 +1,8 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketUpdateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
 import org.springframework.http.HttpStatus;
@@ -24,45 +24,45 @@ public class LeadTicketController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<TicketResponseDTO> create(@RequestBody @Validated TicketCreateRequestDTO dto) {
-        TicketResponseDTO ticketResponseDTO = ticketService.create(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ticketResponseDTO);
+    public ResponseEntity<LeadTicketResponseDTO> create(@RequestBody @Validated LeadTicketCreateRequestDTO dto) {
+        LeadTicketResponseDTO leadTicketResponseDTO = ticketService.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(leadTicketResponseDTO);
     }
 
     @PatchMapping("/update/{id}/{dto}")
-    public ResponseEntity<TicketResponseDTO> update(
+    public ResponseEntity<LeadTicketResponseDTO> update(
             @PathVariable UUID id,
-            @RequestBody @Validated TicketUpdateRequestDTO dto) {
+            @RequestBody @Validated LeadTicketUpdateRequestDTO dto) {
         return ResponseEntity.ok(ticketService.update(id, dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<TicketResponseDTO>> findAll() {
+    public ResponseEntity<List<LeadTicketResponseDTO>> findAll() {
         return ResponseEntity.ok(ticketService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TicketResponseDTO> findById(@PathVariable UUID ticketId) {
+    public ResponseEntity<LeadTicketResponseDTO> findById(@PathVariable UUID ticketId) {
         return ResponseEntity.ok(ticketService.findById(ticketId));
     }
 
     @GetMapping("/findByCustomer/{customerId}")
-    public ResponseEntity<List<TicketResponseDTO>> findByCustomer(@PathVariable UUID customerId) {
+    public ResponseEntity<List<LeadTicketResponseDTO>> findByCustomer(@PathVariable UUID customerId) {
         return ResponseEntity.ok(ticketService.findByCustomer(customerId));
     }
 
     @GetMapping("/ticketStatus/{ticketStatus}")
-    public ResponseEntity<List<TicketResponseDTO>> findByTicketStatus(@PathVariable TicketStatus ticketStatus) {
+    public ResponseEntity<List<LeadTicketResponseDTO>> findByTicketStatus(@PathVariable TicketStatus ticketStatus) {
         return ResponseEntity.ok(ticketService.findByTicketStatus(ticketStatus));
     }
 
     @GetMapping("assignedToUser/{userId}")
-    public ResponseEntity<List<TicketResponseDTO>> findByAssignedToUser(@PathVariable UUID userId) {
+    public ResponseEntity<List<LeadTicketResponseDTO>> findByAssignedToUser(@PathVariable UUID userId) {
         return ResponseEntity.ok(ticketService.findByAssignedToUser(userId));
     }
 
     @PatchMapping("/updateStatus/{id}/{ticketStatus}")
-    public ResponseEntity<TicketResponseDTO> updateStatus(
+    public ResponseEntity<LeadTicketResponseDTO> updateStatus(
             @PathVariable UUID Id,
             @RequestBody @Validated TicketStatus ticketStatus) {
         return ResponseEntity.ok(ticketService.updateStatus(Id, ticketStatus));

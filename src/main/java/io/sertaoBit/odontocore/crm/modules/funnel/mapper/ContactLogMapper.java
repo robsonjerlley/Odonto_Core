@@ -10,7 +10,7 @@ import org.mapstruct.Mappings;
 public interface ContactLogMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
-            @Mapping(target = "customer" , ignore = true),
+            @Mapping(target = "customerId" , ignore = true),
             @Mapping(target = "leadTicket",ignore = true ),
             @Mapping(target = "contactBy", ignore = true),
             @Mapping(target = "description", source = "description"),

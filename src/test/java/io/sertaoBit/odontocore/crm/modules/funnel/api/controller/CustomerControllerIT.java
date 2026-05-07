@@ -17,7 +17,7 @@ public class CustomerControllerIT extends AbstractIntegrationTest {
     private WebTestClient webTestClient;
 
     @Test
-    @DisplayName("Deve criar um novo customer com sucesso")
+    @DisplayName("Deve criar um novo customerId com sucesso")
     void shouldCreateCustomerSuccessfully() {
         // Arrange
         CustomerCreateRequestDTO requestDTO = new CustomerCreateRequestDTO(

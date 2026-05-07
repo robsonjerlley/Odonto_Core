@@ -1,8 +1,8 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketUpdateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
@@ -43,9 +43,9 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional
-    public TicketResponseDTO create(TicketCreateRequestDTO dto) {
-        Customer customer = customerRepository.findById(dto.customer().getId())
-                .orElseThrow(() -> new RuntimeException("Customer with id: " + dto.customer().getId() + " not found"));
+    public LeadTicketResponseDTO create(LeadTicketCreateRequestDTO dto) {
+        Customer customer = customerRepository.findById(dto.customerId().getId())
+                .orElseThrow(() -> new RuntimeException("Customer with id: " + dto.customerId().getId() + " not found"));
 
         User user = userRepository.findById(dto.assigneTo().getId())
                 .orElseThrow(() -> new RuntimeException("User with id: " + dto.assigneTo().getId() + " not found"));
@@ -60,7 +60,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional
-    public TicketResponseDTO update(UUID id, TicketUpdateRequestDTO dto) {
+    public LeadTicketResponseDTO update(UUID id, LeadTicketUpdateRequestDTO dto) {
         LeadTicket leadTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
 
@@ -87,7 +87,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public TicketResponseDTO findById(UUID id) {
+    public LeadTicketResponseDTO findById(UUID id) {
         return ticketRepository.findById(id)
                 .map(ticketMapper::toResponseDTO)
                 .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
@@ -95,7 +95,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TicketResponseDTO> findAll() {
+    public List<LeadTicketResponseDTO> findAll() {
         return ticketRepository.findAll().stream()
                 .map(ticketMapper::toResponseDTO)
                 .collect(Collectors.toList());
@@ -103,7 +103,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TicketResponseDTO> findByCustomer(UUID customerId) {
+    public List<LeadTicketResponseDTO> findByCustomer(UUID customerId) {
         if (!customerRepository.existsById(customerId)) {
             throw new RuntimeException("Customer not found by id: " + customerId);
         }
@@ -116,7 +116,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TicketResponseDTO> findByTicketStatus(TicketStatus ticketStatus) {
+    public List<LeadTicketResponseDTO> findByTicketStatus(TicketStatus ticketStatus) {
         if (ticketStatus == null) {
             throw new RuntimeException("ticketStatus is null");
         }
@@ -128,7 +128,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TicketResponseDTO> findByAssignedToUser(UUID userId) {
+    public List<LeadTicketResponseDTO> findByAssignedToUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new RuntimeException("User not found by id: " + userId);
         }
@@ -141,7 +141,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional
-    public TicketResponseDTO updateStatus(UUID id, TicketStatus ticketStatus) {
+    public LeadTicketResponseDTO updateStatus(UUID id, TicketStatus ticketStatus) {
         LeadTicket leadTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
 

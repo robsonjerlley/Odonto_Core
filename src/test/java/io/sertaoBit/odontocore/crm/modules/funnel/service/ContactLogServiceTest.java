@@ -155,7 +155,7 @@ class ContactLogServiceTest {
 
 
     @Test
-    @DisplayName("Deve lançar erro quando customer não encontrado")
+    @DisplayName("Deve lançar erro quando customerId não encontrado")
     void testCreateContactLogCustomerNotFound() {
         // Arrange
         ContactLogCreateRequestDTO createDTO = ContactLogCreateRequestDTO.builder()
@@ -178,12 +178,12 @@ class ContactLogServiceTest {
 
 
     @Test
-    @DisplayName("Deve validar que ticket pertence ao customer")
+    @DisplayName("Deve validar que ticket pertence ao customerId")
     void testCreateContactLogTicketNotBelongToCustomer() {
         // Arrange
         Customer otherCustomer = new Customer();
         otherCustomer.setId(UUID.randomUUID());
-        leadTicket.setCustomer(otherCustomer);  // Ticket pertence  outro customer
+        leadTicket.setCustomer(otherCustomer);  // Ticket pertence  outro customerId
 
         ContactLogCreateRequestDTO createDTO = ContactLogCreateRequestDTO.builder()
                 .customer(customer)
@@ -242,7 +242,7 @@ class ContactLogServiceTest {
     }
 
     @Test
-    @DisplayName("Deve buscar contact logs por customer com sucesso")
+    @DisplayName("Deve buscar contact logs por customerId com sucesso")
     void testFindByCustomerSuccess() {
         // Arrange
 

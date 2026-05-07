@@ -69,7 +69,7 @@ class CustomerServiceTest {
     // ========== CREATE TESTS ==========
 
     @Test
-    @DisplayName("Deve criar customer com sucesso")
+    @DisplayName("Deve criar customerId com sucesso")
     void testCreateCustomerSuccess() {
         // Arrange
         Department department = new Department();
@@ -128,7 +128,7 @@ class CustomerServiceTest {
     // ========== FIND TESTS ==========
 
     @Test
-    @DisplayName("Deve buscar customer por ID com sucesso")
+    @DisplayName("Deve buscar customerId por ID com sucesso")
     void testFindByIdSuccess() {
         // Arrange
         Customer customer = new Customer();
@@ -150,7 +150,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar erro quando customer não encontrado por ID")
+    @DisplayName("Deve lançar erro quando customerId não encontrado por ID")
     void testFindByIdNotFound() {
         // Arrange
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
@@ -164,7 +164,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @DisplayName("Deve buscar customer por CPF com sucesso")
+    @DisplayName("Deve buscar customerId por CPF com sucesso")
     void testFindByCpfSuccess() {
         // Arrange
         String cpf = "123.456.789-00";
@@ -190,7 +190,7 @@ class CustomerServiceTest {
     // ========== UPDATE TESTS ==========
 
     @Test
-    @DisplayName("Deve atualizar customer com sucesso")
+    @DisplayName("Deve atualizar customerId com sucesso")
     void testUpdateCustomerSuccess() {
         // Arrange
         String cpf = "123.456.789-00";
@@ -217,7 +217,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @DisplayName("Deve impedir atualizar customer com CPF duplicado")
+    @DisplayName("Deve impedir atualizar customerId com CPF duplicado")
     void testUpdateCustomerDuplicateCPF() {
         // Arrange
         String oldCpf = "123.456.789-00";
@@ -248,7 +248,7 @@ class CustomerServiceTest {
     // ========== DELETE TESTS ==========
 
     @Test
-    @DisplayName("Deve deletar customer com sucesso")
+    @DisplayName("Deve deletar customerId com sucesso")
     void testDeleteCustomerSuccess() {
         // Arrange
         when(customerRepository.existsById(customerId)).thenReturn(true);
@@ -261,7 +261,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar erro ao deletar customer inexistente")
+    @DisplayName("Deve lançar erro ao deletar customerId inexistente")
     void testDeleteCustomerNotFound() {
         // Arrange
         when(customerRepository.existsById(customerId)).thenReturn(false);

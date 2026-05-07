@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
@@ -78,7 +78,7 @@ class TicketServiceTest {
         leadTicket.setCustomer(customer);
         leadTicket.setAssigneTo(user);
 
-        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
+        LeadTicketResponseDTO responseDTO = mock(LeadTicketResponseDTO.class);
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -86,10 +86,10 @@ class TicketServiceTest {
         when(ticketRepository.save(any(LeadTicket.class))).thenReturn(leadTicket);
         when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
-        TicketCreateRequestDTO dto = mock(TicketCreateRequestDTO.class);
+        LeadTicketCreateRequestDTO dto = mock(LeadTicketCreateRequestDTO.class);
 
         // Act
-        TicketResponseDTO result = ticketService.create(dto);
+        LeadTicketResponseDTO result = ticketService.create(dto);
 
         // Assert
         assertNotNull(result);
@@ -100,12 +100,12 @@ class TicketServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar erro quando customer não encontrado")
+    @DisplayName("Deve lançar erro quando customerId não encontrado")
     void testCreateTicketCustomerNotFound() {
         // Arrange
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
 
-        TicketCreateRequestDTO dto = mock(TicketCreateRequestDTO.class);
+        LeadTicketCreateRequestDTO dto = mock(LeadTicketCreateRequestDTO.class);
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -127,13 +127,13 @@ class TicketServiceTest {
         leadTicket.setTicketStatus(TicketStatus.TICKET_OPEN
         );
 
-        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
+        LeadTicketResponseDTO responseDTO = mock(LeadTicketResponseDTO.class);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(leadTicket));
         when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
         // Act
-        TicketResponseDTO result = ticketService.findById(ticketId);
+        LeadTicketResponseDTO result = ticketService.findById(ticketId);
 
         // Assert
         assertNotNull(result);
@@ -155,9 +155,9 @@ class TicketServiceTest {
 
         List<LeadTicket> leadTickets = List.of(leadTicket1, leadTicket2);
 
-        TicketResponseDTO dto1 = mock(TicketResponseDTO.class);
+        LeadTicketResponseDTO dto1 = mock(LeadTicketResponseDTO.class);
 
-        TicketResponseDTO dto2 = mock(TicketResponseDTO.class);
+        LeadTicketResponseDTO dto2 = mock(LeadTicketResponseDTO.class);
 
 
         when(ticketRepository.findAll()).thenReturn(leadTickets);
@@ -165,7 +165,7 @@ class TicketServiceTest {
         when(ticketMapper.toResponseDTO(leadTicket2)).thenReturn(dto2);
 
         // Act
-        List<TicketResponseDTO> results = ticketService.findByTicketStatus(TicketStatus.TICKET_OPEN);
+        List<LeadTicketResponseDTO> results = ticketService.findByTicketStatus(TicketStatus.TICKET_OPEN);
 
         // Assert
         assertNotNull(results);
@@ -183,14 +183,14 @@ class TicketServiceTest {
         leadTicket.setId(ticketId);
         leadTicket.setTicketStatus(TicketStatus.TICKET_OPEN);
 
-        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
+        LeadTicketResponseDTO responseDTO = mock(LeadTicketResponseDTO.class);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(leadTicket));
         when(ticketRepository.save(any(LeadTicket.class))).thenReturn(leadTicket);
         when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
         // Act
-        TicketResponseDTO result = ticketService.updateStatus(ticketId, TicketStatus.TICKET_IN_PROGRESS);
+        LeadTicketResponseDTO result = ticketService.updateStatus(ticketId, TicketStatus.TICKET_IN_PROGRESS);
 
         // Assert
         assertNotNull(result);
@@ -248,7 +248,7 @@ class TicketServiceTest {
     // ========== FIND BY CUSTOMER TESTS ==========
 
     @Test
-    @DisplayName("Deve buscar tickets por customer ID com sucesso")
+    @DisplayName("Deve buscar tickets por customerId ID com sucesso")
     void testFindByCustomerSuccess() {
         // Arrange
         Customer customer = new Customer();
@@ -258,14 +258,14 @@ class TicketServiceTest {
         leadTicket.setId(ticketId);
         leadTicket.setCustomer(customer);
 
-        TicketResponseDTO responseDTO = mock(TicketResponseDTO.class);
+        LeadTicketResponseDTO responseDTO = mock(LeadTicketResponseDTO.class);
 
         when(customerRepository.existsById(customerId)).thenReturn(true);
         when(ticketRepository.findAll()).thenReturn(List.of(leadTicket));
         when(ticketMapper.toResponseDTO(leadTicket)).thenReturn(responseDTO);
 
         // Act
-        List<TicketResponseDTO> results = ticketService.findByCustomer(customerId);
+        List<LeadTicketResponseDTO> results = ticketService.findByCustomer(customerId);
 
         // Assert
         assertNotNull(results);

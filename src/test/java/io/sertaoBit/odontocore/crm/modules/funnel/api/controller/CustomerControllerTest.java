@@ -53,7 +53,7 @@ class CustomerControllerTest {
     // ========== CREATE ENDPOINT TESTS ==========
 
     @Test
-    @DisplayName("POST /api/v1/customers/create - Deve criar customer e retornar 201")
+    @DisplayName("POST /api/v1/customers/create - Deve criar customerId e retornar 201")
     void testCreateCustomer() throws Exception {
         // Arrange
         CustomerCreateRequestDTO requestDTO = new CustomerCreateRequestDTO(
@@ -119,7 +119,7 @@ class CustomerControllerTest {
     // ========== READ-BY-ID ENDPOINT TESTS ==========
 
     @Test
-    @DisplayName("GET /api/v1/customers/{id} - Deve retornar customer por ID")
+    @DisplayName("GET /api/v1/customers/{id} - Deve retornar customerId por ID")
     void testFindByIdCustomer() throws Exception {
         // Arrange
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
@@ -140,7 +140,7 @@ class CustomerControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/customers/{id} - Deve retornar 404 quando customer não encontrado")
+    @DisplayName("GET /api/v1/customers/{id} - Deve retornar 404 quando customerId não encontrado")
     void testFindByIdNotFound() throws Exception {
         // Arrange
         when(customerService.findById(any(UUID.class))).thenThrow(new RuntimeException("Customer not found"));
@@ -180,7 +180,7 @@ class CustomerControllerTest {
     // ========== FIND BY CPF ENDPOINT TESTS ==========
 
     @Test
-    @DisplayName("GET /api/v1/customers/cpf/{cpf} - Deve retornar customer por CPF")
+    @DisplayName("GET /api/v1/customers/cpf/{cpf} - Deve retornar customerId por CPF")
     void testFindByCpfCustomer() throws Exception {
         // Arrange
         String cpf = "123.456.789-00";
@@ -204,7 +204,7 @@ class CustomerControllerTest {
     // ========== DELETE ENDPOINT TESTS ==========
 
     @Test
-    @DisplayName("DELETE /api/v1/customers/{id} - Deve deletar customer e retornar 204")
+    @DisplayName("DELETE /api/v1/customers/{id} - Deve deletar customerId e retornar 204")
     void testDeleteCustomer() throws Exception {
         // Arrange
         doNothing().when(customerService).deleteById(customerId);
