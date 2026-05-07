@@ -10,7 +10,7 @@ import java.util.UUID;
 
 
 @Service
-public interface ICustomerService {
+public interface CustomerService {
 
     CustomerResponseDTO create(CustomerCreateRequestDTO dto);
 

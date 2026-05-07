@@ -4,7 +4,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketC
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.ticket.TicketUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.ITicketService;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,11 +15,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/tickets")
-public class TicketController {
+public class LeadTicketController {
 
-    private final ITicketService ticketService;
+    private final LeadTicketService ticketService;
 
-    public TicketController(ITicketService ticketService) {
+    public LeadTicketController(LeadTicketService ticketService) {
         this.ticketService = ticketService;
     }
 

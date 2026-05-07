@@ -5,10 +5,10 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketRespons
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
-import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ITicketMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.TicketServiceImpl;
+import io.sertaoBit.odontocore.crm.modules.funnel.mapper.LeadTicketMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.LeadTicketServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,19 +29,19 @@ import static org.mockito.Mockito.*;
 @DisplayName("TicketServiceTest - Testes Unitários do Serviço de Tickets")
 class TicketServiceTest {
 
-    private TicketServiceImpl ticketService;
+    private LeadTicketServiceImpl ticketService;
 
     @Mock
-    private ILeadTicketRepository ticketRepository;
+    private LeadTicketRepository ticketRepository;
 
     @Mock
-    private ICustomerRepository customerRepository;
+    private CustomerRepository customerRepository;
 
     @Mock
     private UserRepository userRepository;
 
     @Mock
-    private ITicketMapper ticketMapper;
+    private LeadTicketMapper ticketMapper;
 
     private UUID ticketId;
     private UUID customerId;
@@ -49,7 +49,7 @@ class TicketServiceTest {
 
     @BeforeEach
     void setUp() {
-        ticketService = new TicketServiceImpl(
+        ticketService = new LeadTicketServiceImpl(
                 ticketRepository,
                 customerRepository,
                 userRepository,

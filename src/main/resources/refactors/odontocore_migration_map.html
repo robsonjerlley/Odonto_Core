@@ -1,0 +1,223 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.root{padding:10px 0 20px;font-family:var(--font-mono)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;font-family:var(--font-sans)}
+.leg{display:flex;align-items:center;gap:5px;color:var(--color-text-secondary)}
+.dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.col-title{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;font-family:var(--font-sans)}
+.tree{font-size:11px;line-height:1.9;color:var(--color-text-secondary)}
+.tree .dir{color:var(--color-text-primary);font-weight:500}
+.keep{color:var(--color-text-secondary)}
+.rename{color:#BA7517}
+.add{color:#3B6D11}
+.remove{color:#A32D2D;text-decoration:line-through;opacity:.6}
+.move{color:#185FA5}
+@media(prefers-color-scheme:dark){
+  .add{color:#97C459}.rename{color:#FAC775}.remove{color:#F09595}.move{color:#60A5FA}
+}
+.badge{display:inline-block;font-size:9px;font-weight:500;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;font-family:var(--font-sans)}
+.b-keep{background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+.b-add{background:#EAF3DE;color:#27500A}
+.b-rename{background:#FAEEDA;color:#633806}
+.b-remove{background:#FCEBEB;color:#791F1F}
+.b-move{background:#E6F1FB;color:#0C447C}
+@media(prefers-color-scheme:dark){
+  .b-add{background:#173404;color:#C0DD97}
+  .b-rename{background:#412402;color:#FAC775}
+  .b-remove{background:#501313;color:#F7C1C1}
+  .b-move{background:#042C53;color:#B5D4F4}
+}
+.note{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-left:3px solid var(--color-border-secondary);border-radius:0 6px 6px 0;padding:8px 12px;font-size:11px;color:var(--color-text-secondary);line-height:1.7;margin-top:12px;font-family:var(--font-sans)}
+.note strong{color:var(--color-text-primary)}
+code{font-family:var(--font-mono);font-size:10px;background:var(--color-background-secondary);padding:1px 4px;border-radius:3px}
+hr{border:none;border-top:1px solid var(--color-border-tertiary);margin:12px 0}
+</style>
+
+<div class="root">
+<div class="legend">
+  <div class="leg"><div class="dot" style="background:#3B6D11"></div> criar</div>
+  <div class="leg"><div class="dot" style="background:#BA7517"></div> renomear / mover</div>
+  <div class="leg"><div class="dot" style="background:#A32D2D"></div> remover</div>
+  <div class="leg"><div class="dot" style="background:#185FA5"></div> mover de módulo</div>
+  <div class="leg"><div class="dot" style="background:var(--color-border-secondary)"></div> manter</div>
+</div>
+
+<div class="cols">
+<div>
+  <div class="col-title">estrutura atual</div>
+  <div class="tree">
+<span class="dir">io.sertaoBit.odontocore.crm/</span><br>
+&nbsp;├─ <span class="keep">Application.java</span><br>
+&nbsp;├─ <span class="keep">config/security/</span><br>
+&nbsp;│&nbsp;&nbsp; └─ <span class="keep">SecurityConfig.java</span><br>
+&nbsp;├─ <span class="keep">exception/</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="keep">GlobalExceptionHandler.java</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="keep">ResourceNotFoundException.java</span><br>
+&nbsp;│&nbsp;&nbsp; └─ <span class="keep">ResourceAlreadyExistsException.java</span><br>
+&nbsp;├─ <span class="remove">shared/enums/</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="remove">Action.java</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="remove">Department.java</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="remove">Resource.java</span><br>
+&nbsp;│&nbsp;&nbsp; └─ <span class="remove">Role.java</span><br>
+&nbsp;└─ <span class="keep">modules/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">identity/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">api/controller/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">api/dto/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">domain/model/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">User.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">PermissionRule.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">repository/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="rename">IUserRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">service/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="rename">IUserService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="remove">IPermissionRuleService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="keep">impl/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="rename">UserServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="remove">PermissionRuleServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="keep">crm/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ api/controller/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">CustomerController.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="remove">ClinicController.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">ContactLogController.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ api/dto/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">request/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">response/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ domain/model/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">Customer.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="remove">Clinic.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="rename">Ticket.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">ContactLog.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ domain/enums/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="rename">TicketStatus.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">ContactChannel.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="remove">ContactOutcome.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ mapper/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">ICustomerMapper.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="remove">IClinicMapper.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">IContactLogMapper.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ repository/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">ICustomerRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="remove">IClinicRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="rename">ITicketRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">IContactLogRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ service/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">ICustomerService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="remove">IClinicService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">IContactLogService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ impl/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">CustomerServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="remove">ClinicServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="keep">ContactLogServiceImpl.java</span>
+  </div>
+</div>
+
+<div>
+  <div class="col-title">estrutura alvo</div>
+  <div class="tree">
+<span class="dir">io.sertaoBit.odontocore.crm/</span><br>
+&nbsp;├─ <span class="keep">Application.java</span><br>
+&nbsp;├─ <span class="keep">config/security/</span><br>
+&nbsp;│&nbsp;&nbsp; └─ <span class="keep">SecurityConfig.java</span><br>
+&nbsp;├─ <span class="keep">exception/</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="keep">GlobalExceptionHandler.java</span><span class="badge b-rename">+IllegalStateException 422</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="keep">ResourceNotFoundException.java</span><br>
+&nbsp;│&nbsp;&nbsp; └─ <span class="keep">ResourceAlreadyExistsException.java</span><br>
+&nbsp;├─ <span class="add">core/enums/</span><span class="badge b-rename">shared/ → core/</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="rename">Action.java</span><span class="badge b-keep">mantém</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="rename">Setor.java</span><span class="badge b-rename">Department → Setor</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="rename">Resource.java</span><span class="badge b-keep">mantém</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="rename">Role.java</span><span class="badge b-keep">+SELLER</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="add">PermissionScope.java</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="add">CustomerSource.java</span><br>
+&nbsp;│&nbsp;&nbsp; ├─ <span class="add">AdsChannel.java</span><br>
+&nbsp;│&nbsp;&nbsp; └─ <span class="add">ContactChannel.java</span><span class="badge b-move">movido de crm/enums</span><br>
+&nbsp;└─ <span class="keep">modules/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">identity/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">api/controller/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">api/dto/</span><span class="badge b-add">request/ response/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">security/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">UserPrincipal.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="add">JwtAuthFilter.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">domain/model/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">User.java</span><span class="badge b-add">+implements UserDetails</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">PermissionRule.java</span><span class="badge b-add">+scope +conditions</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">repository/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="rename">UserRepository.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="add">PermissionRuleRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">mapper/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="add">UserMapper.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">service/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="rename">UserService.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">PermissionService.java</span><span class="badge b-rename">não é interface</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">AuthService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">PermissionSeeder.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="keep">impl/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="rename">UserServiceImpl.java</span><span class="badge b-keep">mantém</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="rename">funnel/</span><span class="badge b-rename">crm/ → funnel/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ api/controller/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">CustomerController.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">LeadTicketController.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">ContactLogController.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ api/dto/request/ + response/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ domain/model/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">Customer.java</span><span class="badge b-add">+source +adChannel +referredBy</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="rename">LeadTicket.java</span><span class="badge b-rename">Ticket → LeadTicket</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">ContactLog.java</span><span class="badge b-add">+statusBefore +statusAfter</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ mapper/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">CustomerMapper.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">LeadTicketMapper.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">ContactLogMapper.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ repository/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="keep">CustomerRepository.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="rename">LeadTicketRepository.java</span><span class="badge b-rename">ITicketRepo → LeadTicketRepo</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="keep">ContactLogRepository.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ service/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">CustomerService.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">TicketService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">ContactLogService.java</span><span class="badge b-rename">remove prefixo I</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ impl/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="keep">CustomerServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">TicketServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="keep">ContactLogServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">commercial/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ api/controller/<span class="badge b-add">DealController</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ api/dto/request/ + response/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ domain/model/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">Deal.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">DealProcedure.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">DealHistory.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">AdsInvestment.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">RecycleConfig.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="add">BonusConfig.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ mapper/<span class="badge b-add">DealMapper</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; ├─ repository/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">DealRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">DealHistoryRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">AdsInvestmentRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├─ <span class="add">RecycleConfigRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └─ <span class="add">BonusConfigRepository.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp; └─ service/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">CommercialService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">ConfigService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">RecycleJob.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ impl/<br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">CommercialServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="add">ConfigServiceImpl.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="add">analytics/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ api/controller/<span class="badge b-add">AnalyticsController</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ dto/<span class="badge b-add">todos os *Dto de retorno</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ service/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ├─ <span class="add">AnalyticsService.java</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; └─ <span class="add">DateRange.java</span>
+  </div>
+</div>
+</div>
+
+<hr>
+<div class="note">
+  <strong>Sobre o prefixo I nas interfaces:</strong> a convenção <code>IUserService</code> vem do C# e é incomum no ecossistema Spring/Java. O padrão Java é <code>UserService</code> para a interface e <code>UserServiceImpl</code> para a implementação — sem prefixo. Como você já tem os <code>*Impl</code>, basta remover o <code>I</code> das interfaces. O Spring injeta pela interface normalmente: <code>@Autowired UserService userService</code>.<br><br>
+  <strong>Sobre Clinic e ClinicController:</strong> não há correspondência no modelo projetado. Se a clínica é uma entidade de configuração (nome, CNPJ, dados da clínica), ela pode entrar como <code>ClinicConfig</code> dentro de <code>commercial/domain</code>. Se não for necessária no MVP, pode ser removida agora e adicionada depois.
+</div>
+</div>

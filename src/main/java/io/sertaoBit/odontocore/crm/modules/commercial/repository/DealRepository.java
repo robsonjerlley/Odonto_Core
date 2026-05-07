@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.funnel.repository;
+package io.sertaoBit.odontocore.crm.modules.commercial.repository;
 
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface IDealRepository extends JpaRepository<Deal, UUID> {
+public interface DealRepository extends JpaRepository<Deal, UUID> {
 
     List<Deal> findByDealStatus(DealStatus dealStatus);
 

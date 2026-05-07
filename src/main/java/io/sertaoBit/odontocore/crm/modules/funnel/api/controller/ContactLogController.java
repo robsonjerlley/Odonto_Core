@@ -2,7 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.IContactLogService;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.ContactLogService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -16,10 +16,10 @@ import java.util.UUID;
 @RequestMapping("/api/v1/contactsLogs")
 public class ContactLogController {
 
-    private final IContactLogService contactLogService;
+    private final ContactLogService contactLogService;
 
 
-    public ContactLogController(IContactLogService contactLogService) {
+    public ContactLogController(ContactLogService contactLogService) {
         this.contactLogService = contactLogService;
     }
 

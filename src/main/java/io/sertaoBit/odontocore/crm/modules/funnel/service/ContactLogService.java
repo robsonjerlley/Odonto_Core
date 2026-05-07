@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public interface IContactLogService {
+public interface ContactLogService {
 
     ContactLogResponseDTO create(ContactLogCreateRequestDTO dto);
 

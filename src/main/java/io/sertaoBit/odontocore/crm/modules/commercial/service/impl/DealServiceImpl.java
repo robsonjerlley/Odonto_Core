@@ -1,14 +1,14 @@
-package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
+package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
-import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IDealMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDealRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.IDealService;
+import io.sertaoBit.odontocore.crm.modules.commercial.mapper.DealMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;
+import io.sertaoBit.odontocore.crm.modules.commercial.service.DealService;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,18 +21,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class DealServiceImpl implements IDealService {
+public class DealServiceImpl implements DealService {
 
-    private final IDealRepository dealRepository;
+    private final DealRepository dealRepository;
     private final UserRepository userRepository;
-    private final ICustomerRepository customerRepository;
-    private final IDealMapper dealMapper;
+    private final CustomerRepository customerRepository;
+    private final DealMapper dealMapper;
 
     public DealServiceImpl(
-            IDealRepository dealRepository,
+            DealRepository dealRepository,
             UserRepository userRepository,
-            ICustomerRepository customerRepository,
-            IDealMapper dealMapper
+            CustomerRepository customerRepository,
+            DealMapper dealMapper
     ) {
         this.dealRepository = dealRepository;
         this.userRepository = userRepository;
@@ -183,4 +183,3 @@ public class DealServiceImpl implements IDealService {
         dealRepository.deleteById(id);
     }
 }
-

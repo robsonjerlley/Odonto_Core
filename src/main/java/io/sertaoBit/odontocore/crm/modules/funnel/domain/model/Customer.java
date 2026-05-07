@@ -49,7 +49,7 @@ public class Customer {
     @Enumerated(EnumType.STRING)
     private CustomerSource source;
     @Enumerated(EnumType.STRING)
-    private AdsChannel adsChannel;
+    private AdsChannel adChannel;
     private String adCampaign;
     @CreationTimestamp
     private LocalDateTime createdAt;

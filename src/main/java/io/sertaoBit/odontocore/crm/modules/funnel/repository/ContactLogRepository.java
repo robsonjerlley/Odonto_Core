@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface IContactLogRepository extends JpaRepository<ContactLog, UUID> {
+public interface ContactLogRepository extends JpaRepository<ContactLog, UUID> {
 
   List<ContactLog> findByContactDate(LocalDate date);
 

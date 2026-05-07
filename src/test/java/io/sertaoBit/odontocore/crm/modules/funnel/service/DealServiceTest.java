@@ -4,9 +4,9 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreat
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
-import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IDealMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDealRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.mapper.DealMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.DealRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.DealServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
@@ -37,13 +37,13 @@ class DealServiceTest {
 
     // Mockamos apenas as dependências.
     @Mock
-    private IDealRepository dealRepository;
+    private DealRepository dealRepository;
     @Mock
-    private ICustomerRepository customerRepository;
+    private CustomerRepository customerRepository;
     @Mock
     private UserRepository userRepository;
     @Mock
-    private IDealMapper dealMapper;
+    private DealMapper dealMapper;
 
     private Customer customer;
     private User user;

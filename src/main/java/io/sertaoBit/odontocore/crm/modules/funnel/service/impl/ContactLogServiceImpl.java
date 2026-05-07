@@ -5,11 +5,11 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
-import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IContactLogMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.IContactLogRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.IContactLogService;
+import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ContactLogMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.ContactLogService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -23,19 +23,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class ContactLogServiceImpl implements IContactLogService {
+public class ContactLogServiceImpl implements ContactLogService {
 
-    private final IContactLogRepository contactLogRepository;
-    private final IContactLogMapper contactLogMapper;
-    private final ICustomerRepository customerRepository;
-    private final ILeadTicketRepository ticketRepository;
+    private final ContactLogRepository contactLogRepository;
+    private final ContactLogMapper contactLogMapper;
+    private final CustomerRepository customerRepository;
+    private final LeadTicketRepository ticketRepository;
     private final UserRepository userRepository;
 
     public ContactLogServiceImpl(
-            IContactLogRepository contactLogRepository,
-            IContactLogMapper contactLogMapper,
-            ICustomerRepository customerRepository,
-            ILeadTicketRepository ticketRepository,
+            ContactLogRepository contactLogRepository,
+            ContactLogMapper contactLogMapper,
+            CustomerRepository customerRepository,
+            LeadTicketRepository ticketRepository,
             UserRepository userRepository
     ) {
         this.contactLogRepository = contactLogRepository;

@@ -4,12 +4,10 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.Custo
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Department;
-import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ICustomerMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.IDepartmentRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.ICustomerService;
+import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -21,19 +19,19 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class CustomerServiceImpl implements ICustomerService {
+public class CustomerServiceImpl implements CustomerService {
 
-    private final ICustomerRepository customerRepository;
-    private final ICustomerMapper customerMapper;
+    private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
     private final UserRepository userRepository;
     private final IDepartmentRepository departmentRepository;
-    private final ILeadTicketRepository securityUtils;
+    private final LeadTicketRepository securityUtils;
 
-    public CustomerServiceImpl(ICustomerRepository customerRepository,
-                               ICustomerMapper customerMapper,
+    public CustomerServiceImpl(CustomerRepository customerRepository,
+                               CustomerMapper customerMapper,
                                UserRepository userRepository,
                                IDepartmentRepository departmentRepository,
-                               ILeadTicketRepository securityUtils
+                               LeadTicketRepository securityUtils
     ) {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;

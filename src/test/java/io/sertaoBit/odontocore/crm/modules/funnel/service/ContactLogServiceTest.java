@@ -5,10 +5,10 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
-import io.sertaoBit.odontocore.crm.modules.funnel.mapper.IContactLogMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.IContactLogRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ContactLogMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.ContactLogServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
@@ -37,19 +37,19 @@ class ContactLogServiceTest {
     private ContactLogServiceImpl contactLogService;
 
     @Mock
-    private IContactLogRepository contactLogRepository;
+    private ContactLogRepository contactLogRepository;
 
     @Mock
-    private ICustomerRepository customerRepository;
+    private CustomerRepository customerRepository;
 
     @Mock
-    private ILeadTicketRepository ticketRepository;
+    private LeadTicketRepository ticketRepository;
 
     @Mock
     private UserRepository userRepository;
 
     @Mock
-    private IContactLogMapper contactLogMapper;
+    private ContactLogMapper contactLogMapper;
 
     private ContactLog contactLog;
     private Customer customer;

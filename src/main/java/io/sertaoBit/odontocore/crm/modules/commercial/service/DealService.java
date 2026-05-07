@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.funnel.service;
+package io.sertaoBit.odontocore.crm.modules.commercial.service;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealUpdateRequestDTO;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public interface IDealService {
+public interface DealService {
 
     DealResponseDTO create(DealCreateRequestDTO dto);
 

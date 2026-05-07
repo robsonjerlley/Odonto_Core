@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface ILeadTicketRepository extends JpaRepository<LeadTicket, UUID> {
+public interface LeadTicketRepository extends JpaRepository<LeadTicket, UUID> {
 
     List<LeadTicket> findByCustomer(UUID customerId);
 

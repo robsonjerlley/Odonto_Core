@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.ICustomerService;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class CustomerControllerTest {
     private ObjectMapper objectMapper;
 
 
-    private ICustomerService customerService;
+    private CustomerService customerService;
 
     private UUID customerId;
     private UUID departmentId;

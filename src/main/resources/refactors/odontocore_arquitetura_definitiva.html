@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OdontoCore — Arquitetura Definitiva</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--bg2:#161B27;--bg3:#1E2535;--bg4:#252D40;
+  --border:#2A3449;--border2:#374159;
+  --text:#C8D0E0;--text2:#7B8BA8;--text3:#4A566E;
+  --purple:#8B7CF6;--purple2:#6C5CE7;--purple-bg:#1A1730;
+  --teal:#4ECDC4;--teal2:#0F6E56;--teal-bg:#0D2422;
+  --amber:#F59E0B;--amber2:#BA7517;--amber-bg:#231A07;
+  --blue:#60A5FA;--blue2:#185FA5;--blue-bg:#0D1F35;
+  --coral:#F87171;--coral-bg:#2A1010;
+  --green:#6EE7B7;--green2:#3B6D11;--green-bg:#0B2418;
+  --red:#F87171;--red-bg:#2A1010;
+  --gray:#94A3B8;
+  --pk:#60A5FA;--fk:#F59E0B;--opt:#4A566E;
+  --ret:#4ECDC4;--mod:#8B7CF6;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh}
+
+/* HEADER */
+.header{padding:20px 24px 0}
+.header h1{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.header .sub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:4px}
+.header .rev{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;
+  background:var(--green-bg);color:var(--green);border:1px solid var(--green2);margin-top:6px;font-family:'JetBrains Mono',monospace}
+
+/* ERRATA BOX */
+.errata{margin:14px 24px 0;background:var(--amber-bg);border:1px solid var(--amber2);border-radius:8px;padding:12px 16px}
+.errata-title{font-size:11px;font-weight:600;color:var(--amber);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+.errata-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:700px){.errata-grid{grid-template-columns:1fr}}
+.errata-item{font-size:10px;color:var(--text2);line-height:1.6;font-family:'JetBrains Mono',monospace}
+.errata-item .from{color:var(--red);text-decoration:line-through;opacity:.7}
+.errata-item .to{color:var(--green)}
+.errata-item .label{color:var(--text3);font-size:9px;display:block;margin-bottom:2px}
+
+/* TABS */
+.tabs{display:flex;gap:3px;flex-wrap:wrap;padding:14px 24px 0;position:sticky;top:0;
+  background:var(--bg);z-index:10;border-bottom:1px solid var(--border);padding-bottom:10px}
+.tab{padding:6px 13px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;
+  border:1px solid var(--border2);color:var(--text2);background:var(--bg2);
+  transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.tab:hover{border-color:var(--purple2);color:var(--purple)}
+.tab.on{border-color:var(--purple2);color:var(--purple);background:var(--purple-bg)}
+
+.pn{display:none;padding:20px 24px 40px}.pn.on{display:block}
+.section{margin-bottom:22px}
+.sec-label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace;
+  padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+@media(max-width:1000px){.g3{grid-template-columns:1fr 1fr}.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* ENTITY CARDS */
+.cls{border-radius:8px;border:1px solid var(--border);background:var(--bg2);overflow:hidden;font-family:'JetBrains Mono',monospace}
+.cls-head{padding:10px 12px;border-bottom:1px solid var(--border)}
+.cls-stereo{font-size:9px;color:var(--text3);margin-bottom:3px;font-style:italic;line-height:1.5}
+.cls-name{font-size:13px;font-weight:500}
+.cls-pkg{font-size:9px;color:var(--text3);margin-top:3px;line-height:1.5}
+.cls-body{padding:6px 0}
+.sdiv{font-size:9px;color:var(--text3);padding:5px 12px 2px;border-top:1px solid var(--border);
+  margin-top:3px;letter-spacing:.05em;text-transform:uppercase}
+
+.field{display:flex;justify-content:space-between;align-items:baseline;padding:3px 12px;gap:8px}
+.field:hover{background:var(--bg3)}
+.fname{font-size:11px;color:var(--text)}
+.ftype{font-size:10px;color:var(--text2);white-space:nowrap;text-align:right;max-width:55%}
+.pk{color:var(--pk)!important}.fk{color:var(--fk)!important}.opt{color:var(--opt)!important}
+
+.mth{display:flex;flex-direction:column;padding:3px 12px;gap:1px}
+.mth:hover{background:var(--bg3)}
+.mname{font-size:11px;color:var(--text)}
+.mmod{color:var(--mod)}
+.msig{font-size:10px;color:var(--text2)}
+.mrule{font-size:9px;color:var(--text3);font-style:italic}
+
+/* ENUMS */
+.enum-cls{border-radius:8px;border:1px solid var(--border);background:var(--bg2);overflow:hidden;font-family:'JetBrains Mono',monospace}
+.enum-head{padding:9px 12px;border-bottom:1px solid var(--border)}
+.enum-vals{padding:8px 12px;display:flex;flex-wrap:wrap;gap:5px}
+.ev{font-size:10px;padding:2px 7px;border-radius:4px;border:1px solid var(--border2);color:var(--text2)}
+
+/* NOTES */
+.note{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--purple2);
+  border-radius:0 6px 6px 0;padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.8;margin-top:10px}
+.note strong{color:var(--text);font-weight:500}
+.note code{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg4);
+  padding:1px 5px;border-radius:3px;color:var(--teal)}
+.note-warn{border-left-color:var(--amber2);background:var(--amber-bg)}
+.note-green{border-left-color:var(--green2);background:var(--green-bg)}
+
+/* LEGEND */
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 0 14px;font-size:11px;
+  color:var(--text2);font-family:'JetBrains Mono',monospace}
+.leg{display:flex;align-items:center;gap:5px}
+.dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* HEAD COLORS */
+.head-purple .cls-name{color:var(--purple)}.head-purple{background:var(--purple-bg);border-bottom-color:var(--purple2)}
+.head-teal   .cls-name{color:var(--teal)}  .head-teal  {background:var(--teal-bg);border-bottom-color:var(--teal)}
+.head-amber  .cls-name{color:var(--amber)} .head-amber {background:var(--amber-bg);border-bottom-color:var(--amber)}
+.head-blue   .cls-name{color:var(--blue)}  .head-blue  {background:var(--blue-bg);border-bottom-color:var(--blue)}
+.head-green  .cls-name{color:var(--green)} .head-green {background:var(--green-bg);border-bottom-color:var(--green2)}
+.head-gray   .cls-name{color:var(--gray)}  .head-gray  {background:#161B27;border-bottom-color:var(--border2)}
+
+/* STRUCT TREE */
+.tree{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;color:var(--text2)}
+.tree .dir{color:var(--text);font-weight:500}
+.t-keep{color:var(--text2)}
+.t-add{color:var(--green)}
+.t-rename{color:var(--amber)}
+.t-remove{color:var(--red);text-decoration:line-through;opacity:.5}
+.t-move{color:var(--blue)}
+.badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;
+  margin-left:5px;vertical-align:middle;font-family:'DM Sans',sans-serif;font-weight:500}
+.b-add{background:var(--green-bg);color:var(--green)}
+.b-rename{background:var(--amber-bg);color:var(--amber)}
+.b-fix{background:var(--purple-bg);color:var(--purple)}
+
+/* RELATIONS TABLE */
+.rel-table{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11px}
+.rel-table th{text-align:left;padding:7px 10px;background:var(--bg3);color:var(--text3);
+  font-size:9px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+.rel-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.rel-table tr:last-child td{border-bottom:none}
+.rel-table tr:hover td{background:var(--bg3)}
+.col-from{color:var(--purple)}.col-to{color:var(--teal)}.col-card{color:var(--amber)}.col-note{color:var(--text3);font-size:10px}
+
+/* STATUS FLOW */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:10px 0}
+.status-pill{font-size:10px;font-weight:500;padding:4px 10px;border-radius:12px;
+  font-family:'JetBrains Mono',monospace;border:1px solid var(--border2);color:var(--text2)}
+.s-novo{background:#0D1F35;color:#60A5FA;border-color:#185FA5}
+.s-contato{background:#1A1730;color:#8B7CF6;border-color:#6C5CE7}
+.s-agendado{background:#231A07;color:#F59E0B;border-color:#BA7517}
+.s-aval{background:#0D2422;color:#4ECDC4;border-color:#0F6E56}
+.s-neg{background:#231A07;color:#FAC775;border-color:#BA7517}
+.s-ganho{background:#0B2418;color:#6EE7B7;border-color:#3B6D11}
+.s-pend{background:#2A1010;color:#F87171;border-color:#A32D2D}
+.s-rec{background:#1A1730;color:#94A3B8;border-color:#374159}
+.s-perd{background:#2A1010;color:#F87171;border-color:#A32D2D;opacity:.6}
+.arrow{color:var(--text3);font-size:12px}
+.flow-note{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:4px}
+
+.col2{display:flex;flex-direction:column;gap:10px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>OdontoCore CRM — Arquitetura Definitiva</h1>
+  <div class="sub">io.sertaoBit.odontocore.crm · Java 21 + Spring Boot 3 + MapStruct + jjwt</div>
+  <div class="rev">v3.0 — unificado · 10 inconsistências corrigidas</div>
+</div>
+
+<!-- ERRATA -->
+<div class="errata">
+  <div class="errata-title">⚠ Correções aplicadas nesta versão (conflitos entre documentos anteriores)</div>
+  <div class="errata-grid">
+    <div class="errata-item"><span class="label">1. Nome do serviço commercial</span><span class="from">ManagerConfigService</span> → <span class="to">ConfigService</span></div>
+    <div class="errata-item"><span class="label">2. Package raiz dos enums</span><span class="from">shared/enums</span> → <span class="to">core/enums</span></div>
+    <div class="errata-item"><span class="label">3. Seeder de permissões</span><span class="from">seedDefaultRules() dentro de PermissionService</span> → <span class="to">PermissionSeeder (@Component separado)</span></div>
+    <div class="errata-item"><span class="label">4. UserDetailsService</span><span class="from">loadUserByEmail() em UserService (duplicado)</span> → <span class="to">UserDetailsServiceImpl separado</span></div>
+    <div class="errata-item"><span class="label">5. JwtService faltando</span><span class="from">referenciado mas não definido</span> → <span class="to">JwtService adicionado em identity/security</span></div>
+    <div class="errata-item"><span class="label">6. Padrão de services</span><span class="from">@Service direto (sem interface) em alguns</span> → <span class="to">Interface + Impl em TODOS</span></div>
+    <div class="errata-item"><span class="label">7. Nomes dos DTOs analytics</span><span class="from">*Dto em alguns, *Result em outros</span> → <span class="to">sufixo *Result em todos (analytics)</span></div>
+    <div class="errata-item"><span class="label">8. Repositórios em aba errada</span><span class="from">listados dentro de "service"</span> → <span class="to">sempre em "repository"</span></div>
+    <div class="errata-item"><span class="label">9. Department (enum)</span><span class="from">Department.java</span> → <span class="to">Setor.java</span></div>
+    <div class="errata-item"><span class="label">10. ContactOutcome (enum)</span><span class="from">ContactOutcome.java (sem uso no modelo)</span> → <span class="to">removido</span></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on"  onclick="sw(0)">Estrutura</div>
+  <div class="tab"     onclick="sw(1)">core · enums</div>
+  <div class="tab"     onclick="sw(2)">identity · domain</div>
+  <div class="tab"     onclick="sw(3)">identity · security</div>
+  <div class="tab"     onclick="sw(4)">identity · service</div>
+  <div class="tab"     onclick="sw(5)">funnel · domain</div>
+  <div class="tab"     onclick="sw(6)">funnel · service</div>
+  <div class="tab"     onclick="sw(7)">commercial · domain</div>
+  <div class="tab"     onclick="sw(8)">commercial · service</div>
+  <div class="tab"     onclick="sw(9)">analytics</div>
+  <div class="tab"     onclick="sw(10)">relações</div>
+  <div class="tab"     onclick="sw(11)">status flow</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 0 — ESTRUTURA DE PACOTES
+══════════════════════════════════════════ -->
+<div class="pn on" id="p0">
+<div class="section">
+  <div class="sec-label">io.sertaoBit.odontocore.crm — estrutura de pacotes definitiva</div>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:var(--green)"></div>criar</div>
+    <div class="leg"><div class="dot" style="background:var(--amber)"></div>renomear / ajustar</div>
+    <div class="leg"><div class="dot" style="background:var(--red)"></div>remover</div>
+    <div class="leg"><div class="dot" style="background:var(--blue)"></div>mover de módulo</div>
+    <div class="leg"><div class="dot" style="background:var(--text2)"></div>manter</div>
+  </div>
+
+<div class="tree">
+<span class="dir">io.sertaoBit.odontocore.crm/</span>
+├─ <span class="t-keep">Application.java</span>
+│
+├─ <span class="t-add">core/</span>
+│  └─ <span class="t-add">enums/</span><span class="badge b-rename">shared/enums → core/enums</span>
+│     ├─ <span class="t-rename">Setor.java</span><span class="badge b-rename">Department → Setor</span>
+│     ├─ <span class="t-keep">Role.java</span><span class="badge b-add">+SELLER</span>
+│     ├─ <span class="t-keep">Resource.java</span>
+│     ├─ <span class="t-keep">Action.java</span>
+│     ├─ <span class="t-add">PermissionScope.java</span>
+│     ├─ <span class="t-add">CustomerSource.java</span>
+│     ├─ <span class="t-add">AdsChannel.java</span>
+│     ├─ <span class="t-add">TicketStatus.java</span><span class="badge b-move">movido de crm/domain/enums</span>
+│     └─ <span class="t-move">ContactChannel.java</span><span class="badge b-move">movido de crm/domain/enums</span>
+│
+├─ <span class="t-keep">config/</span>
+│  └─ <span class="t-keep">security/</span>
+│     └─ <span class="t-keep">SecurityConfig.java</span><span class="badge b-add">atualizar para JWT</span>
+│
+├─ <span class="t-keep">exception/</span>
+│  ├─ <span class="t-keep">GlobalExceptionHandler.java</span><span class="badge b-add">+422 IllegalState +403 AccessDenied</span>
+│  ├─ <span class="t-keep">ResourceNotFoundException.java</span>
+│  ├─ <span class="t-keep">ResourceAlreadyExistsException.java</span>
+│  └─ <span class="t-add">DiscountApprovalRequiredException.java</span>
+│
+└─ <span class="t-keep">modules/</span>
+   │
+   ├─ <span class="t-keep">identity/</span>
+   │  ├─ api/
+   │  │  ├─ controller/
+   │  │  │  ├─ <span class="t-add">AuthController.java</span>
+   │  │  │  └─ <span class="t-add">UserController.java</span>
+   │  │  └─ dto/
+   │  │     ├─ request/
+   │  │     │  ├─ <span class="t-add">LoginRequest.java</span>
+   │  │     │  └─ <span class="t-add">CreateUserRequest.java</span>
+   │  │     └─ response/
+   │  │        ├─ <span class="t-add">AuthResponse.java</span>
+   │  │        └─ <span class="t-add">UserResponse.java</span>
+   │  ├─ domain/model/
+   │  │  ├─ <span class="t-keep">User.java</span><span class="badge b-add">+implements UserDetails +sector +active +createdBy</span>
+   │  │  └─ <span class="t-keep">PermissionRule.java</span><span class="badge b-add">+scope +conditions</span>
+   │  ├─ repository/
+   │  │  ├─ <span class="t-rename">UserRepository.java</span><span class="badge b-rename">IUserRepository → UserRepository</span>
+   │  │  └─ <span class="t-add">PermissionRuleRepository.java</span>
+   │  ├─ mapper/
+   │  │  └─ <span class="t-add">UserMapper.java</span>
+   │  ├─ <span class="t-add">security/</span>
+   │  │  ├─ <span class="t-add">UserPrincipal.java</span>
+   │  │  ├─ <span class="t-add">JwtService.java</span><span class="badge b-fix">novo — faltava</span>
+   │  │  └─ <span class="t-add">JwtAuthFilter.java</span>
+   │  └─ service/
+   │     ├─ <span class="t-rename">IUserService.java</span><span class="badge b-rename">mantém prefixo I (padrão adotado)</span>
+   │     ├─ <span class="t-add">IPermissionService.java</span>
+   │     ├─ <span class="t-add">IAuthService.java</span>
+   │     └─ impl/
+   │        ├─ <span class="t-keep">UserServiceImpl.java</span>
+   │        ├─ <span class="t-add">PermissionServiceImpl.java</span><span class="badge b-fix">canAccess + checkOrThrow</span>
+   │        ├─ <span class="t-add">AuthServiceImpl.java</span>
+   │        ├─ <span class="t-add">UserDetailsServiceImpl.java</span><span class="badge b-fix">separado — não misturar com UserService</span>
+   │        └─ <span class="t-add">PermissionSeeder.java</span><span class="badge b-fix">ApplicationRunner separado</span>
+   │
+   ├─ <span class="t-rename">funnel/</span><span class="badge b-rename">crm/ → funnel/</span>
+   │  ├─ api/
+   │  │  ├─ controller/
+   │  │  │  ├─ <span class="t-keep">CustomerController.java</span>
+   │  │  │  ├─ <span class="t-add">LeadTicketController.java</span>
+   │  │  │  └─ <span class="t-keep">ContactLogController.java</span>
+   │  │  └─ dto/
+   │  │     ├─ request/
+   │  │     │  ├─ <span class="t-add">CreateCustomerRequest.java</span>
+   │  │     │  ├─ <span class="t-add">CreateContactLogRequest.java</span>
+   │  │     │  └─ <span class="t-add">ScheduleRequest.java</span>
+   │  │     └─ response/
+   │  │        ├─ <span class="t-add">CustomerResponse.java</span>
+   │  │        ├─ <span class="t-add">LeadTicketResponse.java</span>
+   │  │        └─ <span class="t-add">ContactLogResponse.java</span>
+   │  ├─ domain/model/
+   │  │  ├─ <span class="t-keep">Customer.java</span><span class="badge b-add">+source +adChannel +adCampaign +referredBy</span>
+   │  │  ├─ <span class="t-rename">LeadTicket.java</span><span class="badge b-rename">Ticket → LeadTicket</span>
+   │  │  └─ <span class="t-keep">ContactLog.java</span><span class="badge b-add">+statusBefore +statusAfter · imutável</span>
+   │  ├─ mapper/
+   │  │  ├─ <span class="t-rename">CustomerMapper.java</span><span class="badge b-rename">remove prefixo I</span>
+   │  │  ├─ <span class="t-add">LeadTicketMapper.java</span>
+   │  │  └─ <span class="t-rename">ContactLogMapper.java</span><span class="badge b-rename">remove prefixo I</span>
+   │  ├─ repository/
+   │  │  ├─ <span class="t-rename">CustomerRepository.java</span><span class="badge b-rename">remove prefixo I</span>
+   │  │  ├─ <span class="t-rename">LeadTicketRepository.java</span><span class="badge b-rename">ITicketRepository → LeadTicketRepository</span>
+   │  │  └─ <span class="t-rename">ContactLogRepository.java</span><span class="badge b-rename">remove prefixo I</span>
+   │  └─ service/
+   │     ├─ <span class="t-rename">ICustomerService.java</span><span class="badge b-rename">remove prefixo I apenas do arquivo .java</span>
+   │     ├─ <span class="t-add">ITicketService.java</span>
+   │     ├─ <span class="t-rename">IContactLogService.java</span>
+   │     └─ impl/
+   │        ├─ <span class="t-keep">CustomerServiceImpl.java</span>
+   │        ├─ <span class="t-add">TicketServiceImpl.java</span>
+   │        └─ <span class="t-keep">ContactLogServiceImpl.java</span>
+   │
+   ├─ <span class="t-add">commercial/</span>
+   │  ├─ api/
+   │  │  ├─ controller/
+   │  │  │  ├─ <span class="t-add">DealController.java</span>
+   │  │  │  └─ <span class="t-add">ConfigController.java</span>
+   │  │  └─ dto/
+   │  │     ├─ request/
+   │  │     │  ├─ <span class="t-add">CreateDealRequest.java</span>
+   │  │     │  ├─ <span class="t-add">UpdateDealRequest.java</span>
+   │  │     │  ├─ <span class="t-add">ApplyDiscountRequest.java</span>
+   │  │     │  ├─ <span class="t-add">CloseDealRequest.java</span>
+   │  │     │  ├─ <span class="t-add">RecycleConfigRequest.java</span>
+   │  │     │  ├─ <span class="t-add">BonusConfigRequest.java</span>
+   │  │     │  └─ <span class="t-add">AdsInvestmentRequest.java</span>
+   │  │     └─ response/
+   │  │        ├─ <span class="t-add">DealResponse.java</span>
+   │  │        └─ <span class="t-add">DealDetailResponse.java</span>
+   │  ├─ domain/model/
+   │  │  ├─ <span class="t-add">Deal.java</span>
+   │  │  ├─ <span class="t-add">DealProcedure.java</span>
+   │  │  ├─ <span class="t-add">DealHistory.java</span>
+   │  │  ├─ <span class="t-add">AdsInvestment.java</span>
+   │  │  ├─ <span class="t-add">RecycleConfig.java</span>
+   │  │  └─ <span class="t-add">BonusConfig.java</span>
+   │  ├─ mapper/
+   │  │  └─ <span class="t-add">DealMapper.java</span>
+   │  ├─ repository/
+   │  │  ├─ <span class="t-add">DealRepository.java</span>
+   │  │  ├─ <span class="t-add">DealHistoryRepository.java</span>
+   │  │  ├─ <span class="t-add">AdsInvestmentRepository.java</span>
+   │  │  ├─ <span class="t-add">RecycleConfigRepository.java</span>
+   │  │  └─ <span class="t-add">BonusConfigRepository.java</span>
+   │  └─ service/
+   │     ├─ <span class="t-add">ICommercialService.java</span>
+   │     ├─ <span class="t-add">IConfigService.java</span>
+   │     └─ impl/
+   │        ├─ <span class="t-add">CommercialServiceImpl.java</span>
+   │        ├─ <span class="t-add">ConfigServiceImpl.java</span>
+   │        └─ <span class="t-add">RecycleJob.java</span><span class="badge b-fix">@Scheduled — não é Service, não segue Interface+Impl</span>
+   │
+   └─ <span class="t-add">analytics/</span>
+      ├─ api/
+      │  ├─ controller/
+      │  │  └─ <span class="t-add">AnalyticsController.java</span>
+      │  └─ dto/response/
+      │     ├─ <span class="t-add">AdsROIResult.java</span>
+      │     ├─ <span class="t-add">StageConversionResult.java</span>
+      │     ├─ <span class="t-add">SectorDropoffResult.java</span>
+      │     ├─ <span class="t-add">UserPerformanceResult.java</span>
+      │     ├─ <span class="t-add">GlobalDashboardResult.java</span>
+      │     └─ <span class="t-add">DateRange.java</span>
+      └─ service/
+         ├─ <span class="t-add">IAnalyticsService.java</span>
+         └─ impl/
+            └─ <span class="t-add">AnalyticsServiceImpl.java</span>
+</div>
+<div class="note note-warn" style="margin-top:10px">
+  <strong>Exceções ao padrão Interface+Impl:</strong> <code>RecycleJob</code> é um <code>@Component</code> com <code>@Scheduled</code> — não é um serviço injetável, portanto não precisa de interface. <code>UserDetailsServiceImpl</code> já implementa a interface do Spring (<code>UserDetailsService</code>), não cria interface própria. <code>PermissionSeeder</code> implementa <code>ApplicationRunner</code> do Spring — mesmo caso.
+</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — CORE ENUMS
+══════════════════════════════════════════ -->
+<div class="pn" id="p1">
+<div class="sec-label">io.sertaoBit.odontocore.crm.core.enums</div>
+<div class="grid g3">
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">Setor</div><div class="cls-pkg">antes: Department</div></div>
+  <div class="enum-vals"><span class="ev">LEADS</span><span class="ev">AVALIACAO</span><span class="ev">COMERCIAL</span><span class="ev">MANAGER</span><span class="ev">ADMIN</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">Role</div><div class="cls-pkg">+SELLER adicionado</div></div>
+  <div class="enum-vals"><span class="ev">ADMIN</span><span class="ev">MANAGER</span><span class="ev">ATTENDANT</span><span class="ev">DENTIST</span><span class="ev">SELLER</span><span class="ev">VIEWER</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">TicketStatus</div><div class="cls-pkg">movido de crm/domain/enums</div></div>
+  <div class="enum-vals"><span class="ev">NOVO</span><span class="ev">EM_CONTATO</span><span class="ev">AGENDADO</span><span class="ev">EM_AVALIACAO</span><span class="ev">NEGOCIACAO</span><span class="ev">GANHO</span><span class="ev">PENDENTE</span><span class="ev">RECICLADO</span><span class="ev">PERDIDO</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">CustomerSource</div></div>
+  <div class="enum-vals"><span class="ev">ADS_PAGO</span><span class="ev">ORGANICO</span><span class="ev">INDICACAO</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">ContactChannel</div><div class="cls-pkg">movido de crm/domain/enums</div></div>
+  <div class="enum-vals"><span class="ev">WHATSAPP</span><span class="ev">TELEFONE</span><span class="ev">EMAIL</span><span class="ev">PRESENCIAL</span><span class="ev">INSTAGRAM</span><span class="ev">OUTRO</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">AdsChannel</div></div>
+  <div class="enum-vals"><span class="ev">META</span><span class="ev">GOOGLE</span><span class="ev">INSTAGRAM</span><span class="ev">TIKTOK</span><span class="ev">OUTRO</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">Resource</div></div>
+  <div class="enum-vals"><span class="ev">CUSTOMER</span><span class="ev">TICKET</span><span class="ev">CONTACT_LOG</span><span class="ev">DEAL</span><span class="ev">ANALYTICS</span><span class="ev">CONFIG</span><span class="ev">USER</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">Action</div></div>
+  <div class="enum-vals"><span class="ev">CREATE</span><span class="ev">READ</span><span class="ev">UPDATE</span><span class="ev">DELETE</span><span class="ev">CLOSE</span><span class="ev">RECYCLE</span><span class="ev">CONFIGURE</span></div>
+</div>
+
+<div class="enum-cls">
+  <div class="enum-head head-gray"><div class="cls-stereo">«enumeration»</div><div class="cls-name" style="color:var(--gray)">PermissionScope</div></div>
+  <div class="enum-vals"><span class="ev">GLOBAL</span><span class="ev">SECTOR</span><span class="ev">OWN</span></div>
+</div>
+
+</div>
+<div class="note"><strong>@Enumerated(EnumType.STRING)</strong> obrigatório em todos os campos de entidade JPA que referenciam estes enums. Armazena o nome textual — nunca o ordinal — prevenindo bugs silenciosos em futuras migrations quando a ordem dos valores mudar.</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — IDENTITY DOMAIN
+══════════════════════════════════════════ -->
+<div class="pn" id="p2">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.identity.domain.model</div>
+<div class="grid g2">
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Entity · @Table("users") · implements UserDetails»</div>
+    <div class="cls-name">User</div>
+    <div class="cls-pkg">identity_db · @EntityListeners(AuditingEntityListener)</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname">name</span><span class="ftype">String · @NotBlank</span></div>
+    <div class="field"><span class="fname">email</span><span class="ftype">String · @Column(unique) @Email</span></div>
+    <div class="field"><span class="fname">passwordHash</span><span class="ftype">String · @JsonIgnore</span></div>
+    <div class="field"><span class="fname">sector</span><span class="ftype">@Enumerated(STRING) Setor</span></div>
+    <div class="field"><span class="fname">role</span><span class="ftype">@Enumerated(STRING) Role</span></div>
+    <div class="field"><span class="fname">active</span><span class="ftype">boolean = true</span></div>
+    <div class="field"><span class="fname fk opt">createdBy</span><span class="ftype opt">UUID nullable</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+    <div class="field"><span class="fname">updatedAt</span><span class="ftype">LocalDateTime · @LastModifiedDate</span></div>
+    <div class="sdiv">— UserDetails overrides —</div>
+    <div class="mth"><span class="mname">getAuthorities()</span><span class="msig">: Collection&lt;GrantedAuthority&gt;</span><span class="mrule">→ new SimpleGrantedAuthority("ROLE_" + role.name())</span></div>
+    <div class="mth"><span class="mname">getUsername()</span><span class="msig">: String</span><span class="mrule">→ this.email</span></div>
+    <div class="mth"><span class="mname">isEnabled()</span><span class="msig">: boolean</span><span class="mrule">→ this.active</span></div>
+    <div class="mth"><span class="mname">isAccountNonExpired() / isAccountNonLocked() / isCredentialsNonExpired()</span><span class="msig">: boolean</span><span class="mrule">→ true (gerenciado pelo campo active)</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Entity · @Table("permission_rules")»</div>
+    <div class="cls-name">PermissionRule</div>
+    <div class="cls-pkg">identity_db · @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"role","sector","resource","action"}))</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname">role</span><span class="ftype">@Enumerated(STRING) Role</span></div>
+    <div class="field"><span class="fname opt">sector</span><span class="ftype opt">@Enumerated(STRING) Setor · nullable</span></div>
+    <div class="field"><span class="fname">resource</span><span class="ftype">@Enumerated(STRING) Resource</span></div>
+    <div class="field"><span class="fname">action</span><span class="ftype">@Enumerated(STRING) Action</span></div>
+    <div class="field"><span class="fname">scope</span><span class="ftype">@Enumerated(STRING) PermissionScope</span></div>
+    <div class="field"><span class="fname">allowed</span><span class="ftype">boolean</span></div>
+    <div class="field"><span class="fname opt">conditions</span><span class="ftype opt">@JdbcTypeCode(JSON) Map&lt;String,Object&gt; · nullable</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+  </div>
+</div>
+
+</div>
+
+<div class="sec-label" style="margin-top:18px">identity · repository</div>
+<div class="grid g2">
+<div class="cls">
+  <div class="cls-head head-purple"><div class="cls-stereo">«interface · extends JpaRepository&lt;User, UUID&gt;»</div><div class="cls-name">UserRepository</div><div class="cls-pkg">antes: IUserRepository</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">findByEmail(String email)</span><span class="msig">: Optional&lt;User&gt;</span></div>
+    <div class="mth"><span class="mname">findAllBySector(Setor sector)</span><span class="msig">: List&lt;User&gt;</span></div>
+    <div class="mth"><span class="mname">findAllBySectorAndRole(Setor sector, Role role)</span><span class="msig">: List&lt;User&gt;</span></div>
+    <div class="mth"><span class="mname">existsByEmail(String email)</span><span class="msig">: boolean</span></div>
+    <div class="mth"><span class="mname">findAllBySectorAndActive(Setor sector, boolean active)</span><span class="msig">: List&lt;User&gt;</span></div>
+  </div>
+</div>
+<div class="cls">
+  <div class="cls-head head-purple"><div class="cls-stereo">«interface · extends JpaRepository&lt;PermissionRule, UUID&gt;»</div><div class="cls-name">PermissionRuleRepository</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">findByRoleAndSectorAndResourceAndAction(Role, Setor, Resource, Action)</span><span class="msig">: Optional&lt;PermissionRule&gt;</span></div>
+    <div class="mth"><span class="mname">findByRoleAndSectorIsNullAndResourceAndAction(Role, Resource, Action)</span><span class="msig">: Optional&lt;PermissionRule&gt;</span></div>
+    <div class="mth"><span class="mname">findAllByRole(Role role)</span><span class="msig">: List&lt;PermissionRule&gt;</span></div>
+    <div class="mth"><span class="mname">countByAllowedTrue()</span><span class="msig">: long</span><span class="mrule">usado pelo PermissionSeeder para verificar se já foi populado</span></div>
+  </div>
+</div>
+</div>
+
+<div class="sec-label" style="margin-top:18px">identity · mapper</div>
+<div class="grid g2">
+<div class="cls">
+  <div class="cls-head head-purple"><div class="cls-stereo">«@Mapper(componentModel = "spring")»</div><div class="cls-name">UserMapper</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">toResponse(User user)</span><span class="msig">: UserResponse</span></div>
+    <div class="mth"><span class="mname">toResponseList(List&lt;User&gt; users)</span><span class="msig">: List&lt;UserResponse&gt;</span></div>
+  </div>
+</div>
+<div class="note" style="align-self:start;margin-top:0"><strong>passwordHash</strong> nunca entra no UserResponse — use <code>@Mapping(target = "passwordHash", ignore = true)</code> ou simplesmente não inclua o campo no record de resposta. O MapStruct não mapeia campos que não existem no target.</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — IDENTITY SECURITY
+══════════════════════════════════════════ -->
+<div class="pn" id="p3">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.identity.security</div>
+<div class="grid g2">
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«class · implements UserDetails»</div>
+    <div class="cls-name">UserPrincipal</div>
+    <div class="cls-pkg">objeto que o Spring Security mantém no SecurityContext</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID</span></div>
+    <div class="field"><span class="fname">email</span><span class="ftype">String</span></div>
+    <div class="field"><span class="fname">passwordHash</span><span class="ftype">String</span></div>
+    <div class="field"><span class="fname">role</span><span class="ftype">Role</span></div>
+    <div class="field"><span class="fname">sector</span><span class="ftype">Setor</span></div>
+    <div class="sdiv">— factory + overrides —</div>
+    <div class="mth"><span class="mname"><span class="mmod">+static</span> from(User user)</span><span class="msig">: UserPrincipal</span><span class="mrule">mapeia User → UserPrincipal sem expor entidade JPA no contexto</span></div>
+    <div class="mth"><span class="mname">getAuthorities()</span><span class="msig">: Collection&lt;GrantedAuthority&gt;</span><span class="mrule">→ "ROLE_" + role.name()</span></div>
+    <div class="mth"><span class="mname">getUsername()</span><span class="msig">: String → email</span></div>
+    <div class="mth"><span class="mname">getPassword()</span><span class="msig">: String → passwordHash</span></div>
+    <div class="mth"><span class="mname">isEnabled() / isAccountNonExpired() / isAccountNonLocked() / isCredentialsNonExpired()</span><span class="msig">: boolean → true</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Service»</div>
+    <div class="cls-name">JwtService</div>
+    <div class="cls-pkg">novo — faltava nos documentos anteriores · lib: io.jsonwebtoken (jjwt)</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname mmod">@Value("${jwt.secret}")</span><span class="ftype">String secretKey</span></div>
+    <div class="field"><span class="fname mmod">@Value("${jwt.expiration}")</span><span class="ftype">long expirationMs</span></div>
+    <div class="sdiv">— métodos —</div>
+    <div class="mth"><span class="mname">generateToken(UserPrincipal principal)</span><span class="msig">: String</span><span class="mrule">claims: id, email, role, sector · assina com HS256</span></div>
+    <div class="mth"><span class="mname">extractEmail(String token)</span><span class="msig">: String</span></div>
+    <div class="mth"><span class="mname">extractUserId(String token)</span><span class="msig">: UUID</span></div>
+    <div class="mth"><span class="mname">isTokenValid(String token, UserDetails userDetails)</span><span class="msig">: boolean</span></div>
+    <div class="mth"><span class="mname mmod">-extractClaim&lt;T&gt;(String token, Function&lt;Claims,T&gt; resolver)</span><span class="msig">: T</span></div>
+    <div class="mth"><span class="mname mmod">-isTokenExpired(String token)</span><span class="msig">: boolean</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Component · extends OncePerRequestFilter»</div>
+    <div class="cls-name">JwtAuthFilter</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">jwtService</span><span class="ftype">JwtService</span></div>
+    <div class="field"><span class="fname fk">userDetailsService</span><span class="ftype">UserDetailsService</span></div>
+    <div class="sdiv">— métodos —</div>
+    <div class="mth"><span class="mname"><span class="mmod">@Override</span> doFilterInternal(request, response, filterChain)</span><span class="msig">: void</span>
+      <span class="mrule">1. extrai "Authorization: Bearer &lt;token&gt;"</span>
+      <span class="mrule">2. jwtService.extractEmail(token)</span>
+      <span class="mrule">3. userDetailsService.loadUserByUsername(email)</span>
+      <span class="mrule">4. jwtService.isTokenValid(token, userDetails)</span>
+      <span class="mrule">5. UsernamePasswordAuthenticationToken → SecurityContextHolder</span>
+    </div>
+    <div class="mth"><span class="mname mmod">-extractTokenFromHeader(HttpServletRequest req)</span><span class="msig">: Optional&lt;String&gt;</span><span class="mrule">verifica "Bearer " prefix · retorna token ou empty</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Component · implements UserDetailsService»</div>
+    <div class="cls-name">UserDetailsServiceImpl</div>
+    <div class="cls-pkg">separado de UserService — responsabilidade única</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">userRepository</span><span class="ftype">UserRepository</span></div>
+    <div class="sdiv">— métodos —</div>
+    <div class="mth"><span class="mname"><span class="mmod">@Override</span> loadUserByUsername(String email)</span><span class="msig">: UserDetails</span>
+      <span class="mrule">userRepository.findByEmail(email)</span>
+      <span class="mrule">→ UserPrincipal.from(user)</span>
+      <span class="mrule">→ lança UsernameNotFoundException se não encontrar</span>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="note note-warn"><strong>Por que UserDetailsServiceImpl é separado de UserService?</strong> O Spring Security injeta <code>UserDetailsService</code> no <code>AuthenticationManager</code>. Se você colocar isso dentro do <code>UserServiceImpl</code>, que também injeta <code>PermissionService</code> e <code>PasswordEncoder</code>, cria um risco de dependência circular. A classe <code>UserDetailsServiceImpl</code> injeta apenas o <code>UserRepository</code> — zero risco de ciclo.</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 4 — IDENTITY SERVICE
+══════════════════════════════════════════ -->
+<div class="pn" id="p4">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.identity.service</div>
+<div class="grid g2">
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«interface»</div>
+    <div class="cls-name">IPermissionService</div>
+  </div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">canAccess(User user, Resource resource, Action action, Setor targetSector, UUID targetOwnerId)</span><span class="msig">: boolean</span></div>
+    <div class="mth"><span class="mname">checkOrThrow(User user, Resource resource, Action action, Setor targetSector, UUID targetOwnerId)</span><span class="msig">: void</span><span class="mrule">se !canAccess → throw AccessDeniedException → HTTP 403</span></div>
+    <div class="mth"><span class="mname">getPermissions(Role role, Setor sector)</span><span class="msig">: List&lt;PermissionRule&gt;</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Service · implements IPermissionService»</div>
+    <div class="cls-name">PermissionServiceImpl</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">ruleRepo</span><span class="ftype">PermissionRuleRepository</span></div>
+    <div class="sdiv">— implementação —</div>
+    <div class="mth"><span class="mname">canAccess(user, resource, action, targetSector, targetOwnerId)</span><span class="msig">: boolean</span>
+      <span class="mrule">1. resolveRule(role, sector, resource, action) → busca específica</span>
+      <span class="mrule">2. fallback: resolveRule(role, null, resource, action) → regra global do role</span>
+      <span class="mrule">3. se empty || !allowed → false</span>
+      <span class="mrule">4. switch(scope): GLOBAL→true | SECTOR→user.sector==targetSector | OWN→user.id==targetOwnerId</span>
+    </div>
+    <div class="mth"><span class="mname">checkOrThrow(user, resource, action, targetSector, targetOwnerId)</span><span class="msig">: void</span><span class="mrule">if (!canAccess(...)) throw new AccessDeniedException("Acesso negado")</span></div>
+    <div class="mth"><span class="mname mmod">-resolveRule(Role, Setor, Resource, Action)</span><span class="msig">: Optional&lt;PermissionRule&gt;</span></div>
+    <div class="mth"><span class="mname mmod">-applyScope(PermissionRule, User, Setor, UUID)</span><span class="msig">: boolean</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«interface»</div>
+    <div class="cls-name">IUserService</div>
+  </div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">createUser(CreateUserRequest dto, User by)</span><span class="msig">: User</span></div>
+    <div class="mth"><span class="mname">deactivateUser(UUID userId, User by)</span><span class="msig">: void</span></div>
+    <div class="mth"><span class="mname">listUsersBySector(Setor sector, User by)</span><span class="msig">: List&lt;User&gt;</span></div>
+    <div class="mth"><span class="mname">findById(UUID id)</span><span class="msig">: User</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Service · implements IUserService»</div>
+    <div class="cls-name">UserServiceImpl</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">userRepo</span><span class="ftype">UserRepository</span></div>
+    <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="field"><span class="fname fk">passwordEncoder</span><span class="ftype">PasswordEncoder</span></div>
+    <div class="sdiv">— implementação —</div>
+    <div class="mth"><span class="mname">createUser(dto, by)</span><span class="msig">: User</span>
+      <span class="mrule">checkOrThrow(by, USER, CREATE, dto.sector(), null)</span>
+      <span class="mrule">MANAGER só cria no próprio setor · verifica email duplicado</span>
+      <span class="mrule">passwordEncoder.encode(dto.password()) → user.passwordHash</span>
+    </div>
+    <div class="mth"><span class="mname">deactivateUser(userId, by)</span><span class="msig">: void</span><span class="mrule">checkOrThrow(by, USER, DELETE, target.sector, null) · user.active = false</span></div>
+    <div class="mth"><span class="mname">listUsersBySector(sector, by)</span><span class="msig">: List&lt;User&gt;</span><span class="mrule">ADMIN → todos · MANAGER → scope SECTOR (by.sector == sector)</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«interface»</div>
+    <div class="cls-name">IAuthService</div>
+  </div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">login(LoginRequest dto)</span><span class="msig">: AuthResponse</span></div>
+    <div class="mth"><span class="mname">refreshToken(String token)</span><span class="msig">: AuthResponse</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Service · implements IAuthService»</div>
+    <div class="cls-name">AuthServiceImpl</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">authManager</span><span class="ftype">AuthenticationManager</span></div>
+    <div class="field"><span class="fname fk">jwtService</span><span class="ftype">JwtService</span></div>
+    <div class="field"><span class="fname fk">userRepo</span><span class="ftype">UserRepository</span></div>
+    <div class="sdiv">— implementação —</div>
+    <div class="mth"><span class="mname">login(dto)</span><span class="msig">: AuthResponse</span>
+      <span class="mrule">authManager.authenticate(UsernamePasswordAuthenticationToken)</span>
+      <span class="mrule">userRepo.findByEmail(dto.email()) → UserPrincipal.from(user)</span>
+      <span class="mrule">jwtService.generateToken(principal) → AuthResponse(token)</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="sec-label" style="margin-top:18px">PermissionSeeder — inicialização da matriz</div>
+<div class="cls">
+  <div class="cls-head head-purple">
+    <div class="cls-stereo">«@Component · implements ApplicationRunner»</div>
+    <div class="cls-name">PermissionSeeder</div>
+    <div class="cls-pkg">executa uma vez na inicialização · só popula se ruleRepo.countByAllowedTrue() == 0</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">ruleRepo</span><span class="ftype">PermissionRuleRepository</span></div>
+    <div class="sdiv">— método público —</div>
+    <div class="mth"><span class="mname"><span class="mmod">@Override</span> run(ApplicationArguments args)</span><span class="msig">: void</span><span class="mrule">if ruleRepo.countByAllowedTrue() == 0 → seedAll()</span></div>
+    <div class="sdiv">— métodos privados —</div>
+    <div class="mth"><span class="mname mmod">-seedAll()</span><span class="msig">: void</span><span class="mrule">chama cada grupo abaixo e salva em batch via ruleRepo.saveAll()</span></div>
+    <div class="mth"><span class="mname mmod">-rulesForAttendant()</span><span class="msig">: List&lt;PermissionRule&gt;</span><span class="mrule">ATTENDANT(LEADS): CREATE+READ CUSTOMER · CREATE CONTACT_LOG · READ TICKET+LOG · UPDATE TICKET(NOVO→AGENDADO) — scope SECTOR</span></div>
+    <div class="mth"><span class="mname mmod">-rulesForDentist()</span><span class="msig">: List&lt;PermissionRule&gt;</span><span class="mrule">DENTIST(AVALIACAO): READ CUSTOMER+LOG+TICKET · CREATE DEAL · UPDATE DEAL — scope OWN</span></div>
+    <div class="mth"><span class="mname mmod">-rulesForSeller()</span><span class="msig">: List&lt;PermissionRule&gt;</span><span class="mrule">SELLER(COMERCIAL): READ CUSTOMER+LOG+DEAL+TICKET · UPDATE DEAL · CLOSE DEAL · UPDATE TICKET(NEGOCIACAO→GANHO/PENDENTE)</span></div>
+    <div class="mth"><span class="mname mmod">-rulesForManager()</span><span class="msig">: List&lt;PermissionRule&gt;</span><span class="mrule">tudo do setor + CONFIGURE(RecycleConfig, BonusConfig, AdsInvestment) + READ ANALYTICS(scope SECTOR)</span></div>
+    <div class="mth"><span class="mname mmod">-rulesForAdmin()</span><span class="msig">: List&lt;PermissionRule&gt;</span><span class="mrule">GLOBAL em todos os resources e actions</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 5 — FUNNEL DOMAIN
+══════════════════════════════════════════ -->
+<div class="pn" id="p5">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.funnel.domain.model</div>
+<div class="grid g3">
+
+<div class="cls">
+  <div class="cls-head head-teal">
+    <div class="cls-stereo">«@Entity · @Table("customers")»</div>
+    <div class="cls-name">Customer</div>
+    <div class="cls-pkg">crm_db · +source +adChannel +adCampaign +referredBy</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname">name</span><span class="ftype">String · @NotBlank</span></div>
+    <div class="field"><span class="fname">phone</span><span class="ftype">String · @NotBlank</span></div>
+    <div class="field"><span class="fname opt">email</span><span class="ftype opt">String · nullable</span></div>
+    <div class="field"><span class="fname opt">cpf</span><span class="ftype opt">String · @Column(unique) nullable</span></div>
+    <div class="field"><span class="fname">source</span><span class="ftype">@Enumerated CustomerSource</span></div>
+    <div class="field"><span class="fname opt">adChannel</span><span class="ftype opt">@Enumerated AdsChannel · nullable</span></div>
+    <div class="field"><span class="fname opt">adCampaign</span><span class="ftype opt">String · nullable</span></div>
+    <div class="field"><span class="fname fk opt">referredBy</span><span class="ftype opt">UUID FK(Customer) · nullable</span></div>
+    <div class="field"><span class="fname fk">createdBy</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+    <div class="field"><span class="fname">updatedAt</span><span class="ftype">LocalDateTime · @LastModifiedDate</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-teal">
+    <div class="cls-stereo">«@Entity · @Table("lead_tickets")»</div>
+    <div class="cls-name">LeadTicket</div>
+    <div class="cls-pkg">crm_db · antes: Ticket</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname fk">customerId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname">status</span><span class="ftype">@Enumerated TicketStatus</span></div>
+    <div class="field"><span class="fname">currentSector</span><span class="ftype">@Enumerated Setor</span></div>
+    <div class="field"><span class="fname fk opt">assignedTo</span><span class="ftype opt">UUID FK(User) · nullable</span></div>
+    <div class="field"><span class="fname fk opt">previousTicketId</span><span class="ftype opt">UUID FK(self) · nullable</span></div>
+    <div class="field"><span class="fname opt">scheduledAt</span><span class="ftype opt">LocalDateTime · nullable</span></div>
+    <div class="field"><span class="fname opt">closedAt</span><span class="ftype opt">LocalDateTime · nullable</span></div>
+    <div class="field"><span class="fname opt">pendingAt</span><span class="ftype opt">LocalDateTime · nullable</span></div>
+    <div class="field"><span class="fname opt">recycledAt</span><span class="ftype opt">LocalDateTime · nullable</span></div>
+    <div class="field"><span class="fname fk">createdBy</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+    <div class="field"><span class="fname">updatedAt</span><span class="ftype">LocalDateTime · @LastModifiedDate</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-teal">
+    <div class="cls-stereo">«@Entity · @Table("contact_logs") · imutável»</div>
+    <div class="cls-name">ContactLog</div>
+    <div class="cls-pkg">crm_db · sem @Setter · nunca sofre UPDATE</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname fk">ticketId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname fk">userId</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">channel</span><span class="ftype">@Enumerated ContactChannel</span></div>
+    <div class="field"><span class="fname">note</span><span class="ftype">@Column(TEXT) String</span></div>
+    <div class="field"><span class="fname opt">statusBefore</span><span class="ftype opt">@Enumerated TicketStatus · nullable</span></div>
+    <div class="field"><span class="fname opt">statusAfter</span><span class="ftype opt">@Enumerated TicketStatus · nullable</span></div>
+    <div class="field"><span class="fname">occurredAt</span><span class="ftype">LocalDateTime</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+  </div>
+</div>
+
+</div>
+
+<div class="sec-label" style="margin-top:18px">funnel · repository</div>
+<div class="grid g3">
+<div class="cls"><div class="cls-head head-teal"><div class="cls-stereo">«JpaRepository&lt;Customer,UUID&gt;»</div><div class="cls-name">CustomerRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findByCpf(String cpf)</span><span class="msig">: Optional&lt;Customer&gt;</span></div>
+  <div class="mth"><span class="mname">findByPhone(String phone)</span><span class="msig">: Optional&lt;Customer&gt;</span></div>
+  <div class="mth"><span class="mname">existsByCpf(String cpf)</span><span class="msig">: boolean</span></div>
+  <div class="mth"><span class="mname">existsByPhone(String phone)</span><span class="msig">: boolean</span></div>
+  <div class="mth"><span class="mname">@Query searchByTerm(String q, Pageable p)</span><span class="msig">: Page&lt;Customer&gt;</span><span class="mrule">ILIKE em name, phone, cpf</span></div>
+</div></div>
+<div class="cls"><div class="cls-head head-teal"><div class="cls-stereo">«JpaRepository&lt;LeadTicket,UUID&gt;»</div><div class="cls-name">LeadTicketRepository</div><div class="cls-pkg">antes: ITicketRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findByCurrentSector(Setor s)</span><span class="msig">: List&lt;LeadTicket&gt;</span></div>
+  <div class="mth"><span class="mname">findByCurrentSectorAndAssignedTo(Setor s, UUID userId)</span><span class="msig">: List&lt;LeadTicket&gt;</span></div>
+  <div class="mth"><span class="mname">findByStatusAndPendingAtBefore(TicketStatus status, LocalDateTime dt)</span><span class="msig">: List&lt;LeadTicket&gt;</span><span class="mrule">usado pelo RecycleJob</span></div>
+  <div class="mth"><span class="mname">findByCustomerIdOrderByCreatedAtDesc(UUID cid)</span><span class="msig">: List&lt;LeadTicket&gt;</span></div>
+  <div class="mth"><span class="mname">countByCurrentSectorAndStatus(Setor s, TicketStatus st)</span><span class="msig">: long</span><span class="mrule">usado pelo AnalyticsService</span></div>
+</div></div>
+<div class="cls"><div class="cls-head head-teal"><div class="cls-stereo">«JpaRepository&lt;ContactLog,UUID&gt;»</div><div class="cls-name">ContactLogRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findByTicketIdOrderByOccurredAtAsc(UUID tid)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
+  <div class="mth"><span class="mname">findByUserId(UUID uid)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
+  <div class="mth"><span class="mname">countByTicketId(UUID tid)</span><span class="msig">: long</span></div>
+  <div class="mth"><span class="mname">countByUserIdAndOccurredAtBetween(UUID uid, LocalDateTime s, LocalDateTime e)</span><span class="msig">: long</span></div>
+</div></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 6 — FUNNEL SERVICE
+══════════════════════════════════════════ -->
+<div class="pn" id="p6">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.funnel.service</div>
+<div class="grid g2">
+
+<div class="cls">
+  <div class="cls-head head-teal"><div class="cls-stereo">«interface»</div><div class="cls-name">ICustomerService</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">create(CreateCustomerRequest dto, User by)</span><span class="msig">: Customer</span></div>
+    <div class="mth"><span class="mname">findById(UUID id, User by)</span><span class="msig">: Customer</span></div>
+    <div class="mth"><span class="mname">search(String query, Pageable pageable, User by)</span><span class="msig">: Page&lt;Customer&gt;</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-teal"><div class="cls-stereo">«@Service · implements ICustomerService»</div><div class="cls-name">CustomerServiceImpl</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">customerRepo</span><span class="ftype">CustomerRepository</span></div>
+    <div class="field"><span class="fname fk">ticketService</span><span class="ftype">ITicketService</span></div>
+    <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="sdiv">— implementação —</div>
+    <div class="mth"><span class="mname">create(dto, by)</span><span class="msig">: Customer</span>
+      <span class="mrule">checkOrThrow(by, CUSTOMER, CREATE, LEADS, null)</span>
+      <span class="mrule">valida duplicidade de CPF e phone → ResourceAlreadyExistsException</span>
+      <span class="mrule">salva Customer → ticketService.openTicket(customer.id, by)</span>
+    </div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-teal"><div class="cls-stereo">«interface»</div><div class="cls-name">ITicketService</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">openTicket(UUID customerId, User by)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">addContactLog(UUID ticketId, CreateContactLogRequest dto, User by)</span><span class="msig">: ContactLog</span></div>
+    <div class="mth"><span class="mname">schedule(UUID ticketId, LocalDateTime scheduledAt, User by)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">changeStatus(UUID ticketId, TicketStatus nextStatus, User by)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">markPending(UUID ticketId, User by)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">listBySector(Setor sector, User by)</span><span class="msig">: List&lt;LeadTicket&gt;</span></div>
+    <div class="mth"><span class="mname">getHistory(UUID ticketId, User by)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-teal"><div class="cls-stereo">«@Service · implements ITicketService»</div><div class="cls-name">TicketServiceImpl</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">ticketRepo</span><span class="ftype">LeadTicketRepository</span></div>
+    <div class="field"><span class="fname fk">logRepo</span><span class="ftype">ContactLogRepository</span></div>
+    <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="sdiv">— implementação —</div>
+    <div class="mth"><span class="mname">openTicket(customerId, by)</span><span class="msig">: LeadTicket</span><span class="mrule">status=NOVO · currentSector=LEADS · createdBy=by.id</span></div>
+    <div class="mth"><span class="mname">addContactLog(ticketId, dto, by)</span><span class="msig">: ContactLog</span><span class="mrule">checkOrThrow(by, CONTACT_LOG, CREATE, ticket.currentSector, null)</span><span class="mrule">apenas LEADS · salva sem alterar status</span></div>
+    <div class="mth"><span class="mname">schedule(ticketId, scheduledAt, by)</span><span class="msig">: LeadTicket</span><span class="mrule">checkOrThrow(by, TICKET, UPDATE, LEADS, null)</span><span class="mrule">status→AGENDADO · currentSector→AVALIACAO · salva ContactLog automático</span></div>
+    <div class="mth"><span class="mname">changeStatus(ticketId, nextStatus, by)</span><span class="msig">: LeadTicket</span><span class="mrule">valida ALLOWED_TRANSITIONS · salva ContactLog automático (statusBefore/statusAfter)</span></div>
+    <div class="mth"><span class="mname">markPending(ticketId, by)</span><span class="msig">: LeadTicket</span><span class="mrule">checkOrThrow(by, TICKET, UPDATE, COMERCIAL, null)</span><span class="mrule">status→PENDENTE · pendingAt=now</span></div>
+    <div class="mth"><span class="mname">listBySector(sector, by)</span><span class="msig">: List&lt;LeadTicket&gt;</span><span class="mrule">MANAGER→setor inteiro · demais→assignedTo=by.id</span></div>
+    <div class="sdiv">— constante interna —</div>
+    <div class="mth"><span class="mname mmod">-static final ALLOWED_TRANSITIONS: Map&lt;TicketStatus,Set&lt;TicketStatus&gt;&gt;</span><span class="mrule">NOVO→{EM_CONTATO} · EM_CONTATO→{AGENDADO,PERDIDO} · AGENDADO→{EM_AVALIACAO}</span><span class="mrule">EM_AVALIACAO→{NEGOCIACAO,PERDIDO} · NEGOCIACAO→{GANHO,PENDENTE} · RECICLADO→{NOVO}</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-teal"><div class="cls-stereo">«interface»</div><div class="cls-name">IContactLogService</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">getByTicket(UUID ticketId, User by)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-teal"><div class="cls-stereo">«@Service · implements IContactLogService»</div><div class="cls-name">ContactLogServiceImpl</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">logRepo</span><span class="ftype">ContactLogRepository</span></div>
+    <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="mth"><span class="mname">getByTicket(ticketId, by)</span><span class="msig">: List&lt;ContactLog&gt;</span><span class="mrule">checkOrThrow(by, CONTACT_LOG, READ, null, null)</span></div>
+  </div>
+</div>
+
+</div>
+<div class="note note-warn"><strong>ContactLog é imutável por design.</strong> A entidade não deve ter @Setter. Toda nova interação é um INSERT — nunca UPDATE. Isso garante trilha de auditoria completa e íntegra. O GlobalExceptionHandler deve mapear transição inválida de status (<code>IllegalStateException</code>) para HTTP 422 Unprocessable Entity.</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 7 — COMMERCIAL DOMAIN
+══════════════════════════════════════════ -->
+<div class="pn" id="p7">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.commercial.domain.model</div>
+<div class="grid g2">
+
+<div class="cls">
+  <div class="cls-head head-amber">
+    <div class="cls-stereo">«@Entity · @Table("deals")»</div>
+    <div class="cls-name">Deal</div>
+    <div class="cls-pkg">crm_db</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname fk">ticketId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname">createdBySector</span><span class="ftype">@Enumerated Setor · sempre AVALIACAO</span></div>
+    <div class="field"><span class="fname fk">createdBy</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">procedures</span><span class="ftype">@JdbcTypeCode(JSON) List&lt;DealProcedure&gt;</span></div>
+    <div class="field"><span class="fname">totalValue</span><span class="ftype">BigDecimal · NUMERIC(15,2)</span></div>
+    <div class="field"><span class="fname">discountPct</span><span class="ftype">BigDecimal = 0.00</span></div>
+    <div class="field"><span class="fname fk opt">discountApprovedBy</span><span class="ftype opt">UUID FK(User) · nullable</span></div>
+    <div class="field"><span class="fname">finalValue</span><span class="ftype">BigDecimal · calculado no service</span></div>
+    <div class="field"><span class="fname opt">paymentMethod</span><span class="ftype opt">String · nullable</span></div>
+    <div class="field"><span class="fname fk opt">closedBy</span><span class="ftype opt">UUID FK(User) · nullable</span></div>
+    <div class="field"><span class="fname opt">closedAt</span><span class="ftype opt">LocalDateTime · nullable</span></div>
+    <div class="field"><span class="fname">archived</span><span class="ftype">boolean = false</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+    <div class="field"><span class="fname">updatedAt</span><span class="ftype">LocalDateTime · @LastModifiedDate</span></div>
+  </div>
+</div>
+
+<div class="col2">
+<div class="cls">
+  <div class="cls-head head-amber">
+    <div class="cls-stereo">«record · serializado como JSON em Deal.procedures»</div>
+    <div class="cls-name">DealProcedure</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname">name</span><span class="ftype">String</span></div>
+    <div class="field"><span class="fname opt">code</span><span class="ftype opt">String · nullable</span></div>
+    <div class="field"><span class="fname">tableValue</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">quantity</span><span class="ftype">int = 1</span></div>
+    <div class="field"><span class="fname opt">note</span><span class="ftype opt">String · nullable</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-amber">
+    <div class="cls-stereo">«@Entity · @Table("deal_history") · imutável»</div>
+    <div class="cls-name">DealHistory</div>
+    <div class="cls-pkg">auditoria de alterações no Deal</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname fk">dealId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname fk">changedBy</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">changedBySector</span><span class="ftype">@Enumerated Setor</span></div>
+    <div class="field"><span class="fname">fieldChanged</span><span class="ftype">String</span></div>
+    <div class="field"><span class="fname">valueBefore</span><span class="ftype">@JdbcTypeCode(JSON) Object</span></div>
+    <div class="field"><span class="fname">valueAfter</span><span class="ftype">@JdbcTypeCode(JSON) Object</span></div>
+    <div class="field"><span class="fname">occurredAt</span><span class="ftype">LocalDateTime</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-blue">
+    <div class="cls-stereo">«@Entity · @Table("ads_investments")»</div>
+    <div class="cls-name">AdsInvestment</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname">channel</span><span class="ftype">@Enumerated AdsChannel</span></div>
+    <div class="field"><span class="fname opt">campaign</span><span class="ftype opt">String · nullable</span></div>
+    <div class="field"><span class="fname">amount</span><span class="ftype">BigDecimal · NUMERIC(15,2)</span></div>
+    <div class="field"><span class="fname">periodStart</span><span class="ftype">LocalDate</span></div>
+    <div class="field"><span class="fname">periodEnd</span><span class="ftype">LocalDate</span></div>
+    <div class="field"><span class="fname fk">registeredBy</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-blue">
+    <div class="cls-stereo">«@Entity · @Table("recycle_configs")»</div>
+    <div class="cls-name">RecycleConfig</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname opt">sector</span><span class="ftype opt">@Enumerated Setor · nullable = global</span></div>
+    <div class="field"><span class="fname">afterDays</span><span class="ftype">int</span></div>
+    <div class="field"><span class="fname">active</span><span class="ftype">boolean = true</span></div>
+    <div class="field"><span class="fname fk">configuredBy</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+    <div class="field"><span class="fname">updatedAt</span><span class="ftype">LocalDateTime · @LastModifiedDate</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-blue">
+    <div class="cls-stereo">«@Entity · @Table("bonus_configs")»</div>
+    <div class="cls-name">BonusConfig</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
+    <div class="field"><span class="fname">sector</span><span class="ftype">@Enumerated Setor</span></div>
+    <div class="field"><span class="fname">role</span><span class="ftype">@Enumerated Role</span></div>
+    <div class="field"><span class="fname">metricKey</span><span class="ftype">String (ex: "schedulingRate")</span></div>
+    <div class="field"><span class="fname">bonusPct</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname opt">targetValue</span><span class="ftype opt">BigDecimal · nullable</span></div>
+    <div class="field"><span class="fname">active</span><span class="ftype">boolean = true</span></div>
+    <div class="field"><span class="fname fk">configuredBy</span><span class="ftype">UUID FK(User)</span></div>
+    <div class="field"><span class="fname">periodRef</span><span class="ftype">String (ex: "2025-07")</span></div>
+    <div class="field"><span class="fname">createdAt</span><span class="ftype">LocalDateTime · @CreatedDate</span></div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<div class="sec-label" style="margin-top:18px">commercial · repository</div>
+<div class="grid g3">
+<div class="cls"><div class="cls-head head-amber"><div class="cls-stereo">«JpaRepository&lt;Deal,UUID&gt;»</div><div class="cls-name">DealRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findByTicketId(UUID tid)</span><span class="msig">: Optional&lt;Deal&gt;</span></div>
+  <div class="mth"><span class="mname">findByTicketIdAndArchivedFalse(UUID tid)</span><span class="msig">: Optional&lt;Deal&gt;</span></div>
+  <div class="mth"><span class="mname">findByClosedByAndClosedAtBetween(UUID uid, LocalDateTime s, LocalDateTime e)</span><span class="msig">: List&lt;Deal&gt;</span></div>
+  <div class="mth"><span class="mname">@Query sumFinalValueByAdChannelAndPeriod(AdsChannel ch, LocalDateTime s, LocalDateTime e)</span><span class="msig">: BigDecimal</span></div>
+</div></div>
+<div class="cls"><div class="cls-head head-amber"><div class="cls-stereo">«JpaRepository&lt;DealHistory,UUID&gt;»</div><div class="cls-name">DealHistoryRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findByDealIdOrderByOccurredAtAsc(UUID did)</span><span class="msig">: List&lt;DealHistory&gt;</span></div>
+  <div class="mth"><span class="mname">findByChangedBy(UUID uid)</span><span class="msig">: List&lt;DealHistory&gt;</span></div>
+</div></div>
+<div class="cls"><div class="cls-head head-blue"><div class="cls-stereo">«JpaRepository&lt;AdsInvestment,UUID&gt;»</div><div class="cls-name">AdsInvestmentRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findByChannelAndPeriodStartGreaterThanEqualAndPeriodEndLessThanEqual(AdsChannel, LocalDate, LocalDate)</span><span class="msig">: List&lt;AdsInvestment&gt;</span></div>
+  <div class="mth"><span class="mname">@Query sumAmountByChannelAndPeriod(AdsChannel ch, LocalDate s, LocalDate e)</span><span class="msig">: BigDecimal</span></div>
+</div></div>
+<div class="cls"><div class="cls-head head-blue"><div class="cls-stereo">«JpaRepository&lt;RecycleConfig,UUID&gt;»</div><div class="cls-name">RecycleConfigRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findBySectorAndActiveTrue(Setor sector)</span><span class="msig">: Optional&lt;RecycleConfig&gt;</span></div>
+  <div class="mth"><span class="mname">findFirstBySectorIsNullAndActiveTrue()</span><span class="msig">: Optional&lt;RecycleConfig&gt;</span><span class="mrule">fallback global</span></div>
+</div></div>
+<div class="cls"><div class="cls-head head-blue"><div class="cls-stereo">«JpaRepository&lt;BonusConfig,UUID&gt;»</div><div class="cls-name">BonusConfigRepository</div></div><div class="cls-body">
+  <div class="mth"><span class="mname">findBySectorAndRoleAndActiveTrue(Setor s, Role r)</span><span class="msig">: Optional&lt;BonusConfig&gt;</span></div>
+  <div class="mth"><span class="mname">findBySectorAndRoleAndPeriodRef(Setor s, Role r, String ref)</span><span class="msig">: Optional&lt;BonusConfig&gt;</span></div>
+</div></div>
+</div>
+<div class="note"><strong>BigDecimal obrigatório</strong> em todos os campos monetários — nunca <code>double</code> ou <code>float</code>. No banco: <code>NUMERIC(15,2)</code>. Use <code>RoundingMode.HALF_UP</code> em divisões. O <code>finalValue</code> é calculado no service antes de cada save: <code>totalValue.multiply(ONE.subtract(discountPct.divide(HUNDRED, 2, HALF_UP)))</code>.</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 8 — COMMERCIAL SERVICE
+══════════════════════════════════════════ -->
+<div class="pn" id="p8">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.commercial.service</div>
+<div class="grid g2">
+
+<div class="cls">
+  <div class="cls-head head-amber"><div class="cls-stereo">«interface»</div><div class="cls-name">ICommercialService</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">createDeal(UUID ticketId, CreateDealRequest dto, User by)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">updateDeal(UUID dealId, UpdateDealRequest dto, User by)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">applyDiscount(UUID dealId, ApplyDiscountRequest dto, User by)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">closeDeal(UUID dealId, CloseDealRequest dto, User by)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">getDealWithHistory(UUID dealId, User by)</span><span class="msig">: DealDetailResponse</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-amber"><div class="cls-stereo">«@Service · implements ICommercialService»</div><div class="cls-name">CommercialServiceImpl</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">dealRepo</span><span class="ftype">DealRepository</span></div>
+    <div class="field"><span class="fname fk">historyRepo</span><span class="ftype">DealHistoryRepository</span></div>
+    <div class="field"><span class="fname fk">ticketService</span><span class="ftype">ITicketService</span></div>
+    <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="sdiv">— implementação —</div>
+    <div class="mth"><span class="mname">createDeal(ticketId, dto, by)</span><span class="msig">: Deal</span>
+      <span class="mrule">checkOrThrow(by, DEAL, CREATE, ticket.currentSector, null)</span>
+      <span class="mrule">exige ticket.currentSector == AVALIACAO</span>
+      <span class="mrule">calcula totalValue · finalValue=totalValue (discountPct=0)</span>
+      <span class="mrule">salva Deal → ticketService.changeStatus(ticketId, NEGOCIACAO, by)</span>
+    </div>
+    <div class="mth"><span class="mname">updateDeal(dealId, dto, by)</span><span class="msig">: Deal</span>
+      <span class="mrule">checkOrThrow: AVALIACAO→scope OWN(deal.createdBy) | COMERCIAL→scope SECTOR</span>
+      <span class="mrule">para cada campo alterado → recordHistory(deal, field, before, after, by)</span>
+      <span class="mrule">recalcula totalValue e finalValue</span>
+    </div>
+    <div class="mth"><span class="mname">applyDiscount(dealId, dto, by)</span><span class="msig">: Deal</span>
+      <span class="mrule">carrega conditions.maxDiscountPct da PermissionRule do role</span>
+      <span class="mrule">se pct > max → throw DiscountApprovalRequiredException</span>
+      <span class="mrule">finalValue = totalValue × (1 - pct/100) com HALF_UP</span>
+    </div>
+    <div class="mth"><span class="mname">closeDeal(dealId, dto, by)</span><span class="msig">: Deal</span>
+      <span class="mrule">checkOrThrow(by, DEAL, CLOSE, COMERCIAL, null)</span>
+      <span class="mrule">closedBy=by.id · closedAt=now → ticketService.changeStatus(GANHO)</span>
+    </div>
+    <div class="mth"><span class="mname mmod">-calculateTotal(List&lt;DealProcedure&gt;)</span><span class="msig">: BigDecimal</span><span class="mrule">Σ(proc.tableValue × proc.quantity) com RoundingMode.HALF_UP</span></div>
+    <div class="mth"><span class="mname mmod">-recordHistory(Deal, String field, Object before, Object after, User)</span><span class="msig">: void</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«interface»</div><div class="cls-name">IConfigService</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">setRecycleConfig(RecycleConfigRequest dto, User by)</span><span class="msig">: RecycleConfig</span></div>
+    <div class="mth"><span class="mname">getRecycleConfig(Setor sector)</span><span class="msig">: RecycleConfig</span></div>
+    <div class="mth"><span class="mname">setBonusConfig(BonusConfigRequest dto, User by)</span><span class="msig">: BonusConfig</span></div>
+    <div class="mth"><span class="mname">registerAdsInvestment(AdsInvestmentRequest dto, User by)</span><span class="msig">: AdsInvestment</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«@Service · implements IConfigService»</div><div class="cls-name">ConfigServiceImpl</div><div class="cls-pkg">antes: ManagerConfigService — nome corrigido para ConfigService</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">recycleRepo</span><span class="ftype">RecycleConfigRepository</span></div>
+    <div class="field"><span class="fname fk">bonusRepo</span><span class="ftype">BonusConfigRepository</span></div>
+    <div class="field"><span class="fname fk">adsRepo</span><span class="ftype">AdsInvestmentRepository</span></div>
+    <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="mth"><span class="mname">setRecycleConfig(dto, by)</span><span class="msig">: RecycleConfig</span><span class="mrule">checkOrThrow(by, CONFIG, CONFIGURE, dto.sector(), null) · upsert por sector</span></div>
+    <div class="mth"><span class="mname">getRecycleConfig(sector)</span><span class="msig">: RecycleConfig</span><span class="mrule">busca por sector → fallback sector=null (global)</span></div>
+    <div class="mth"><span class="mname">registerAdsInvestment(dto, by)</span><span class="msig">: AdsInvestment</span><span class="mrule">checkOrThrow(by, CONFIG, CONFIGURE, null, null) · valida periodEnd >= periodStart</span></div>
+  </div>
+</div>
+
+</div>
+
+<div class="sec-label" style="margin-top:18px">RecycleJob — não segue Interface+Impl</div>
+<div class="cls">
+  <div class="cls-head head-blue">
+    <div class="cls-stereo">«@Component · @EnableScheduling»</div>
+    <div class="cls-name">RecycleJob</div>
+    <div class="cls-pkg">não implementa interface própria — é um job agendado, não um serviço injetável</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">ticketRepo</span><span class="ftype">LeadTicketRepository</span></div>
+    <div class="field"><span class="fname fk">configService</span><span class="ftype">IConfigService</span></div>
+    <div class="field"><span class="fname fk">dealRepo</span><span class="ftype">DealRepository</span></div>
+    <div class="sdiv">— métodos —</div>
+    <div class="mth"><span class="mname"><span class="mmod">@Scheduled(cron = "0 0 2 * * *")</span> run()</span><span class="msig">: void</span><span class="mrule">02:00 diário · busca PENDENTE → delega processTicket()</span></div>
+    <div class="mth"><span class="mname mmod">-processTicket(LeadTicket ticket)</span><span class="msig">: void</span><span class="mrule">ChronoUnit.DAYS.between(pendingAt, now) >= config.afterDays</span><span class="mrule">→ archiveDeal() → ticket.status=RECICLADO → createRecycled(ticket)</span></div>
+    <div class="mth"><span class="mname mmod">-archiveDeal(UUID ticketId)</span><span class="msig">: void</span><span class="mrule">dealRepo.findByTicketIdAndArchivedFalse(id) → deal.archived=true → save</span></div>
+    <div class="mth"><span class="mname mmod">-createRecycled(LeadTicket original)</span><span class="msig">: LeadTicket</span><span class="mrule">novo ticket: status=NOVO · currentSector=LEADS · previousTicketId=original.id · recycledAt=now</span></div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 9 — ANALYTICS
+══════════════════════════════════════════ -->
+<div class="pn" id="p9">
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.analytics</div>
+<div class="grid g2">
+
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«interface»</div><div class="cls-name">IAnalyticsService</div></div>
+  <div class="cls-body">
+    <div class="mth"><span class="mname">getAdsROI(AdsChannel channel, DateRange period, User by)</span><span class="msig">: AdsROIResult</span></div>
+    <div class="mth"><span class="mname">getConversionByStage(DateRange period, Setor sector, User by)</span><span class="msig">: StageConversionResult</span></div>
+    <div class="mth"><span class="mname">getDropoffBySector(DateRange period, User by)</span><span class="msig">: List&lt;SectorDropoffResult&gt;</span></div>
+    <div class="mth"><span class="mname">getAttendantPerformance(UUID userId, DateRange period, User by)</span><span class="msig">: UserPerformanceResult</span></div>
+    <div class="mth"><span class="mname">getDentistPerformance(UUID userId, DateRange period, User by)</span><span class="msig">: UserPerformanceResult</span></div>
+    <div class="mth"><span class="mname">getSellerPerformance(UUID userId, DateRange period, User by)</span><span class="msig">: UserPerformanceResult</span></div>
+    <div class="mth"><span class="mname">getBonusApurado(UUID userId, String periodRef, User by)</span><span class="msig">: BigDecimal</span></div>
+    <div class="mth"><span class="mname">getGlobalDashboard(DateRange period, User by)</span><span class="msig">: GlobalDashboardResult</span></div>
+  </div>
+</div>
+
+<div class="cls">
+  <div class="cls-head head-blue">
+    <div class="cls-stereo">«@Service · @Transactional(readOnly=true) · implements IAnalyticsService»</div>
+    <div class="cls-name">AnalyticsServiceImpl</div>
+    <div class="cls-pkg">nunca escreve — leitura cross-db via repositórios injetados</div>
+  </div>
+  <div class="cls-body">
+    <div class="field"><span class="fname fk">ticketRepo</span><span class="ftype">LeadTicketRepository</span></div>
+    <div class="field"><span class="fname fk">logRepo</span><span class="ftype">ContactLogRepository</span></div>
+    <div class="field"><span class="fname fk">dealRepo</span><span class="ftype">DealRepository</span></div>
+    <div class="field"><span class="fname fk">adsRepo</span><span class="ftype">AdsInvestmentRepository</span></div>
+    <div class="field"><span class="fname fk">bonusRepo</span><span class="ftype">BonusConfigRepository</span></div>
+    <div class="field"><span class="fname fk">userRepo</span><span class="ftype">UserRepository</span></div>
+    <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="sdiv">— fórmulas centrais —</div>
+    <div class="mth"><span class="mname">getAdsROI(channel, period, by)</span><span class="msig">: AdsROIResult</span>
+      <span class="mrule">receita = dealRepo.sumFinalValueByAdChannelAndPeriod(channel, period)</span>
+      <span class="mrule">custo = adsRepo.sumAmountByChannelAndPeriod(channel, period)</span>
+      <span class="mrule">roi = receita.divide(custo, 2, HALF_UP) · costPerLead = custo / leadsCount</span>
+    </div>
+    <div class="mth"><span class="mname">getConversionByStage(period, sector, by)</span><span class="msig">: StageConversionResult</span>
+      <span class="mrule">checkOrThrow(by, ANALYTICS, READ, sector, null)</span>
+      <span class="mrule">conta por status: captados / agendados / dealCriado / ganho</span>
+    </div>
+    <div class="mth"><span class="mname">getGlobalDashboard(period, by)</span><span class="msig">: GlobalDashboardResult</span>
+      <span class="mrule">checkOrThrow(by, ANALYTICS, READ, null, null) → scope GLOBAL → apenas ADMIN/MANAGER</span>
+    </div>
+    <div class="mth"><span class="mname">getBonusApurado(userId, periodRef, by)</span><span class="msig">: BigDecimal</span>
+      <span class="mrule">carrega User → BonusConfig(sector, role, periodRef)</span>
+      <span class="mrule">calcula metricValue do período → metricValue × bonusPct / 100</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="sec-label" style="margin-top:18px">analytics · DTOs de retorno (sufixo *Result — padronizado)</div>
+<div class="grid g3">
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«record»</div><div class="cls-name">AdsROIResult</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname">channel</span><span class="ftype">AdsChannel</span></div>
+    <div class="field"><span class="fname">totalInvested</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">totalRevenue</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">roiMultiplier</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">leadsCount</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">closedCount</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">costPerLead</span><span class="ftype">BigDecimal</span></div>
+  </div>
+</div>
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«record»</div><div class="cls-name">StageConversionResult</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname">capturedCount</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">scheduledCount</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">dealCreatedCount</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">closedCount</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">leadsConversionPct</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">avaliacaoConversionPct</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">comercialConversionPct</span><span class="ftype">BigDecimal</span></div>
+  </div>
+</div>
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«record»</div><div class="cls-name">UserPerformanceResult</div><div class="cls-pkg">usado para Attendant, Dentist e Seller</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname">userId</span><span class="ftype">UUID</span></div>
+    <div class="field"><span class="fname">userName</span><span class="ftype">String</span></div>
+    <div class="field"><span class="fname">sector</span><span class="ftype">Setor</span></div>
+    <div class="field"><span class="fname">totalAssigned</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">totalConverted</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">conversionPct</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">avgTicketValue</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">bonusApurado</span><span class="ftype">BigDecimal</span></div>
+  </div>
+</div>
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«record»</div><div class="cls-name">SectorDropoffResult</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname">sector</span><span class="ftype">Setor</span></div>
+    <div class="field"><span class="fname">received</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">converted</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">dropped</span><span class="ftype">long</span></div>
+    <div class="field"><span class="fname">dropPct</span><span class="ftype">BigDecimal</span></div>
+  </div>
+</div>
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«record»</div><div class="cls-name">GlobalDashboardResult</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname">period</span><span class="ftype">DateRange</span></div>
+    <div class="field"><span class="fname">adsROIByChannel</span><span class="ftype">List&lt;AdsROIResult&gt;</span></div>
+    <div class="field"><span class="fname">stageConversion</span><span class="ftype">StageConversionResult</span></div>
+    <div class="field"><span class="fname">dropoffBySector</span><span class="ftype">List&lt;SectorDropoffResult&gt;</span></div>
+    <div class="field"><span class="fname">topPerformers</span><span class="ftype">List&lt;UserPerformanceResult&gt;</span></div>
+    <div class="field"><span class="fname">totalRevenue</span><span class="ftype">BigDecimal</span></div>
+    <div class="field"><span class="fname">avgTicketValue</span><span class="ftype">BigDecimal</span></div>
+  </div>
+</div>
+<div class="cls">
+  <div class="cls-head head-blue"><div class="cls-stereo">«record»</div><div class="cls-name">DateRange</div></div>
+  <div class="cls-body">
+    <div class="field"><span class="fname">from</span><span class="ftype">LocalDate</span></div>
+    <div class="field"><span class="fname">to</span><span class="ftype">LocalDate</span></div>
+    <div class="sdiv">— métodos —</div>
+    <div class="mth"><span class="mname">toStartDateTime()</span><span class="msig">: LocalDateTime → from.atStartOfDay()</span></div>
+    <div class="mth"><span class="mname">toEndDateTime()</span><span class="msig">: LocalDateTime → to.atTime(23,59,59)</span></div>
+    <div class="mth"><span class="mname mmod">+static</span> currentMonth()</span><span class="msig">: DateRange</span></div>
+    <div class="mth"><span class="mname mmod">+static</span> ofMonth(int year, int month)</span><span class="msig">: DateRange</span></div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 10 — RELAÇÕES
+══════════════════════════════════════════ -->
+<div class="pn" id="p10">
+<div class="sec-label">relações entre entidades</div>
+<table class="rel-table">
+  <thead><tr><th>Origem</th><th>Cardinalidade</th><th>Destino</th><th>Campo FK</th><th>Observação</th></tr></thead>
+  <tbody>
+    <tr><td class="col-from">Customer</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>createdBy</td><td class="col-note">quem cadastrou · cross-db UUID simples</td></tr>
+    <tr><td class="col-from">Customer</td><td class="col-card">N : 1</td><td class="col-to">Customer</td><td>referredBy</td><td class="col-note">auto-referência nullable — quem indicou</td></tr>
+    <tr><td class="col-from">LeadTicket</td><td class="col-card">N : 1</td><td class="col-to">Customer</td><td>customerId</td><td class="col-note">um customer pode ter múltiplos tickets (ciclos)</td></tr>
+    <tr><td class="col-from">LeadTicket</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>assignedTo</td><td class="col-note">responsável atual · nullable · cross-db UUID simples</td></tr>
+    <tr><td class="col-from">LeadTicket</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>createdBy</td><td class="col-note">quem abriu o ticket · cross-db UUID simples</td></tr>
+    <tr><td class="col-from">LeadTicket</td><td class="col-card">N : 1</td><td class="col-to">LeadTicket</td><td>previousTicketId</td><td class="col-note">auto-referência nullable — ciclo anterior (reciclo)</td></tr>
+    <tr><td class="col-from">ContactLog</td><td class="col-card">N : 1</td><td class="col-to">LeadTicket</td><td>ticketId</td><td class="col-note">imutável após criação — sem UPDATE</td></tr>
+    <tr><td class="col-from">ContactLog</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>userId</td><td class="col-note">quem registrou · cross-db UUID simples</td></tr>
+    <tr><td class="col-from">Deal</td><td class="col-card">1 : 1</td><td class="col-to">LeadTicket</td><td>ticketId</td><td class="col-note">um ticket ativo tem no máximo 1 Deal não-arquivado</td></tr>
+    <tr><td class="col-from">Deal</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>createdBy</td><td class="col-note">sempre setor AVALIACAO · cross-db UUID simples</td></tr>
+    <tr><td class="col-from">Deal</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>discountApprovedBy</td><td class="col-note">nullable — aprovação acima do limite</td></tr>
+    <tr><td class="col-from">Deal</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>closedBy</td><td class="col-note">nullable — quem fechou</td></tr>
+    <tr><td class="col-from">DealHistory</td><td class="col-card">N : 1</td><td class="col-to">Deal</td><td>dealId</td><td class="col-note">trilha imutável de auditoria</td></tr>
+    <tr><td class="col-from">DealHistory</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>changedBy</td><td class="col-note">cross-db UUID simples</td></tr>
+    <tr><td class="col-from">AdsInvestment</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>registeredBy</td><td class="col-note">MANAGER/ADMIN que registrou</td></tr>
+    <tr><td class="col-from">RecycleConfig</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>configuredBy</td><td class="col-note">MANAGER/ADMIN</td></tr>
+    <tr><td class="col-from">BonusConfig</td><td class="col-card">N : 1</td><td class="col-to">User</td><td>configuredBy</td><td class="col-note">MANAGER/ADMIN</td></tr>
+    <tr><td class="col-from">PermissionRule</td><td class="col-card">—</td><td class="col-to">—</td><td>sem FK</td><td class="col-note">matriz lida pelo PermissionServiceImpl — sem relação JPA</td></tr>
+  </tbody>
+</table>
+
+<div class="sec-label" style="margin-top:18px">dependências entre serviços</div>
+<table class="rel-table">
+  <thead><tr><th>Serviço</th><th>Injeta</th><th>Observação</th></tr></thead>
+  <tbody>
+    <tr><td class="col-from">CustomerServiceImpl</td><td class="col-to">ITicketService · IPermissionService · CustomerRepository</td><td class="col-note"></td></tr>
+    <tr><td class="col-from">TicketServiceImpl</td><td class="col-to">LeadTicketRepository · ContactLogRepository · IPermissionService</td><td class="col-note">não injeta outros services — evita ciclo</td></tr>
+    <tr><td class="col-from">CommercialServiceImpl</td><td class="col-to">DealRepository · DealHistoryRepository · ITicketService · IPermissionService</td><td class="col-note"></td></tr>
+    <tr><td class="col-from">ConfigServiceImpl</td><td class="col-to">RecycleConfigRepository · BonusConfigRepository · AdsInvestmentRepository · IPermissionService</td><td class="col-note"></td></tr>
+    <tr><td class="col-from">RecycleJob</td><td class="col-to">LeadTicketRepository · IConfigService · DealRepository</td><td class="col-note">@Component — não é serviço injetável</td></tr>
+    <tr><td class="col-from">AnalyticsServiceImpl</td><td class="col-to">todos os repos + IPermissionService</td><td class="col-note">@Transactional(readOnly=true) · nunca escreve</td></tr>
+    <tr><td class="col-from">todos os *ServiceImpl</td><td class="col-to">IPermissionService</td><td class="col-note">checkOrThrow() antes de cada operação crítica</td></tr>
+  </tbody>
+</table>
+
+<div class="note note-warn" style="margin-top:10px">
+  <strong>Cross-db sem @ManyToOne entre bancos:</strong> todos os campos que referenciam <code>User</code> (identity_db) a partir do crm_db são armazenados como <code>UUID</code> simples, sem anotação JPA de relacionamento. Para montar respostas com nome do usuário, o service faz duas queries separadas: uma no crm_db e outra no identity_db via <code>UserRepository</code>. Nunca crie um <code>@ManyToOne</code> cruzando DataSources distintos.
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 11 — STATUS FLOW
+══════════════════════════════════════════ -->
+<div class="pn" id="p11">
+<div class="sec-label">fluxo de status do LeadTicket — transições permitidas</div>
+
+<div class="flow">
+  <span class="status-pill s-novo">NOVO</span>
+  <span class="arrow">→</span>
+  <span class="status-pill s-contato">EM_CONTATO</span>
+  <span class="arrow">→</span>
+  <span class="status-pill s-agendado">AGENDADO</span>
+  <span class="arrow">→</span>
+  <span class="status-pill s-aval">EM_AVALIACAO</span>
+  <span class="arrow">→</span>
+  <span class="status-pill s-neg">NEGOCIACAO</span>
+  <span class="arrow">→</span>
+  <span class="status-pill s-ganho">GANHO</span>
+</div>
+<div class="flow" style="padding-top:4px">
+  <span class="status-pill s-contato">EM_CONTATO</span><span class="arrow">→</span><span class="status-pill s-perd">PERDIDO</span>
+  &nbsp;&nbsp;
+  <span class="status-pill s-aval">EM_AVALIACAO</span><span class="arrow">→</span><span class="status-pill s-perd">PERDIDO</span>
+  &nbsp;&nbsp;
+  <span class="status-pill s-neg">NEGOCIACAO</span><span class="arrow">→</span><span class="status-pill s-pend">PENDENTE</span>
+  &nbsp;&nbsp;
+  <span class="status-pill s-pend">PENDENTE</span><span class="arrow">→ (RecycleJob) →</span><span class="status-pill s-rec">RECICLADO</span>
+  &nbsp;&nbsp;
+  <span class="status-pill s-rec">RECICLADO</span><span class="arrow">→</span><span class="status-pill s-novo">NOVO</span>
+</div>
+
+<div class="sec-label" style="margin-top:18px">ALLOWED_TRANSITIONS — Map no TicketServiceImpl</div>
+<table class="rel-table">
+  <thead><tr><th>Status atual</th><th>Próximos permitidos</th><th>Quem pode executar</th><th>Observação</th></tr></thead>
+  <tbody>
+    <tr><td class="col-from">NOVO</td><td class="col-to">EM_CONTATO</td><td>ATTENDANT, MANAGER, ADMIN</td><td class="col-note">primeiro contato registrado</td></tr>
+    <tr><td class="col-from">EM_CONTATO</td><td class="col-to">AGENDADO, PERDIDO</td><td>ATTENDANT, MANAGER, ADMIN</td><td class="col-note">AGENDADO → currentSector muda para AVALIACAO</td></tr>
+    <tr><td class="col-from">AGENDADO</td><td class="col-to">EM_AVALIACAO</td><td>automático via schedule()</td><td class="col-note">transição disparada pelo TicketService ao agendar</td></tr>
+    <tr><td class="col-from">EM_AVALIACAO</td><td class="col-to">NEGOCIACAO, PERDIDO</td><td>DENTIST via createDeal() · MANAGER · ADMIN</td><td class="col-note">NEGOCIACAO → currentSector muda para COMERCIAL</td></tr>
+    <tr><td class="col-from">NEGOCIACAO</td><td class="col-to">GANHO, PENDENTE</td><td>SELLER, MANAGER, ADMIN</td><td class="col-note">GANHO = closeDeal() · PENDENTE = markPending()</td></tr>
+    <tr><td class="col-from">PENDENTE</td><td class="col-to">RECICLADO</td><td>RecycleJob (automático)</td><td class="col-note">após afterDays dias definidos em RecycleConfig</td></tr>
+    <tr><td class="col-from">RECICLADO</td><td class="col-to">NOVO (novo ticket)</td><td>RecycleJob (automático)</td><td class="col-note">cria novo LeadTicket com previousTicketId</td></tr>
+    <tr><td class="col-from">GANHO</td><td class="col-to">—</td><td>—</td><td class="col-note">estado terminal · histórico completo preservado</td></tr>
+    <tr><td class="col-from">PERDIDO</td><td class="col-to">—</td><td>—</td><td class="col-note">estado terminal</td></tr>
+  </tbody>
+</table>
+
+<div class="sec-label" style="margin-top:18px">ordem de implementação recomendada</div>
+<table class="rel-table">
+  <thead><tr><th>#</th><th>O que implementar</th><th>Dependências necessárias</th></tr></thead>
+  <tbody>
+    <tr><td style="color:var(--purple)">1</td><td>core/enums — todos os 9 enums</td><td>nenhuma</td></tr>
+    <tr><td style="color:var(--purple)">2</td><td>identity domain — User, PermissionRule, UserRepository, PermissionRuleRepository</td><td>enums</td></tr>
+    <tr><td style="color:var(--purple)">3</td><td>identity security — UserPrincipal, JwtService, JwtAuthFilter, UserDetailsServiceImpl</td><td>User, UserRepository</td></tr>
+    <tr><td style="color:var(--purple)">4</td><td>identity service — IPermissionService + impl, PermissionSeeder</td><td>PermissionRule, PermissionRuleRepository</td></tr>
+    <tr><td style="color:var(--purple)">5</td><td>identity service — IUserService + impl, IAuthService + impl</td><td>IPermissionService, JwtService, UserRepository</td></tr>
+    <tr><td style="color:var(--purple)">6</td><td>config/SecurityConfig — configura JWT filter chain</td><td>JwtAuthFilter, UserDetailsServiceImpl</td></tr>
+    <tr><td style="color:var(--teal)">7</td><td>funnel domain — Customer, LeadTicket, ContactLog + repositories</td><td>enums, IPermissionService</td></tr>
+    <tr><td style="color:var(--teal)">8</td><td>funnel service — ITicketService + impl (com ALLOWED_TRANSITIONS)</td><td>repositories funnel</td></tr>
+    <tr><td style="color:var(--teal)">9</td><td>funnel service — ICustomerService + impl, IContactLogService + impl</td><td>ITicketService, IPermissionService</td></tr>
+    <tr><td style="color:var(--amber)">10</td><td>commercial domain — Deal, DealProcedure, DealHistory, configs + repositories</td><td>enums, LeadTicket</td></tr>
+    <tr><td style="color:var(--amber)">11</td><td>commercial service — IConfigService + impl</td><td>commercial repos, IPermissionService</td></tr>
+    <tr><td style="color:var(--amber)">12</td><td>commercial service — ICommercialService + impl</td><td>ITicketService, IConfigService, IPermissionService</td></tr>
+    <tr><td style="color:var(--amber)">13</td><td>RecycleJob</td><td>IConfigService, LeadTicketRepository, DealRepository</td></tr>
+    <tr><td style="color:var(--blue)">14</td><td>analytics — IAnalyticsService + impl + todos os *Result records</td><td>todos os repos, IPermissionService</td></tr>
+    <tr><td style="color:var(--blue)">15</td><td>mappers MapStruct + controllers + DTOs de request/response</td><td>services correspondentes</td></tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+function sw(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',i===j));
+  document.querySelectorAll('.pn').forEach((p,j)=>p.classList.toggle('on',i===j));
+}
+</script>
+</body>
+</html>

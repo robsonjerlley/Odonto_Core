@@ -11,7 +11,7 @@ import org.mapstruct.Named;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface ICustomerMapper {
+public interface CustomerMapper {
 
     @Mappings({
             @Mapping(target = "id", ignore = true),

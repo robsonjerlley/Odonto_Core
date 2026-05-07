@@ -1,9 +1,9 @@
-package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
+package io.sertaoBit.odontocore.crm.modules.commercial.api.controller;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.DealResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.IDealService;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.DealService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,9 +17,9 @@ import java.util.UUID;
 @RequestMapping("/api/v1/deal")
 public class DealController {
 
-    private final IDealService dealService;
+    private final DealService dealService;
 
-    public DealController(IDealService dealService) {
+    public DealController(DealService dealService) {
         this.dealService = dealService;
     }
 

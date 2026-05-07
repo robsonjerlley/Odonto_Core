@@ -6,10 +6,10 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.TicketRespons
 
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
-import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ITicketMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ICustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.ILeadTicketRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.ITicketService;
+import io.sertaoBit.odontocore.crm.modules.funnel.mapper.LeadTicketMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
@@ -21,18 +21,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class TicketServiceImpl implements ITicketService {
+public class LeadTicketServiceImpl implements LeadTicketService {
 
-    private final ILeadTicketRepository ticketRepository;
-    private final ICustomerRepository customerRepository;
+    private final LeadTicketRepository ticketRepository;
+    private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
-    private final ITicketMapper ticketMapper;
+    private final LeadTicketMapper ticketMapper;
 
-    public TicketServiceImpl(
-            ILeadTicketRepository ticketRepository,
-            ICustomerRepository customerRepository,
+    public LeadTicketServiceImpl(
+            LeadTicketRepository ticketRepository,
+            CustomerRepository customerRepository,
             UserRepository userRepository,
-            ITicketMapper ticketMapper
+            LeadTicketMapper ticketMapper
     ) {
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;

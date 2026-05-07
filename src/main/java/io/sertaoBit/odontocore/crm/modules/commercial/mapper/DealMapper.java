@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.funnel.mapper;
+package io.sertaoBit.odontocore.crm.modules.commercial.mapper;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.DealResponseDTO;
@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
 @Mapper(componentModel = "spring")
-public interface IDealMapper {
+public interface DealMapper {
     @Mappings({
 
             @Mapping(target = "closedDate", ignore = true),

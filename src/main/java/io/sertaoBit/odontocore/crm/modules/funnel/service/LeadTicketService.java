@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public interface ITicketService {
+public interface LeadTicketService {
 
     TicketResponseDTO create(TicketCreateRequestDTO dto);
 

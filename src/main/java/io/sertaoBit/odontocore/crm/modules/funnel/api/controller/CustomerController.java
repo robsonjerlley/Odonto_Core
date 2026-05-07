@@ -3,7 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.ICustomerService;
+import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +16,9 @@ import java.util.UUID;
 @RequestMapping("/api/v1/customers")
 public class CustomerController {
 
-    private final ICustomerService customerService;
+    private final CustomerService customerService;
 
-    public CustomerController(ICustomerService customerService) {
+    public CustomerController(CustomerService customerService) {
 
         this.customerService = customerService;
     }
