@@ -56,8 +56,7 @@ class CustomerServiceTest {
                 customerRepository,
                 customerMapper,
                 userRepository,
-                departmentRepository,
-                ticketRepository
+
 
         );
 

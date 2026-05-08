@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,28 +61,10 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional
-    public LeadTicketResponseDTO update(UUID id, LeadTicketUpdateRequestDTO dto) {
+    public LeadTicketResponseDTO changeStatus(UUID id, LeadTicketUpdateRequestDTO dto) {
+        Objects.requireNonNull(id, "ID cannot be null");
         LeadTicket leadTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
-
-        if (dto.assigneToId() != null) {
-            User assignedTo = userRepository.findById(dto.assigneToId())
-                    .orElseThrow(() -> new RuntimeException("User with id: " + dto.assigneToId() + " not found"));
-            leadTicket.setAssigneTo(assignedTo);
-        }
-
-        if (dto.description() != null && !dto.description().isBlank()) {
-            leadTicket.setDescription(dto.description());
-        }
-
-        if (dto.ticketStatus() != null) {
-            leadTicket.setTicketStatus(dto.ticketStatus());
-        }
-
-        if (dto.priority() != null) {
-            leadTicket.setPriority(dto.priority());
-        }
-
         return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
     }
 
@@ -116,7 +99,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LeadTicketResponseDTO> findByTicketStatus(TicketStatus ticketStatus) {
+    public List<LeadTicketResponseDTO> findByStatus(TicketStatus ticketStatus) {
         if (ticketStatus == null) {
             throw new RuntimeException("ticketStatus is null");
         }
@@ -139,20 +122,6 @@ public class LeadTicketServiceImpl implements LeadTicketService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional
-    public LeadTicketResponseDTO updateStatus(UUID id, TicketStatus ticketStatus) {
-        LeadTicket leadTicket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
-
-        if (ticketStatus == null) {
-            throw new RuntimeException("ticketStatus cannot not be null");
-        }
-
-        leadTicket.setTicketStatus(ticketStatus);
-
-        return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
-    }
 
     @Override
     @Transactional

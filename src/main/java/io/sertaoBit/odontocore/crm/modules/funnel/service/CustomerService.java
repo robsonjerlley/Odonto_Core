@@ -12,7 +12,7 @@ public interface CustomerService {
 
     CustomerResponseDTO create(CustomerCreateRequestDTO dto);
 
-    CustomerResponseDTO update(String cpf, CustomerUpdateRequestDTO dto);
+    CustomerResponseDTO update(UUID id, CustomerUpdateRequestDTO dto);
 
     List<CustomerResponseDTO> findAll();
 

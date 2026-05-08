@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Skill(update-config)",
-      "PowerShell(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\" -Recurse -File | Where-Object { $_.Extension -notin @\\('.class', '.java'\\) } | Select-Object FullName)"
+      "PowerShell(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\" -Recurse -File | Where-Object { $_.Extension -notin @\\('.class', '.java'\\) } | Select-Object FullName)",
+      "Bash(git commit *)"
     ]
   }
 }

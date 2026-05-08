@@ -30,11 +30,11 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerResponseDTO);
     }
 
-    @PatchMapping("/update/{cpf}")
+    @PatchMapping("/update/{id}")
     public ResponseEntity<CustomerResponseDTO> update(
-            @PathVariable String cpf, @RequestBody
+            @PathVariable UUID id, @RequestBody
             @Valid CustomerUpdateRequestDTO requestDTO) {
-        return ResponseEntity.ok(customerService.update(cpf, requestDTO));
+        return ResponseEntity.ok(customerService.update(id, requestDTO));
     }
 
     @GetMapping
