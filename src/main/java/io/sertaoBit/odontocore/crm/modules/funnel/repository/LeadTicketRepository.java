@@ -13,13 +13,13 @@ import java.util.UUID;
 @Repository
 public interface LeadTicketRepository extends JpaRepository<LeadTicket, UUID> {
 
-    List<LeadTicket> findByCustomer(UUID customerId);
+    List<LeadTicket> findByCustomerId(UUID customerId);
 
     List<LeadTicket> findByCurrentSector(Sector sector);
 
     List<LeadTicket> findByCurrentSectorAndAssignedTo(Sector sector, UUID userId);
 
-    List<LeadTicket>findByStatus(TicketStatus status);
+    List<LeadTicket> findByStatus(TicketStatus status);
 
     List<LeadTicket> findByStatusAndPendingAtBefore(TicketStatus status, LocalDateTime date);
 

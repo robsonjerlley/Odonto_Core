@@ -46,7 +46,7 @@ public class LeadTicketController {
         return ResponseEntity.ok(ticketService.findById(ticketId));
     }
 
-    @GetMapping("/findByCustomer/{customerId}")
+    @GetMapping("/findByCustomerId/{customerId}")
     public ResponseEntity<List<LeadTicketResponseDTO>> findByCustomer(@PathVariable UUID customerId) {
         return ResponseEntity.ok(ticketService.findByCustomer(customerId));
     }

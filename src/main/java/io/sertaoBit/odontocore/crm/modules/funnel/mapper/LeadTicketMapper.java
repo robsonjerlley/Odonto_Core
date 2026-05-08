@@ -11,14 +11,19 @@ import org.mapstruct.Mappings;
 public interface LeadTicketMapper {
 
     @Mappings({
-            @Mapping(target = "id", ignore = true),
+
+            @Mapping(target = "closedAt", ignore = true),
             @Mapping(target = "createdAt", ignore = true),
-            @Mapping(target = "updatedAt", ignore = true),
-            @Mapping(target = "assignedTo", ignore = true),
-            @Mapping(target = "customerId", ignore = true),
+            @Mapping(target = "createdBy", ignore = true),
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "pendingAt", ignore = true),
+            @Mapping(target = "previousTicketId", ignore = true),
+            @Mapping(target = "recycledAt", ignore = true),
+            @Mapping(target = "status", ignore = true),
+            @Mapping(target = "updatedAt", ignore = true)
     })
     LeadTicket toEntity(LeadTicketCreateRequestDTO dto);
 
-    @Mapping(target = "updatedAt", ignore = true)
+
     LeadTicketResponseDTO toResponseDTO(LeadTicket leadTicket);
 }
