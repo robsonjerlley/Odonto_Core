@@ -13,35 +13,35 @@ A maioria dos CRMs do mercado controla contatos, mas **não fecham o laço finan
 
 | Origem | Como chega | `CustomerSource` |
 |---|---|---|
-| ADS pago | Meta, Google, TikTok — cliente viu anúncio e entrou em contato | `ADS_PAGO` |
-| Orgânico | Viu a clínica, ligou direto, entrou presencialmente | `ORGANICO` |
-| Indicação | Outro paciente indicou | `INDICACAO` |
+| ADS pago | Meta, Google, TikTok — cliente viu anúncio e entrou em contato | `ADS_PAID` |
+| Orgânico | Viu a clínica, ligou direto, entrou presencialmente | `ORGANIC` |
+| Indicação | Outro paciente indicou | `INDICATION` |
 
 O `adChannel` e `adCampaign` em `Customer` permitem ao gestor calcular o ROI exato por campanha: quanto foi investido naquele canal vs. quanto faturou em fechamentos de clientes vindos dele.
 
 ### A esteira por setor
 
 ```
-LEADS (ATTENDANT)
-  ↓  cadastra Customer + abre LeadTicket(NOVO)
+LEADS (Sector.LEADS)
+  ↓  cadastra Customer + abre LeadTicket(NEW)
   ↓  faz contatos → ContactLog por interação
-  ↓  converte → AGENDADO → currentSector = AVALIACAO
-  ↓  não converte → PERDIDO
+  ↓  converte → SCHEDULED → currentSector = EVALUATOR
+  ↓  não converte → LOSS
      └─ gargalo mensurável: ADS caro + baixa conversão em agendamentos
 
-AVALIACAO (DENTIST)
+EVALUATOR (Sector.EVALUATOR)
   ↓  lê histórico de contatos, avalia o paciente
   ↓  cria Deal com procedimentos e valores estimados
-  ↓  Deal criado → NEGOCIACAO → currentSector = COMERCIAL
-  ↓  cliente recusa tratamento → PERDIDO
+  ↓  Deal criado → NEGOTIATION → currentSector = COMMERCIAL
+  ↓  cliente recusa tratamento → LOSS
      └─ gargalo mensurável: taxa de aceite do plano de tratamento
 
-COMERCIAL (SELLER)
+COMMERCIAL (Sector.COMMERCIAL)
   ↓  lê histórico + Deal, negocia valores e descontos
-  ↓  fecha → GANHO → closedAt + closedBy registrados
-  ↓  não fecha → PENDENTE (comercial perdeu contato)
-     └─ após X dias configurados pelo gestor → RecycleJob → RECICLADO
-        └─ novo LeadTicket(NOVO) com previousTicketId apontando para o anterior
+  ↓  fecha → WIN → closedAt + closedBy registrados
+  ↓  não fecha → PENDING (comercial perdeu contato)
+     └─ após X dias configurados pelo gestor → RecycleJob → RECYCLED
+        └─ novo LeadTicket(NEW) com previousTicketId apontando para o anterior
            └─ cliente volta ao LEADS para novo ciclo de contato
 ```
 
@@ -92,14 +92,14 @@ modules/
 
 | Enum | Valores |
 |---|---|
-| `Setor` | LEADS, AVALIACAO, COMERCIAL, MANAGER, ADMIN |
-| `Role` | ADMIN, MANAGER, ATTENDANT, DENTIST, SELLER, VIEWER |
-| `TicketStatus` | NOVO, EM_CONTATO, AGENDADO, EM_AVALIACAO, NEGOCIACAO, GANHO, PENDENTE, RECICLADO, PERDIDO |
-| `CustomerSource` | ADS_PAGO, ORGANICO, INDICACAO |
-| `AdsChannel` | META, GOOGLE, INSTAGRAM, TIKTOK, OUTRO |
-| `ContactChannel` | WHATSAPP, TELEFONE, EMAIL, PRESENCIAL, INSTAGRAM, OUTRO |
-| `Resource` | CUSTOMER, TICKET, CONTACT_LOG, DEAL, ANALYTICS, CONFIG, USER |
-| `Action` | CREATE, READ, UPDATE, DELETE, CLOSE, RECYCLE, CONFIGURE |
+| `Sector` | LEADS, ATTENDANT, EVALUATOR, COMMERCIAL, ADM, MANAGER |
+| `Role` | ADM_SYSTEM, ADM_LEADS, USER_LEADS, USER_ATTENDANT, ADM_EVALUATOR, USER_EVALUATOR, ADM_COMMERCIAL, USER_COMMERCIAL |
+| `TicketStatus` | NEW, IN_CONTACT, SCHEDULED, IN_EVALUATION, NEGOTIATION, WIN, PENDING, RECYCLED, LOSS |
+| `CustomerSource` | ADS_PAID, ORGANIC, INDICATION |
+| `AdsChannel` | GOOGLE, META, INSTAGRAM, TIKTOK, OUTER |
+| `ContactChannel` | ORGANIC, REFERRAL, FACEBOOK, INSTAGRAM, WHATSAPP, PHONE_CALL, WEBSITE_FROM, OTHER |
+| `Resource` | CUSTOMER, USER, TICKET, CONTACT_LOG, DEAL, ANALYTICS, CONFIG |
+| `Action` | CREATE, READ, UPDATE, CLOSE, RECYCLE, CONFIGURE, DELETE |
 | `PermissionScope` | GLOBAL, SECTOR, OWN |
 
 Regra: sempre `@Enumerated(EnumType.STRING)` nas entidades JPA.
@@ -109,20 +109,20 @@ Regra: sempre `@Enumerated(EnumType.STRING)` nas entidades JPA.
 ## Fluxo do cliente (esteira)
 
 ```
-[Entrada] ADS_PAGO | ORGANICO | INDICACAO
+[Entrada] ADS_PAID | ORGANIC | INDICATION
     ↓
-[LEADS] ATTENDANT cadastra Customer + abre LeadTicket(NOVO)
+[LEADS] cadastra Customer + abre LeadTicket(NEW)
         faz contatos → registra ContactLog
-        converte → status AGENDADO → currentSector = AVALIACAO
-    ↓ (perda possível: não agenda → PERDIDO)
-[AVALIACAO] DENTIST lê histórico, avalia paciente
+        converte → status SCHEDULED → currentSector = EVALUATOR
+    ↓ (perda possível: não agenda → LOSS)
+[EVALUATOR] lê histórico, avalia paciente
             cria Deal com procedimentos e valores
-            Deal criado → status NEGOCIACAO → currentSector = COMERCIAL
-    ↓ (perda possível: recusa tratamento → PERDIDO)
-[COMERCIAL] SELLER lê histórico + Deal
-            negocia valores e descontos
-            fecha → GANHO
-            ou não fecha → PENDENTE → RecycleJob após X dias → novo ciclo
+            Deal criado → status NEGOTIATION → currentSector = COMMERCIAL
+    ↓ (perda possível: recusa tratamento → LOSS)
+[COMMERCIAL] lê histórico + Deal
+             negocia valores e descontos
+             fecha → WIN
+             ou não fecha → PENDING → RecycleJob após X dias → novo ciclo
 ```
 
 ---
@@ -130,7 +130,7 @@ Regra: sempre `@Enumerated(EnumType.STRING)` nas entidades JPA.
 ## Módulo identity
 
 ### Entidades (`identity_db`)
-- **User**: id, name, email, passwordHash, sector(Setor), role(Role), active, createdBy, createdAt, updatedAt — implements UserDetails
+- **User**: id, name, email, passwordHash, sector(Sector), role(Role), active, createdBy, createdAt, updatedAt — implements UserDetails
 - **PermissionRule**: id, role, sector(nullable), resource, action, scope, allowed, conditions(JSON)
 
 ### Padrão de permissões (RBAC com escopo)
@@ -169,13 +169,13 @@ Resolução: busca regra (role+sector+resource+action) → fallback (role+resour
 
 ### ALLOWED_TRANSITIONS
 ```
-NOVO → {EM_CONTATO}
-EM_CONTATO → {AGENDADO, PERDIDO}
-AGENDADO → {EM_AVALIACAO}          ← automático via schedule()
-EM_AVALIACAO → {NEGOCIACAO, PERDIDO}
-NEGOCIACAO → {GANHO, PENDENTE}
-PENDENTE → {RECICLADO}             ← RecycleJob
-RECICLADO → {NOVO}                 ← novo LeadTicket filho
+NEW → {IN_CONTACT}
+IN_CONTACT → {SCHEDULED, LOSS}
+SCHEDULED → {IN_EVALUATION}          ← automático via schedule()
+IN_EVALUATION → {NEGOTIATION, LOSS}
+NEGOTIATION → {WIN, PENDING}
+PENDING → {RECYCLED}                  ← RecycleJob
+RECYCLED → {NEW}                      ← novo LeadTicket filho
 ```
 Transição inválida → `IllegalStateException` → HTTP 422
 

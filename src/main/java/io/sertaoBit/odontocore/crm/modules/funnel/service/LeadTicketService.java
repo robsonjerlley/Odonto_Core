@@ -12,7 +12,7 @@ public interface LeadTicketService {
 
     LeadTicketResponseDTO create(LeadTicketCreateRequestDTO dto);
 
-    LeadTicketResponseDTO changeStatus(UUID id, TicketStatus ticketStatus);
+    LeadTicketResponseDTO changeStatus(UUID id, TicketStatus status);
 
     LeadTicketResponseDTO findById(UUID id);
 
@@ -20,7 +20,7 @@ public interface LeadTicketService {
 
     List<LeadTicketResponseDTO> findByCustomer(UUID customerId);
 
-    List<LeadTicketResponseDTO> findByStatus(TicketStatus ticketStatus);
+    List<LeadTicketResponseDTO> findByStatus(TicketStatus status);
 
     List<LeadTicketResponseDTO> findByAssignedToUser(UUID userId);
 

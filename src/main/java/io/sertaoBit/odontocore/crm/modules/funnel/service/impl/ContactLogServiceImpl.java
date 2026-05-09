@@ -80,7 +80,6 @@ public class ContactLogServiceImpl implements ContactLogService {
     @Override
     @Transactional(readOnly = true)
     public List<ContactLogResponseDTO> findByTicketId(UUID ticketId) {
-        Objects.requireNonNull(ticketId);
         return contactLogRepository.findByTicketId(ticketId).stream()
                 .map(contactLogMapper::toResponseDTO)
                 .toList();
@@ -90,7 +89,6 @@ public class ContactLogServiceImpl implements ContactLogService {
     @Override
     @Transactional
     public void delete(UUID id) {
-        Objects.requireNonNull(id);
         if (!contactLogRepository.existsById(id)) {
             throw new ResourceNotFoundException("ContactLog not found by id: " + id);
         }

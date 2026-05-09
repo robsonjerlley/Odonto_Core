@@ -1,7 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
@@ -29,24 +28,18 @@ public class LeadTicketController {
         return ResponseEntity.status(HttpStatus.CREATED).body(leadTicketResponseDTO);
     }
 
-    @PatchMapping("/update/{id}/{dto}")
-    public ResponseEntity<LeadTicketResponseDTO> update(
-            @PathVariable UUID id,
-            @RequestBody @Validated LeadTicketUpdateRequestDTO dto) {
-        return ResponseEntity.ok(ticketService.update(id, dto));
-    }
-
     @GetMapping
     public ResponseEntity<List<LeadTicketResponseDTO>> findAll() {
+
         return ResponseEntity.ok(ticketService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LeadTicketResponseDTO> findById(@PathVariable UUID ticketId) {
-        return ResponseEntity.ok(ticketService.findById(ticketId));
+    public ResponseEntity<LeadTicketResponseDTO> findById(@PathVariable UUID id) {
+        return ResponseEntity.ok(ticketService.findById(id));
     }
 
-    @GetMapping("/findByCustomerId/{customerId}")
+    @GetMapping("/findByCustomer/{customerId}")
     public ResponseEntity<List<LeadTicketResponseDTO>> findByCustomer(@PathVariable UUID customerId) {
         return ResponseEntity.ok(ticketService.findByCustomer(customerId));
     }

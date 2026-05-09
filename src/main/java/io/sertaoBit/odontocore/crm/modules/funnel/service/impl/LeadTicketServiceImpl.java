@@ -1,70 +1,121 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
+import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
+import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
-
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.LeadTicketMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
-import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 
 @Service
 public class LeadTicketServiceImpl implements LeadTicketService {
 
+    private static final Map<TicketStatus, Set<TicketStatus>> ALLOWED_TRANSITIONS = Map.of(
+            NEW, Set.of(IN_CONTACT),
+            IN_CONTACT, Set.of(SCHEDULED, LOSS),
+            SCHEDULED, Set.of(IN_EVALUATION),
+            IN_EVALUATION, Set.of(NEGOTIATION, LOSS),
+            NEGOTIATION, Set.of(WIN, PENDING),
+            PENDING, Set.of(RECYCLED),
+            RECYCLED, Set.of(NEW)
+    );
+
+
     private final LeadTicketRepository ticketRepository;
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
+    private final SecurityUtils securityUtils;
+    private final ContactLogRepository contactLogRepository;
     private final LeadTicketMapper ticketMapper;
+
 
     public LeadTicketServiceImpl(
             LeadTicketRepository ticketRepository,
             CustomerRepository customerRepository,
             UserRepository userRepository,
-            LeadTicketMapper ticketMapper
+            LeadTicketMapper ticketMapper, SecurityUtils securityUtils, ContactLogRepository contactLogRepository
     ) {
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
         this.ticketMapper = ticketMapper;
+        this.securityUtils = securityUtils;
+        this.contactLogRepository = contactLogRepository;
     }
 
 
     @Override
     @Transactional
     public LeadTicketResponseDTO create(LeadTicketCreateRequestDTO dto) {
-        Customer customer = customerRepository.findById(dto.customerId().getId())
-                .orElseThrow(() -> new RuntimeException("Customer with id: " + dto.customerId().getId() + " not found"));
+        Customer customer = customerRepository.findById(dto.customerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Customer with id: " + dto.customerId() + " not found"));
 
-        User user = userRepository.findById(dto.assigneTo().getId())
-                .orElseThrow(() -> new RuntimeException("User with id: " + dto.assigneTo().getId() + " not found"));
-
-        LeadTicket leadTicket = ticketMapper.toEntity(dto);
-
-        leadTicket.setCustomer(customer);
-        leadTicket.setAssigneTo(user);
+        var userId = securityUtils.getCurrentUserId();
+        var ticketStatus = NEW;
+        LeadTicket leadTicket = LeadTicket.builder()
+                .customerId(dto.customerId())
+                .status(ticketStatus)
+                .currentSector(dto.currentSector())
+                .assignedTo(dto.assignedTo())
+                .scheduledAt(dto.scheduledAt())
+                .createdBy(userId)
+                .build();
 
         return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
     }
 
+
     @Override
     @Transactional
-    public LeadTicketResponseDTO changeStatus(UUID id, LeadTicketUpdateRequestDTO dto) {
-        Objects.requireNonNull(id, "ID cannot be null");
+    public LeadTicketResponseDTO changeStatus(UUID id, TicketStatus status) {
         LeadTicket leadTicket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found by id: " + id));
+
+        var currentStatus = leadTicket.getStatus();
+        Set<TicketStatus> allowed = ALLOWED_TRANSITIONS.get(currentStatus);
+        if (allowed == null || !allowed.contains(status)) {
+            throw new IllegalStateException("Transition not allowed " + currentStatus + " -> " + status);
+        }
+
+        leadTicket.setStatus(status);
+
+        LocalDateTime now = LocalDateTime.now();
+        if (status == WIN) leadTicket.setClosedAt(now);
+        if (status == PENDING) leadTicket.setPendingAt(now);
+        if (status == RECYCLED) leadTicket.setRecycledAt(now);
+
+
+        ContactLog log = ContactLog.builder()
+                .ticketId(id)
+                .userId(securityUtils.getCurrentUserId())
+                .channel(ContactChannel.OTHER)
+                .note("Status changed: " + currentStatus + " → " + status)
+                .statusBefore(currentStatus)
+                .statusAfter(status)
+                .occurredAt(now)
+                .build();
+        contactLogRepository.save(log);
+
+
         return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
     }
 
@@ -73,7 +124,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     public LeadTicketResponseDTO findById(UUID id) {
         return ticketRepository.findById(id)
                 .map(ticketMapper::toResponseDTO)
-                .orElseThrow(() -> new RuntimeException("Ticket not found by id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found by id: " + id));
     }
 
     @Override
@@ -81,45 +132,39 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     public List<LeadTicketResponseDTO> findAll() {
         return ticketRepository.findAll().stream()
                 .map(ticketMapper::toResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<LeadTicketResponseDTO> findByCustomer(UUID customerId) {
         if (!customerRepository.existsById(customerId)) {
-            throw new RuntimeException("Customer not found by id: " + customerId);
+            throw new ResourceNotFoundException("Customer not found by id: " + customerId);
         }
 
-        return ticketRepository.findAll().stream()
-                .filter(t -> t.getCustomer().getId().equals(customerId))
+        return ticketRepository.findByCustomerId(customerId).stream()
                 .map(ticketMapper::toResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<LeadTicketResponseDTO> findByStatus(TicketStatus ticketStatus) {
-        if (ticketStatus == null) {
-            throw new RuntimeException("ticketStatus is null");
-        }
-        return ticketRepository.findAll().stream()
-                .filter(t -> t.getTicketStatus().equals(ticketStatus))
+    public List<LeadTicketResponseDTO> findByStatus(TicketStatus status) {
+        return ticketRepository.findByStatus(status).stream()
                 .map(ticketMapper::toResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<LeadTicketResponseDTO> findByAssignedToUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
-            throw new RuntimeException("User not found by id: " + userId);
+            throw new ResourceNotFoundException("User not found by id: " + userId);
         }
 
-        return ticketRepository.findAll().stream()
-                .filter(t -> t.getAssigneTo() != null && t.getAssigneTo().getId().equals(userId))
+        return ticketRepository.findByAssignedTo(userId).stream()
                 .map(ticketMapper::toResponseDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
 
@@ -127,7 +172,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Transactional
     public void deleteById(UUID id) {
         if (!ticketRepository.existsById(id)) {
-            throw new RuntimeException("Ticket not found by id: " + id);
+            throw new ResourceNotFoundException("Ticket not found by id: " + id);
         }
 
         ticketRepository.deleteById(id);

@@ -15,6 +15,8 @@ public interface LeadTicketRepository extends JpaRepository<LeadTicket, UUID> {
 
     List<LeadTicket> findByCustomerId(UUID customerId);
 
+    List<LeadTicket> findByAssignedTo(UUID userId);
+
     List<LeadTicket> findByCurrentSector(Sector sector);
 
     List<LeadTicket> findByCurrentSectorAndAssignedTo(Sector sector, UUID userId);
