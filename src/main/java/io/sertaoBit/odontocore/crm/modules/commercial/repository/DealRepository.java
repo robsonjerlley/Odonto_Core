@@ -6,16 +6,18 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface DealRepository extends JpaRepository<Deal, UUID> {
 
-    List<Deal> findByDealStatus(DealStatus dealStatus);
+    Optional<Deal> findByTicketId(UUID ticketId);
 
-    List<Deal> findByCustomerId(UUID customerId);
+    Optional<Deal> findByTicketIdAndArchivedFalse(UUID ticketId);
 
-    List<Deal> findByClosedDateBetween(LocalDateTime start, LocalDateTime end);
+    List<Deal> findByCreatedByAndClosedAtBetween(UUID userId, LocalDateTime from, LocalDateTime to);
 
-    List<Deal> findByResponsibleId(UUID userId);
+    List<Deal> findByTicketIdIn(List<UUID> ticketIds);
+
 }

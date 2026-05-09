@@ -469,6 +469,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="method"><span class="mname">+ findByPhone(phone: String)</span><span class="msig">Optional&lt;Customer&gt;</span></div>
         <div class="method"><span class="mname">+ existsByCpf(cpf: String)</span><span class="msig">boolean</span></div>
         <div class="method"><span class="mname">+ findBySource(source: CustomerSource)</span><span class="msig">List&lt;Customer&gt;</span></div>
+        <div class="method"><span class="mname">+ findByAdChannel(channel: AdsChannel)</span><span class="msig">List&lt;Customer&gt;</span><span class="mrule">usado por AnalyticsServiceImpl para calcular ROI por canal</span></div>
       </div>
 
       <div class="cls">
@@ -667,8 +668,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="cls-head h-amber"><span class="cls-stereo">«@Repository» «extends JpaRepository&lt;Deal,UUID&gt;»</span><span class="cls-name">DealRepository</span></div>
         <div class="method"><span class="mname">+ findByTicketId(ticketId: UUID)</span><span class="msig">Optional&lt;Deal&gt;</span></div>
         <div class="method"><span class="mname">+ findByTicketIdAndArchivedFalse(ticketId: UUID)</span><span class="msig">Optional&lt;Deal&gt;</span></div>
-        <div class="method"><span class="mname">+ findByCreatedByAndClosedAtBetween(userId, from, to)</span><span class="msig">List&lt;Deal&gt;</span></div>
-        <div class="method"><span class="mname">+ sumFinalValueBySourceAndPeriod(source, from, to)</span><span class="msig">BigDecimal  @Query</span></div>
+        <div class="method"><span class="mname">+ findByCreatedByAndClosedAtBetween(userId: UUID, from: LocalDateTime, to: LocalDateTime)</span><span class="msig">List&lt;Deal&gt;</span></div>
+        <div class="method"><span class="mname">+ findByTicketIdIn(ticketIds: List&lt;UUID&gt;)</span><span class="msig">List&lt;Deal&gt;</span><span class="mrule">usado por AnalyticsServiceImpl para calcular ROI — sem JOIN cross-entidade</span></div>
       </div>
 
       <div class="cls">
@@ -677,15 +678,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       </div>
 
       <div class="cls">
-        <div class="cls-head h-blue"><span class="cls-stereo">«@Repository»</span><span class="cls-name">AdsInvestmentRepository</span></div>
-        <div class="method"><span class="mname">+ findByChannelAndPeriodStartGreaterThanEqual(channel, from)</span><span class="msig">List&lt;AdsInvestment&gt;</span></div>
-        <div class="method"><span class="mname">+ sumAmountByChannelAndPeriod(channel, from, to)</span><span class="msig">BigDecimal  @Query</span></div>
+        <div class="cls-head h-blue"><span class="cls-stereo">«@Repository» «extends JpaRepository&lt;AdsInvestment,UUID&gt;»</span><span class="cls-name">AdsInvestmentRepository</span></div>
+        <div class="method"><span class="mname">+ findByChannelAndPeriodStartGreaterThanEqual(channel: AdsChannel, from: LocalDate)</span><span class="msig">List&lt;AdsInvestment&gt;</span></div>
+        <div class="method"><span class="mname">+ sumAmountByChannelAndPeriod(channel: AdsChannel, from: LocalDate, to: LocalDate)</span><span class="msig">BigDecimal  @Query</span></div>
       </div>
 
       <div class="cls">
         <div class="cls-head h-blue"><span class="cls-stereo">«@Repository»</span><span class="cls-name">RecycleConfigRepository</span></div>
         <div class="method"><span class="mname">+ findBySectorAndActiveTrue(sector: Sector)</span><span class="msig">Optional&lt;RecycleConfig&gt;</span></div>
-        <div class="method"><span class="mname">+ findFirstByActiveTrueOrderBySectorAsc()</span><span class="msig">Optional&lt;RecycleConfig&gt;</span><span class="mrule">config global fallback</span></div>
+        <div class="method"><span class="mname">+ findBySectorIsNullAndActiveTrue()</span><span class="msig">Optional&lt;RecycleConfig&gt;</span><span class="mrule">config global fallback — sector null = global</span></div>
+      </div>
+
+      <div class="cls">
+        <div class="cls-head h-blue"><span class="cls-stereo">«@Repository»</span><span class="cls-name">BonusConfigRepository</span></div>
+        <div class="method"><span class="mname">+ findByRoleAndSectorAndPeriodRef(role: Role, sector: Sector, periodRef: String)</span><span class="msig">Optional&lt;BonusConfig&gt;</span></div>
+        <div class="method"><span class="mname">+ findByRoleAndSector(role: Role, sector: Sector)</span><span class="msig">List&lt;BonusConfig&gt;</span></div>
       </div>
 
       <!-- Services -->

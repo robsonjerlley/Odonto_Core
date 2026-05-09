@@ -1,34 +1,27 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.DealResponseDTO;
-import org.springframework.stereotype.Service;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.DealCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.DealUpdateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 
-import java.time.LocalDate;
-import java.util.List;
+
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
-@Service
+
 public interface DealService {
 
-    DealResponseDTO create(DealCreateRequestDTO dto);
+    Deal create(UUID ticketId, DealCreateRequestDTO dto, User by);
 
-    DealResponseDTO update(UUID id, DealUpdateRequestDTO dto);
+    Deal update(UUID dealId, DealUpdateRequestDTO dto, User by);
 
-    DealResponseDTO findById(UUID id);
+    Deal applyDiscount(UUID dealId, BigDecimal pct, User by);
 
-    List<DealResponseDTO> findAll();
+    Deal closeDeal(UUID dealId, String paymentMethod, User by);
 
-    List<DealResponseDTO> findByCustomer(UUID customerId);
-
-    List<DealResponseDTO> findByStatus(DealStatus status);
-
-    List<DealResponseDTO> findClosedByUser(UUID userId);
-
-    List<DealResponseDTO> findByDateRange(LocalDate start, LocalDate end);
-
-    DealResponseDTO updateStatus(UUID id, DealStatus status);
-
-    void delete(UUID id);
+    DealDetailResponseDTO getDealWithHistory(UUID dealId, User by);
 }
+
+

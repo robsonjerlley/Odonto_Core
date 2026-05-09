@@ -60,7 +60,7 @@ public class DealServiceImpl implements DealService {
 
     @Override
     @Transactional
-    public DealResponseDTO update(UUID id, DealUpdateRequestDTO dto) {
+    public Deal update(UUID id, DealUpdateRequestDTO dto) {
         Deal deal = dealRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Deal not found by id: " + id));
 

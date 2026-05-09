@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.repository;
 
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.CustomerSource;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,8 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     Optional<Customer> findByCpf(String cpf);
 
     List<Customer> findBySource(CustomerSource source);
+
+    List<Customer> findByChannel(AdsChannel channel);
+
+
 }

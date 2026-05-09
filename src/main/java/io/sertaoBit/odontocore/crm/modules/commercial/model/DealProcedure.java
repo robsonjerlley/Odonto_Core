@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.model;
 
+
 import java.math.BigDecimal;
 
 public record DealProcedure(
