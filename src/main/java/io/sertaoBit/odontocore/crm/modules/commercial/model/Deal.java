@@ -1,20 +1,22 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.model;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
+
 @Entity
-@Table(name = "tb_acordos" , schema = "crm_db" , indexes = {
-        @Index(name = "idx_customer_status", columnList = "customer_id, status"),
-        @Index(name = "idx_closed_date" , columnList = "closed_date")
+@Table(name = "deals", schema = "crm_db", indexes = {
+        @Index(name = "idx_deal_ticket_id", columnList = "ticket_id"),
+        @Index(name = "idx_deal_closed_at", columnList = "closed_at")
 })
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
@@ -25,21 +27,42 @@ public class Deal {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Customer customer;
-    @Enumerated(EnumType.STRING)
-    private DealStatus dealStatus;
-    @ElementCollection(fetch = FetchType.LAZY)
-    private Set<String> procedures;
+
     @Column(nullable = false)
-    private BigDecimal negotiationValue;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User closedBy;
-    @Column(length = 350)
-    private String description;
+    private UUID ticketId;
+
+    @Enumerated(EnumType.STRING)
+    private Sector createdBySector = Sector.EVALUATOR;
+
+    @Column(nullable = false)
+    private UUID createdBy;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb", nullable = false)
+    private List<DealProcedure> procedures;
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal totalValue;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal discountPct = BigDecimal.ZERO;
+
+    private UUID discountApprovedBy;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal finalValue;
+
+    private String paymentMethod;
+
+    private UUID closedBy;
+
+    private LocalDateTime closedAt;
+
+    private boolean archived = false;
+
     @CreationTimestamp
-    private LocalDateTime closedDate;
+    private LocalDateTime createdAt;
 
-    private LocalDate targetDate;
-
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

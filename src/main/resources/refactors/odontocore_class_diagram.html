@@ -108,57 +108,59 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
     <div class="pkg-body g4">
 
       <div class="enum-card">
-        <div class="enum-head" style="color:var(--purple)">«enum» Setor</div>
+        <div class="enum-head" style="color:var(--purple)">«enum» Sector</div>
         <div class="enum-vals">
-          <span class="ev ev-purple">LEADS</span><span class="ev ev-purple">AVALIACAO</span>
-          <span class="ev ev-purple">COMERCIAL</span><span class="ev ev-purple">MANAGER</span>
-          <span class="ev ev-purple">ADMIN</span>
+          <span class="ev ev-purple">LEADS</span><span class="ev ev-purple">ATTENDANT</span>
+          <span class="ev ev-purple">EVALUATOR</span><span class="ev ev-purple">COMMERCIAL</span>
+          <span class="ev ev-purple">ADM</span><span class="ev ev-purple">MANAGER</span>
         </div>
       </div>
 
       <div class="enum-card">
         <div class="enum-head" style="color:var(--purple)">«enum» Role</div>
         <div class="enum-vals">
-          <span class="ev ev-purple">ADMIN</span><span class="ev ev-purple">MANAGER</span>
-          <span class="ev ev-purple">ATTENDANT</span><span class="ev ev-purple">DENTIST</span>
-          <span class="ev ev-purple">SELLER</span><span class="ev ev-purple">VIEWER</span>
+          <span class="ev ev-purple">ADM_SYSTEM</span><span class="ev ev-purple">ADM_LEADS</span>
+          <span class="ev ev-purple">USER_LEADS</span><span class="ev ev-purple">USER_ATTENDANT</span>
+          <span class="ev ev-purple">ADM_EVALUATOR</span><span class="ev ev-purple">USER_EVALUATOR</span>
+          <span class="ev ev-purple">ADM_COMMERCIAL</span><span class="ev ev-purple">USER_COMMERCIAL</span>
         </div>
       </div>
 
       <div class="enum-card">
         <div class="enum-head" style="color:var(--amber)">«enum» TicketStatus</div>
         <div class="enum-vals">
-          <span class="ev ev-amber">NOVO</span><span class="ev ev-amber">EM_CONTATO</span>
-          <span class="ev ev-amber">AGENDADO</span><span class="ev ev-amber">EM_AVALIACAO</span>
-          <span class="ev ev-amber">NEGOCIACAO</span><span class="ev ev-amber">GANHO</span>
-          <span class="ev ev-amber">PENDENTE</span><span class="ev ev-amber">RECICLADO</span>
-          <span class="ev ev-amber">PERDIDO</span>
+          <span class="ev ev-amber">NEW</span><span class="ev ev-amber">IN_CONTACT</span>
+          <span class="ev ev-amber">SCHEDULED</span><span class="ev ev-amber">IN_EVALUATION</span>
+          <span class="ev ev-amber">NEGOTIATION</span><span class="ev ev-amber">WIN</span>
+          <span class="ev ev-amber">PENDING</span><span class="ev ev-amber">RECYCLED</span>
+          <span class="ev ev-amber">LOSS</span>
         </div>
       </div>
 
       <div class="enum-card">
         <div class="enum-head" style="color:var(--teal)">«enum» CustomerSource</div>
         <div class="enum-vals">
-          <span class="ev ev-teal">ADS_PAGO</span><span class="ev ev-teal">ORGANICO</span>
-          <span class="ev ev-teal">INDICACAO</span>
+          <span class="ev ev-teal">ADS_PAID</span><span class="ev ev-teal">ORGANIC</span>
+          <span class="ev ev-teal">INDICATION</span>
         </div>
       </div>
 
       <div class="enum-card">
         <div class="enum-head" style="color:var(--teal)">«enum» ContactChannel</div>
         <div class="enum-vals">
-          <span class="ev ev-teal">WHATSAPP</span><span class="ev ev-teal">TELEFONE</span>
-          <span class="ev ev-teal">EMAIL</span><span class="ev ev-teal">PRESENCIAL</span>
-          <span class="ev ev-teal">INSTAGRAM</span><span class="ev ev-teal">OUTRO</span>
+          <span class="ev ev-teal">ORGANIC</span><span class="ev ev-teal">REFERRAL</span>
+          <span class="ev ev-teal">FACEBOOK</span><span class="ev ev-teal">INSTAGRAM</span>
+          <span class="ev ev-teal">WHATSAPP</span><span class="ev ev-teal">PHONE_CALL</span>
+          <span class="ev ev-teal">WEBSITE_FROM</span><span class="ev ev-teal">OTHER</span>
         </div>
       </div>
 
       <div class="enum-card">
         <div class="enum-head" style="color:var(--coral)">«enum» AdsChannel</div>
         <div class="enum-vals">
-          <span class="ev ev-coral">META</span><span class="ev ev-coral">GOOGLE</span>
+          <span class="ev ev-coral">GOOGLE</span><span class="ev ev-coral">META</span>
           <span class="ev ev-coral">INSTAGRAM</span><span class="ev ev-coral">TIKTOK</span>
-          <span class="ev ev-coral">OUTRO</span>
+          <span class="ev ev-coral">OUTER</span>
         </div>
       </div>
 
@@ -213,7 +215,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="field"><span class="vis">-</span><span class="fname">name</span><span class="ftype">String</span><span class="fann nn">NOT NULL</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">email</span><span class="ftype">String</span><span class="fann uk">UNIQUE</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">passwordHash</span><span class="ftype">String</span><span class="fann nn">NOT NULL</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Setor</span><span class="fann nn">NOT NULL</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Sector</span><span class="fann nn">NOT NULL</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">role</span><span class="ftype">Role</span><span class="fann nn">NOT NULL</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">active</span><span class="ftype">Boolean</span><span class="fann def">default true</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">createdBy</span><span class="ftype">UUID</span><span class="fann fk">FK User?</span></div>
@@ -230,7 +232,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="section-label">fields</div>
         <div class="field"><span class="vis">-</span><span class="fname">id</span><span class="ftype">UUID</span><span class="fann pk">PK</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">role</span><span class="ftype">Role</span><span class="fann nn">NOT NULL</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Setor</span><span class="fann nn">nullable</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Sector</span><span class="fann nn">nullable</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">resource</span><span class="ftype">Resource</span><span class="fann nn">NOT NULL</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">action</span><span class="ftype">Action</span><span class="fann nn">NOT NULL</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">scope</span><span class="ftype">PermissionScope</span><span class="fann nn">NOT NULL</span></div>
@@ -261,8 +263,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="cls-name">UserRepository</span>
         </div>
         <div class="method"><span class="mname">+ findByEmail(email: String)</span><span class="msig">Optional&lt;User&gt;</span></div>
-        <div class="method"><span class="mname">+ findAllBySector(sector: Setor)</span><span class="msig">List&lt;User&gt;</span></div>
-        <div class="method"><span class="mname">+ findAllBySectorAndRole(sector: Setor, role: Role)</span><span class="msig">List&lt;User&gt;</span></div>
+        <div class="method"><span class="mname">+ findAllBySector(sector: Sector)</span><span class="msig">List&lt;User&gt;</span></div>
+        <div class="method"><span class="mname">+ findAllBySectorAndRole(sector: Sector, role: Role)</span><span class="msig">List&lt;User&gt;</span></div>
         <div class="method"><span class="mname">+ existsByEmail(email: String)</span><span class="msig">boolean</span></div>
       </div>
 
@@ -272,7 +274,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="cls-name">PermissionRuleRepository</span>
         </div>
         <div class="method"><span class="mname">+ findByRoleAndResourceAndAction(</span><span class="msig">  role: Role, resource: Resource, action: Action)</span><span class="msig">Optional&lt;PermissionRule&gt;</span></div>
-        <div class="method"><span class="mname">+ findByRoleAndSectorAndResourceAndAction(</span><span class="msig">  role: Role, sector: Setor, resource: Resource, action: Action)</span><span class="msig">Optional&lt;PermissionRule&gt;</span></div>
+        <div class="method"><span class="mname">+ findByRoleAndSectorAndResourceAndAction(</span><span class="msig">  role: Role, sector: Sector, resource: Resource, action: Action)</span><span class="msig">Optional&lt;PermissionRule&gt;</span></div>
         <div class="method"><span class="mname">+ findAllByRole(role: Role)</span><span class="msig">List&lt;PermissionRule&gt;</span></div>
       </div>
 
@@ -288,7 +290,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="field"><span class="vis">-</span><span class="fname">email</span><span class="ftype">String</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">passwordHash</span><span class="ftype">String</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">role</span><span class="ftype">Role</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Setor</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Sector</span></div>
         <div class="divider"></div>
         <div class="section-label">implements UserDetails</div>
         <div class="method"><span class="mname">+ getAuthorities()</span><span class="msig">Collection&lt;GrantedAuthority&gt;</span></div>
@@ -326,12 +328,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         </div>
         <div class="method">
           <span class="mname">+ canAccess(user: User, resource: Resource, action: Action,</span>
-          <span class="msig">  targetSector: Setor, targetOwnerId: UUID): boolean</span>
+          <span class="msig">  targetSector: Sector, targetOwnerId: UUID): boolean</span>
           <span class="mrule">busca regra por role+sector → fallback role only → resolve scope</span>
         </div>
         <div class="method">
           <span class="mname">+ checkOrThrow(user: User, resource: Resource, action: Action,</span>
-          <span class="msig">  targetSector: Setor, targetOwnerId: UUID): void</span>
+          <span class="msig">  targetSector: Sector, targetOwnerId: UUID): void</span>
           <span class="mrule">lança AccessDeniedException (HTTP 403) se negado</span>
         </div>
       </div>
@@ -344,7 +346,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         </div>
         <div class="method"><span class="mname">+ createUser(dto: CreateUserRequest, by: User)</span><span class="msig">User</span><span class="mrule">valida CREATE USER · MANAGER cria só no próprio setor</span></div>
         <div class="method"><span class="mname">+ deactivateUser(userId: UUID, by: User)</span><span class="msig">void</span><span class="mrule">soft-delete: active = false · preserva histórico</span></div>
-        <div class="method"><span class="mname">+ listUsersBySector(sector: Setor, by: User)</span><span class="msig">List&lt;User&gt;</span><span class="mrule">ADMIN vê todos · MANAGER vê só o próprio setor</span></div>
+        <div class="method"><span class="mname">+ listUsersBySector(sector: Sector, by: User)</span><span class="msig">List&lt;User&gt;</span><span class="mrule">ADMIN vê todos · MANAGER vê só o próprio setor</span></div>
       </div>
 
       <div class="cls">
@@ -418,7 +420,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="field"><span class="vis">-</span><span class="fname">id</span><span class="ftype">UUID</span><span class="fann pk">PK</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">customerId</span><span class="ftype">UUID</span><span class="fann fk">FK Customer</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">status</span><span class="ftype">TicketStatus</span><span class="fann nn">NOT NULL</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">currentSector</span><span class="ftype">Setor</span><span class="fann nn">NOT NULL</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">currentSector</span><span class="ftype">Sector</span><span class="fann nn">NOT NULL</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">assignedTo</span><span class="ftype">UUID</span><span class="fann fk">FK User?</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">previousTicketId</span><span class="ftype">UUID</span><span class="fann fk">FK self?</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">scheduledAt</span><span class="ftype">LocalDateTime</span></div>
@@ -474,7 +476,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="method"><span class="mname">+ findByCustomerId(customerId: UUID)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
         <div class="method"><span class="mname">+ findByStatus(status: TicketStatus)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
         <div class="method"><span class="mname">+ findByAssignedTo(userId: UUID)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
-        <div class="method"><span class="mname">+ findByCurrentSector(sector: Setor)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
+        <div class="method"><span class="mname">+ findByCurrentSector(sector: Sector)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
         <div class="method"><span class="mname">+ findByStatusAndPendingAtBefore(status: TicketStatus, date: LocalDateTime)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
       </div>
 
@@ -491,7 +493,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="cls-name">ICustomerService</span>
           <span class="cls-sub">injetado: CustomerRepository, LeadTicketRepository, SecurityUtils</span>
         </div>
-        <div class="method"><span class="mname">+ create(dto: CustomerCreateRequestDTO)</span><span class="msig">CustomerResponseDTO</span><span class="mrule">valida CPF duplicado · abre LeadTicket(NOVO) automaticamente via repo</span></div>
+        <div class="method"><span class="mname">+ create(dto: CustomerCreateRequestDTO)</span><span class="msig">CustomerResponseDTO</span><span class="mrule">valida CPF duplicado · abre LeadTicket(NEW) automaticamente via repo</span></div>
         <div class="method"><span class="mname">+ update(id: UUID, dto: CustomerUpdateRequestDTO)</span><span class="msig">CustomerResponseDTO</span><span class="mrule">apenas name, cpf, phone, email</span></div>
         <div class="method"><span class="mname">+ findById(id: UUID)</span><span class="msig">CustomerResponseDTO</span></div>
         <div class="method"><span class="mname">+ findAll()</span><span class="msig">List&lt;CustomerResponseDTO&gt;</span></div>
@@ -508,7 +510,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="field"><span class="vis">-</span><span class="fname">ALLOWED_TRANSITIONS</span><span class="ftype">Map&lt;TicketStatus, Set&lt;TicketStatus&gt;&gt;</span><span class="fann def">static final</span></div>
         <div class="divider"></div>
         <div class="section-label">métodos</div>
-        <div class="method"><span class="mname">+ create(dto: LeadTicketCreateRequestDTO)</span><span class="msig">LeadTicketResponseDTO</span><span class="mrule">status inicial = NOVO · createdBy do SecurityContext</span></div>
+        <div class="method"><span class="mname">+ create(dto: LeadTicketCreateRequestDTO)</span><span class="msig">LeadTicketResponseDTO</span><span class="mrule">status inicial = NEW · createdBy do SecurityContext</span></div>
         <div class="method"><span class="mname">+ changeStatus(id: UUID, newStatus: TicketStatus)</span><span class="msig">LeadTicketResponseDTO</span><span class="mrule">valida ALLOWED_TRANSITIONS → IllegalStateException (422) se inválida · seta timestamps (closedAt/pendingAt/recycledAt) · salva ContactLog automático</span></div>
         <div class="method"><span class="mname">+ findById(id: UUID)</span><span class="msig">LeadTicketResponseDTO</span></div>
         <div class="method"><span class="mname">+ findAll()</span><span class="msig">List&lt;LeadTicketResponseDTO&gt;</span></div>
@@ -536,7 +538,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
 
   <div class="note">
     <strong>ALLOWED_TRANSITIONS (dentro de TicketServiceImpl)</strong><br>
-    NOVO → {EM_CONTATO} · EM_CONTATO → {AGENDADO, PERDIDO} · AGENDADO → {EM_AVALIACAO} · EM_AVALIACAO → {NEGOCIACAO, PERDIDO} · NEGOCIACAO → {GANHO, PENDENTE} · PENDENTE → {RECICLADO} · RECICLADO → {NOVO}<br><br>
+    NEW → {IN_CONTACT} · IN_CONTACT → {SCHEDULED, LOSS} · SCHEDULED → {IN_EVALUATION} · IN_EVALUATION → {NEGOTIATION, LOSS} · NEGOTIATION → {WIN, PENDING} · PENDING → {RECYCLED} · RECYCLED → {NEW}<br><br>
     Transição inválida → <code>IllegalStateException</code> → HTTP 422. Não há <code>StatusTransitionValidator</code> separado — a lógica é encapsulada no próprio <code>TicketServiceImpl</code>.
   </div>
 </div>
@@ -558,7 +560,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="section-label">fields</div>
         <div class="field"><span class="vis">-</span><span class="fname">id</span><span class="ftype">UUID</span><span class="fann pk">PK</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">ticketId</span><span class="ftype">UUID</span><span class="fann fk">FK LeadTicket</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">createdBySector</span><span class="ftype">Setor</span><span class="fann def">= AVALIACAO</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">createdBySector</span><span class="ftype">Sector</span><span class="fann def">= EVALUATOR</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">createdBy</span><span class="ftype">UUID</span><span class="fann fk">FK User</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">procedures</span><span class="ftype">List&lt;DealProcedure&gt;</span><span class="fann nn">@Type JSON</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">totalValue</span><span class="ftype">BigDecimal</span><span class="fann nn">NUMERIC(15,2)</span></div>
@@ -594,7 +596,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <div class="field"><span class="vis">-</span><span class="fname">id</span><span class="ftype">UUID</span><span class="fann pk">PK</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">dealId</span><span class="ftype">UUID</span><span class="fann fk">FK Deal</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">changedBy</span><span class="ftype">UUID</span><span class="fann fk">FK User</span></div>
-          <div class="field"><span class="vis">-</span><span class="fname">changedBySector</span><span class="ftype">Setor</span></div>
+          <div class="field"><span class="vis">-</span><span class="fname">changedBySector</span><span class="ftype">Sector</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">fieldChanged</span><span class="ftype">String</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">valueBefore</span><span class="ftype">String (JSON)</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">valueAfter</span><span class="ftype">String (JSON)</span></div>
@@ -622,7 +624,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
             <span class="cls-name">RecycleConfig</span>
           </div>
           <div class="field"><span class="vis">-</span><span class="fname">id</span><span class="ftype">UUID</span><span class="fann pk">PK</span></div>
-          <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Setor?</span><span class="fann nn">null = global</span></div>
+          <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Sector?</span><span class="fann nn">null = global</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">afterDays</span><span class="ftype">int</span><span class="fann nn">NOT NULL</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">active</span><span class="ftype">Boolean</span><span class="fann def">default true</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">configuredBy</span><span class="ftype">UUID</span><span class="fann fk">FK User</span></div>
@@ -636,7 +638,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
             <span class="cls-name">BonusConfig</span>
           </div>
           <div class="field"><span class="vis">-</span><span class="fname">id</span><span class="ftype">UUID</span><span class="fann pk">PK</span></div>
-          <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Setor</span><span class="fann nn">NOT NULL</span></div>
+          <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Sector</span><span class="fann nn">NOT NULL</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">role</span><span class="ftype">Role</span><span class="fann nn">NOT NULL</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">metricKey</span><span class="ftype">String</span><span class="fann nn">NOT NULL</span></div>
           <div class="field"><span class="vis">-</span><span class="fname">bonusPct</span><span class="ftype">BigDecimal</span></div>
@@ -682,7 +684,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
 
       <div class="cls">
         <div class="cls-head h-blue"><span class="cls-stereo">«@Repository»</span><span class="cls-name">RecycleConfigRepository</span></div>
-        <div class="method"><span class="mname">+ findBySectorAndActiveTrue(sector: Setor)</span><span class="msig">Optional&lt;RecycleConfig&gt;</span></div>
+        <div class="method"><span class="mname">+ findBySectorAndActiveTrue(sector: Sector)</span><span class="msig">Optional&lt;RecycleConfig&gt;</span></div>
         <div class="method"><span class="mname">+ findFirstByActiveTrueOrderBySectorAsc()</span><span class="msig">Optional&lt;RecycleConfig&gt;</span><span class="mrule">config global fallback</span></div>
       </div>
 
@@ -693,10 +695,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="cls-name">ICommercialService</span>
           <span class="cls-sub">injetado: DealRepository, DealHistoryRepository, ITicketService, IPermissionService</span>
         </div>
-        <div class="method"><span class="mname">+ createDeal(ticketId: UUID, dto: CreateDealRequest, by: User)</span><span class="msig">Deal</span><span class="mrule">apenas AVALIACAO · calcula totalValue · ticket → NEGOCIACAO · currentSector → COMERCIAL</span></div>
+        <div class="method"><span class="mname">+ createDeal(ticketId: UUID, dto: CreateDealRequest, by: User)</span><span class="msig">Deal</span><span class="mrule">apenas EVALUATOR · calcula totalValue · ticket → NEGOTIATION · currentSector → COMMERCIAL</span></div>
         <div class="method"><span class="mname">+ updateDeal(dealId: UUID, dto: UpdateDealRequest, by: User)</span><span class="msig">Deal</span><span class="mrule">registra DealHistory por campo alterado</span></div>
         <div class="method"><span class="mname">+ applyDiscount(dealId: UUID, pct: BigDecimal, by: User)</span><span class="msig">Deal</span><span class="mrule">acima de conditions.maxDiscountPct → DiscountApprovalRequiredException</span></div>
-        <div class="method"><span class="mname">+ closeDeal(dealId: UUID, paymentMethod: String, by: User)</span><span class="msig">Deal</span><span class="mrule">apenas COMERCIAL/MANAGER · ticket → GANHO · closedAt = now · finalValue = totalValue × (1 - discountPct/100) HALF_UP</span></div>
+        <div class="method"><span class="mname">+ closeDeal(dealId: UUID, paymentMethod: String, by: User)</span><span class="msig">Deal</span><span class="mrule">apenas COMMERCIAL/MANAGER · ticket → WIN · closedAt = now · finalValue = totalValue × (1 - discountPct/100) HALF_UP</span></div>
         <div class="method"><span class="mname">+ getDealWithHistory(dealId: UUID, by: User)</span><span class="msig">DealDetailResponse</span></div>
       </div>
 
@@ -718,7 +720,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="cls-sub">injetado: LeadTicketRepository, RecycleConfigRepository, DealRepository</span>
         </div>
         <div class="method"><span class="mname">+ runNightly()</span><span class="msig">void  @Scheduled(cron="0 0 2 * * *")</span><span class="mrule">varre PENDENTE · ChronoUnit.DAYS.between(pendingAt, now) >= config.afterDays</span></div>
-        <div class="method"><span class="mname">- processTicket(ticket: LeadTicket)</span><span class="msig">void</span><span class="mrule">arquiva Deal ativo → marca ticket RECICLADO → cria novo LeadTicket(status=NOVO, previousTicketId=original.id)</span></div>
+        <div class="method"><span class="mname">- processTicket(ticket: LeadTicket)</span><span class="msig">void</span><span class="mrule">arquiva Deal ativo → marca ticket RECYCLED → cria novo LeadTicket(status=NEW, previousTicketId=original.id)</span></div>
       </div>
 
     </div>
@@ -764,7 +766,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="cls-head h-gray"><span class="cls-stereo">«record»</span><span class="cls-name">UserPerformanceResult</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">userId</span><span class="ftype">UUID</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">userName</span><span class="ftype">String</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">sector</span><span class="ftype">Setor</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">sector</span><span class="ftype">Sector</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">totalAssigned</span><span class="ftype">long</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">totalConverted</span><span class="ftype">long</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">conversionPct</span><span class="ftype">BigDecimal</span></div>
@@ -780,8 +782,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         </div>
         <div class="pkg-body g2" style="padding:10px;background:transparent">
           <div>
-            <div class="method"><span class="mname">+ getAdsROI(channel: AdsChannel, period: DateRange, by: User)</span><span class="msig">AdsROIResult</span><span class="mrule">Σ Deal.finalValue (GANHO, adChannel=channel) ÷ Σ AdsInvestment.amount · apenas ADMIN/MANAGER</span></div>
-            <div class="method"><span class="mname">+ getConversionByStage(period: DateRange, sector: Setor, by: User)</span><span class="msig">StageConversionResult</span><span class="mrule">contagens por status no período · MANAGER vê só próprio setor</span></div>
+            <div class="method"><span class="mname">+ getAdsROI(channel: AdsChannel, period: DateRange, by: User)</span><span class="msig">AdsROIResult</span><span class="mrule">Σ Deal.finalValue (WIN, adChannel=channel) ÷ Σ AdsInvestment.amount · apenas ADMIN/MANAGER</span></div>
+            <div class="method"><span class="mname">+ getConversionByStage(period: DateRange, sector: Sector, by: User)</span><span class="msig">StageConversionResult</span><span class="mrule">contagens por status no período · MANAGER vê só próprio setor</span></div>
             <div class="method"><span class="mname">+ getDropoffBySector(period: DateRange, by: User)</span><span class="msig">List&lt;SectorDropoffResult&gt;</span><span class="mrule">entradas vs saídas por setor · identifica gargalo</span></div>
             <div class="method"><span class="mname">+ getGlobalDashboard(period: DateRange, by: User)</span><span class="msig">GlobalDashboardResult</span><span class="mrule">agrega ROI + funil + top performers · apenas ADMIN/MANAGER</span></div>
           </div>
@@ -817,7 +819,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <tr><td>ContactLog</td><td>N : 1</td><td>LeadTicket</td><td>ticketId</td><td>imutável após criação — sem UPDATE</td></tr>
           <tr><td>ContactLog</td><td>N : 1</td><td>User</td><td>userId</td><td>quem registrou o contato</td></tr>
           <tr><td>Deal</td><td>1 : 1</td><td>LeadTicket</td><td>ticketId</td><td>um ticket ativo tem no máximo 1 Deal não-arquivado</td></tr>
-          <tr><td>Deal</td><td>N : 1</td><td>User</td><td>createdBy</td><td>sempre setor AVALIACAO</td></tr>
+          <tr><td>Deal</td><td>N : 1</td><td>User</td><td>createdBy</td><td>sempre setor EVALUATOR</td></tr>
           <tr><td>Deal</td><td>N : 1</td><td>User</td><td>discountApprovedBy</td><td>nullable — aprovação de desconto acima do limite</td></tr>
           <tr><td>Deal</td><td>N : 1</td><td>User</td><td>closedBy</td><td>nullable — quem fechou</td></tr>
           <tr><td>DealHistory</td><td>N : 1</td><td>Deal</td><td>dealId</td><td>trilha imutável de auditoria</td></tr>
