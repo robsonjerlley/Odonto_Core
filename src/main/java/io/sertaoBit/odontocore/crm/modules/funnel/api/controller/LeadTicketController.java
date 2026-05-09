@@ -1,8 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 
+import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketChangeStatusRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
+
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +21,27 @@ public class LeadTicketController {
     private final LeadTicketService ticketService;
 
     public LeadTicketController(LeadTicketService ticketService) {
+
         this.ticketService = ticketService;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<LeadTicketResponseDTO> create(@RequestBody @Validated LeadTicketCreateRequestDTO dto) {
+    @PostMapping()
+    public ResponseEntity<LeadTicketResponseDTO> create(
+            @RequestBody @Validated LeadTicketCreateRequestDTO dto
+    ) {
         LeadTicketResponseDTO leadTicketResponseDTO = ticketService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(leadTicketResponseDTO);
     }
+
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<LeadTicketResponseDTO> updateStatus(
+            @PathVariable UUID id,
+            @RequestBody @Validated LeadTicketChangeStatusRequestDTO dto
+    ) {
+        return ResponseEntity.ok(ticketService.changeStatus(id, dto.status()));
+    }
+
 
     @GetMapping
     public ResponseEntity<List<LeadTicketResponseDTO>> findAll() {
@@ -34,35 +49,43 @@ public class LeadTicketController {
         return ResponseEntity.ok(ticketService.findAll());
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<LeadTicketResponseDTO> findById(@PathVariable UUID id) {
+    public ResponseEntity<LeadTicketResponseDTO> findById(
+            @PathVariable UUID id
+    ) {
         return ResponseEntity.ok(ticketService.findById(id));
     }
 
+
     @GetMapping("/findByCustomer/{customerId}")
-    public ResponseEntity<List<LeadTicketResponseDTO>> findByCustomer(@PathVariable UUID customerId) {
+    public ResponseEntity<List<LeadTicketResponseDTO>> findByCustomer(
+            @PathVariable UUID customerId
+    ) {
         return ResponseEntity.ok(ticketService.findByCustomer(customerId));
     }
 
-    @GetMapping("/ticketStatus/{ticketStatus}")
-    public ResponseEntity<List<LeadTicketResponseDTO>> findByTicketStatus(@PathVariable TicketStatus ticketStatus) {
-        return ResponseEntity.ok(ticketService.findByTicketStatus(ticketStatus));
+
+    @GetMapping("/ticketStatus/{status}")
+    public ResponseEntity<List<LeadTicketResponseDTO>> findByTicketStatus(
+            @PathVariable TicketStatus status
+    ) {
+        return ResponseEntity.ok(ticketService.findByStatus(status));
     }
 
-    @GetMapping("assignedToUser/{userId}")
-    public ResponseEntity<List<LeadTicketResponseDTO>> findByAssignedToUser(@PathVariable UUID userId) {
+
+    @GetMapping("/assignedToUser/{userId}")
+    public ResponseEntity<List<LeadTicketResponseDTO>> findByAssignedToUser(
+            @PathVariable UUID userId
+    ) {
         return ResponseEntity.ok(ticketService.findByAssignedToUser(userId));
     }
 
-    @PatchMapping("/changeStatus/{id}/{ticketStatus}")
-    public ResponseEntity<LeadTicketResponseDTO> updateStatus(
-            @PathVariable UUID Id,
-            @RequestBody @Validated TicketStatus ticketStatus) {
-        return ResponseEntity.ok(ticketService.changeStatus(Id, ticketStatus));
-    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id
+    ) {
         ticketService.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

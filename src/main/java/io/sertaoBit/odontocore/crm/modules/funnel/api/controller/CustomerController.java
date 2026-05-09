@@ -4,9 +4,9 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.Custo
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,17 +23,19 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-    @PostMapping("/create")
+    @PostMapping()
     public ResponseEntity<CustomerResponseDTO> create(
-            @RequestBody @Valid CustomerCreateRequestDTO requestDTO) {
+            @RequestBody @Validated CustomerCreateRequestDTO requestDTO
+    ) {
         CustomerResponseDTO customerResponseDTO = customerService.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(customerResponseDTO);
     }
 
-    @PatchMapping("/update/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<CustomerResponseDTO> update(
             @PathVariable UUID id, @RequestBody
-            @Valid CustomerUpdateRequestDTO requestDTO) {
+            @Validated CustomerUpdateRequestDTO requestDTO
+    ) {
         return ResponseEntity.ok(customerService.update(id, requestDTO));
     }
 
@@ -44,24 +46,32 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponseDTO> findById(@PathVariable UUID id) {
+    public ResponseEntity<CustomerResponseDTO> findById(
+            @PathVariable UUID id
+    ) {
         return ResponseEntity.ok(customerService.findById(id));
     }
 
     @GetMapping("/cpf/{cpf}")
-    public ResponseEntity<CustomerResponseDTO> findByCpf(@PathVariable String cpf) {
+    public ResponseEntity<CustomerResponseDTO> findByCpf(
+            @PathVariable @Validated String cpf
+    ) {
         return ResponseEntity.ok(customerService.findByCpf(cpf));
     }
 
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<List<CustomerResponseDTO>> findByName(@PathVariable String name) {
-        List<CustomerResponseDTO> customersDTO = customerService.findByName(name);
+    public ResponseEntity<List<CustomerResponseDTO>> findByName(
+            @PathVariable @Validated String username
+    ) {
+        List<CustomerResponseDTO> customersDTO = customerService.findByName(username);
         return ResponseEntity.ok(customersDTO);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id
+    ) {
         customerService.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

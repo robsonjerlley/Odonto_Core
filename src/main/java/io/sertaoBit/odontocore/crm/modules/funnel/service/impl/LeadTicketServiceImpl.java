@@ -66,14 +66,12 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Override
     @Transactional
     public LeadTicketResponseDTO create(LeadTicketCreateRequestDTO dto) {
-        Customer customer = customerRepository.findById(dto.customerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer with id: " + dto.customerId() + " not found"));
+             customerRepository.existsById(dto.customerId());
 
         var userId = securityUtils.getCurrentUserId();
-        var ticketStatus = NEW;
         LeadTicket leadTicket = LeadTicket.builder()
                 .customerId(dto.customerId())
-                .status(ticketStatus)
+                .status(NEW)
                 .currentSector(dto.currentSector())
                 .assignedTo(dto.assignedTo())
                 .scheduledAt(dto.scheduledAt())
@@ -102,6 +100,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         if (status == WIN) leadTicket.setClosedAt(now);
         if (status == PENDING) leadTicket.setPendingAt(now);
         if (status == RECYCLED) leadTicket.setRecycledAt(now);
+        if (status == LOSS) leadTicket.setClosedAt(now);
 
 
         ContactLog log = ContactLog.builder()
