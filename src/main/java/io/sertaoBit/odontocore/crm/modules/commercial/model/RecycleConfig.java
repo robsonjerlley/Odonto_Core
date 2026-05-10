@@ -16,6 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
+@Builder
 public class RecycleConfig {
 
     @Id
@@ -25,6 +26,7 @@ public class RecycleConfig {
     private Sector sector;
     @Column(nullable = false)
     private int afterDays;
+    @Builder.Default
     private boolean active = true;
     @Column(nullable = false)
     private UUID configuredBy;

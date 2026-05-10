@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.recycle;
+package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.recycleConfig;
 
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import jakarta.validation.constraints.Min;

@@ -17,6 +17,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
+@Builder
 public class BonusConfig {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,6 +34,7 @@ public class BonusConfig {
     private BigDecimal bonusPct;
     @Column(precision = 15, scale = 2)
     private BigDecimal targetValue;
+    @Builder.Default
     private boolean active = true;
     @Column(nullable = false)
     private UUID configuredBy;

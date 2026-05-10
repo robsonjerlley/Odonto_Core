@@ -17,6 +17,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
+@Builder
 public class AdsInvestment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
