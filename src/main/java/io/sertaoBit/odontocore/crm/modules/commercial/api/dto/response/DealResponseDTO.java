@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response;
 
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealProcedureDTO;
+import io.sertaoBit.odontocore.crm.shared.DealProcedureDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

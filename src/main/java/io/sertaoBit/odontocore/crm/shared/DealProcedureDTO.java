@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal;
+package io.sertaoBit.odontocore.crm.shared;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
