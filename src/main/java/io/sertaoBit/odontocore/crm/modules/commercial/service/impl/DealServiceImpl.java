@@ -1,24 +1,22 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.DealResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
+import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.mapper.DealMapper;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.DealService;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.chrono.ChronoLocalDateTime;
-import java.util.List;
-import java.util.Set;
+import java.math.BigDecimal;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class DealServiceImpl implements DealService {
@@ -26,160 +24,57 @@ public class DealServiceImpl implements DealService {
     private final DealRepository dealRepository;
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
+    private final LeadTicketRepository ticketRepository;
+    private final SecurityUtils  securityUtils;
     private final DealMapper dealMapper;
 
     public DealServiceImpl(
             DealRepository dealRepository,
             UserRepository userRepository,
-            CustomerRepository customerRepository,
+            CustomerRepository customerRepository, LeadTicketRepository ticketRepository, SecurityUtils securityUtils,
             DealMapper dealMapper
     ) {
         this.dealRepository = dealRepository;
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
+        this.ticketRepository = ticketRepository;
+        this.securityUtils = securityUtils;
         this.dealMapper = dealMapper;
     }
 
-    @Override
-    @Transactional
-    public DealResponseDTO create(DealCreateRequestDTO dto) {
-        Customer customer = customerRepository.findById(dto.customer().getId())
-                .orElseThrow(() -> new RuntimeException("Customer Not Found by id " + dto.customer().getId()));
-
-        Deal deal = dealMapper.toEntity(dto);
-        deal.setCustomer(customer);
-
-        // Deal começa em NEGOTIATING sem closedBy definido
-        deal.setDealStatus(DealStatus.NEGOTIATING);
-        deal.setClosedBy(null);
-
-
-        Deal saved = dealRepository.save(deal);
-        return dealMapper.toResponseDTO(saved);
-    }
 
     @Override
     @Transactional
-    public Deal update(UUID id, DealUpdateRequestDTO dto) {
-        Deal deal = dealRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Deal not found by id: " + id));
+    public Deal create(UUID ticketId, DealCreateRequestDTO dto) {
+        LeadTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket Not Found"));
+        var currentUser = securityUtils.getCurrentUser();
 
-        if (dto.description() != null && !dto.description().isBlank()) {
-            deal.setDescription(dto.description());
-        }
+        Deal deal = Deal.builder()
+                .ticketId(ticketId)
 
-        if (dto.negotiationValue() != null) {
-            deal.setNegotiationValue(dto.negotiationValue());
-        }
+                .build();
 
-        if (dto.procedures() != null && !dto.procedures().isEmpty()) {
-            deal.setProcedures(Set.of(dto.procedures().toString()));
-        }
-
-        Deal updated = dealRepository.save(deal);
-        return dealMapper.toResponseDTO(updated);
+        return null;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DealResponseDTO findById(UUID id) {
-        return dealRepository.findById(id)
-                .map(dealMapper::toResponseDTO)
-                .orElseThrow(() -> new RuntimeException("Deal Not Found by id " + id));
-
+    public Deal update(UUID dealId, DealUpdateRequestDTO dto) {
+        return null;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DealResponseDTO> findAll() {
-        return dealRepository.findAll().stream()
-                .map(dealMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public Deal applyDiscount(UUID dealId, BigDecimal pct) {
+        return null;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DealResponseDTO> findByCustomer(UUID customerId) {
-        if (!customerRepository.existsById(customerId)) {
-            throw new RuntimeException("Customer Not Found by id " + customerId);
-        }
-        return dealRepository.findAll().stream()
-                .filter(deal -> deal.getCustomer().getId().equals(customerId))
-                .map(dealMapper::toResponseDTO)
-                .collect(Collectors.toList());
+    public Deal closeDeal(UUID dealId, String paymentMethod) {
+        return null;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DealResponseDTO> findByStatus(DealStatus status) {
-        if (status == null) {
-            throw new RuntimeException("Deal Status Not Found");
-        }
-
-        return dealRepository.findAll().stream()
-                .filter(deal -> deal.getDealStatus().equals(status))
-                .map(dealMapper::toResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DealResponseDTO> findClosedByUser(UUID userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new RuntimeException("User Not Found by id " + userId);
-        }
-
-        return dealRepository.findAll().stream()
-                .filter(deal -> deal.getClosedBy().getId().equals(userId))
-                .map(dealMapper::toResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<DealResponseDTO> findByDateRange(LocalDate start, LocalDate end) {
-        return dealRepository.findAll().stream()
-                .filter(deal -> deal.getClosedDate() != null
-                        && deal.getClosedDate().isAfter(ChronoLocalDateTime.from(start))
-                        && deal.getClosedDate().isBefore(ChronoLocalDateTime.from(end)))
-                .map(dealMapper::toResponseDTO)
-                .collect(Collectors.toList());
-
-    }
-
-    @Override
-    @Transactional
-    public DealResponseDTO updateStatus(UUID id, DealStatus status) {
-        Deal deal = dealRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Deal not found by id: " + id));
-
-        if (status == null) {
-            throw new RuntimeException("Deal status cannot be null");
-        }
-
-        DealStatus currentStatus = deal.getDealStatus();
-
-        if (currentStatus == DealStatus.WON || currentStatus == DealStatus.LOST) {
-            throw new RuntimeException("Cannot update Deal in terminal status: " + currentStatus);
-        }
-
-
-        deal.setDealStatus(status);
-
-        Deal updated = dealRepository.save(deal);
-        return dealMapper.toResponseDTO(updated);
-    }
-
-
-    @Override
-    @Transactional
-    public void delete(UUID id) {
-        Deal deal = dealRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Deal not found by id: " + id));
-
-        if (deal.getDealStatus() == DealStatus.WON || deal.getDealStatus() == DealStatus.LOST) {
-            throw new RuntimeException("Cannot delete Deal in terminal status: " + deal.getDealStatus());
-        }
-
-        dealRepository.deleteById(id);
+    public DealDetailResponseDTO getDealWithHistory(UUID dealId) {
+        return null;
     }
 }

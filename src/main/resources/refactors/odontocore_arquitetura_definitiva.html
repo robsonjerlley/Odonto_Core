@@ -263,17 +263,17 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
    │  ├─ <span class="t-add">security/</span>
    │  │  ├─ <span class="t-add">UserPrincipal.java</span>
    │  │  ├─ <span class="t-add">JwtService.java</span><span class="badge b-fix">novo — faltava</span>
-   │  │  └─ <span class="t-add">JwtAuthFilter.java</span>
+   │  │  ├─ <span class="t-add">JwtAuthFilter.java</span>
+   │  │  └─ <span class="t-add">UserDetailsServiceImpl.java</span><span class="badge b-fix">implements UserDetailsService — não cria interface própria</span>
    │  └─ service/
    │     ├─ <span class="t-rename">IUserService.java</span><span class="badge b-rename">mantém prefixo I (padrão adotado)</span>
    │     ├─ <span class="t-add">IPermissionService.java</span>
    │     ├─ <span class="t-add">IAuthService.java</span>
+   │     ├─ <span class="t-add">PermissionSeeder.java</span><span class="badge b-fix">@Component implements ApplicationRunner — não segue Interface+Impl</span>
    │     └─ impl/
    │        ├─ <span class="t-keep">UserServiceImpl.java</span>
    │        ├─ <span class="t-add">PermissionServiceImpl.java</span><span class="badge b-fix">canAccess + checkOrThrow</span>
-   │        ├─ <span class="t-add">AuthServiceImpl.java</span>
-   │        ├─ <span class="t-add">UserDetailsServiceImpl.java</span><span class="badge b-fix">separado — não misturar com UserService</span>
-   │        └─ <span class="t-add">PermissionSeeder.java</span><span class="badge b-fix">ApplicationRunner separado</span>
+   │        └─ <span class="t-add">AuthServiceImpl.java</span>
    │
    ├─ <span class="t-rename">funnel/</span><span class="badge b-rename">crm/ → funnel/</span>
    │  ├─ api/
@@ -328,7 +328,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
    │  │     └─ response/
    │  │        ├─ <span class="t-add">DealResponse.java</span>
    │  │        └─ <span class="t-add">DealDetailResponse.java</span>
-   │  ├─ domain/model/
+   │  ├─ model/
    │  │  ├─ <span class="t-add">Deal.java</span>
    │  │  ├─ <span class="t-add">DealProcedure.java</span>
    │  │  ├─ <span class="t-add">DealHistory.java</span>
@@ -346,10 +346,10 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
    │  └─ service/
    │     ├─ <span class="t-add">ICommercialService.java</span>
    │     ├─ <span class="t-add">IConfigService.java</span>
+   │     ├─ <span class="t-add">RecycleJob.java</span><span class="badge b-fix">@Scheduled — não é Service, não segue Interface+Impl</span>
    │     └─ impl/
    │        ├─ <span class="t-add">CommercialServiceImpl.java</span>
-   │        ├─ <span class="t-add">ConfigServiceImpl.java</span>
-   │        └─ <span class="t-add">RecycleJob.java</span><span class="badge b-fix">@Scheduled — não é Service, não segue Interface+Impl</span>
+   │        └─ <span class="t-add">ConfigServiceImpl.java</span>
    │
    └─ <span class="t-add">analytics/</span>
       ├─ api/
@@ -368,7 +368,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
             └─ <span class="t-add">AnalyticsServiceImpl.java</span>
 </div>
 <div class="note note-warn" style="margin-top:10px">
-  <strong>Exceções ao padrão Interface+Impl:</strong> <code>RecycleJob</code> é um <code>@Component</code> com <code>@Scheduled</code> — não é um serviço injetável, portanto não precisa de interface. <code>UserDetailsServiceImpl</code> já implementa a interface do Spring (<code>UserDetailsService</code>), não cria interface própria. <code>PermissionSeeder</code> implementa <code>ApplicationRunner</code> do Spring — mesmo caso.
+  <strong>Exceções ao padrão Interface+Impl:</strong> <code>RecycleJob</code> é um <code>@Component</code> com <code>@Scheduled</code> — não é um serviço injetável, portanto não precisa de interface. Fica em <code>commercial/service/</code> diretamente. <code>UserDetailsServiceImpl</code> já implementa a interface do Spring (<code>UserDetailsService</code>), não cria interface própria — fica em <code>identity/security/</code>. <code>PermissionSeeder</code> implementa <code>ApplicationRunner</code> do Spring — mesmo caso, fica em <code>identity/service/</code> diretamente.
 </div>
 </div>
 </div>
@@ -651,9 +651,9 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
     <div class="cls-name">IUserService</div>
   </div>
   <div class="cls-body">
-    <div class="mth"><span class="mname">createUser(CreateUserRequest dto, User by)</span><span class="msig">: User</span></div>
-    <div class="mth"><span class="mname">deactivateUser(UUID userId, User by)</span><span class="msig">: void</span></div>
-    <div class="mth"><span class="mname">listUsersBySector(Sector sector, User by)</span><span class="msig">: List&lt;User&gt;</span></div>
+    <div class="mth"><span class="mname">createUser(CreateUserRequest dto)</span><span class="msig">: User</span></div>
+    <div class="mth"><span class="mname">deactivateUser(UUID userId)</span><span class="msig">: void</span></div>
+    <div class="mth"><span class="mname">listUsersBySector(Sector sector)</span><span class="msig">: List&lt;User&gt;</span></div>
     <div class="mth"><span class="mname">findById(UUID id)</span><span class="msig">: User</span></div>
   </div>
 </div>
@@ -667,14 +667,16 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
     <div class="field"><span class="fname fk">userRepo</span><span class="ftype">UserRepository</span></div>
     <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
     <div class="field"><span class="fname fk">passwordEncoder</span><span class="ftype">PasswordEncoder</span></div>
+    <div class="field"><span class="fname fk">securityUtils</span><span class="ftype">SecurityUtils</span></div>
     <div class="sdiv">— implementação —</div>
-    <div class="mth"><span class="mname">createUser(dto, by)</span><span class="msig">: User</span>
-      <span class="mrule">checkOrThrow(by, USER, CREATE, dto.sector(), null)</span>
+    <div class="mth"><span class="mname">createUser(dto)</span><span class="msig">: User</span>
+      <span class="mrule">currentUser = securityUtils.getCurrentUser()</span>
+      <span class="mrule">checkOrThrow(currentUser, USER, CREATE, dto.sector(), null)</span>
       <span class="mrule">MANAGER só cria no próprio setor · verifica email duplicado</span>
       <span class="mrule">passwordEncoder.encode(dto.password()) → user.passwordHash</span>
     </div>
-    <div class="mth"><span class="mname">deactivateUser(userId, by)</span><span class="msig">: void</span><span class="mrule">checkOrThrow(by, USER, DELETE, target.sector, null) · user.active = false</span></div>
-    <div class="mth"><span class="mname">listUsersBySector(sector, by)</span><span class="msig">: List&lt;User&gt;</span><span class="mrule">ADMIN → todos · MANAGER → scope SECTOR (by.sector == sector)</span></div>
+    <div class="mth"><span class="mname">deactivateUser(userId)</span><span class="msig">: void</span><span class="mrule">currentUser = securityUtils.getCurrentUser() · checkOrThrow(currentUser, USER, DELETE, target.sector, null) · user.active = false</span></div>
+    <div class="mth"><span class="mname">listUsersBySector(sector)</span><span class="msig">: List&lt;User&gt;</span><span class="mrule">currentUser = securityUtils.getCurrentUser() · ADMIN → todos · MANAGER → scope SECTOR (currentUser.sector == sector)</span></div>
   </div>
 </div>
 
@@ -768,7 +770,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   </div>
   <div class="cls-body">
     <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
-    <div class="field"><span class="fname fk">customerId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname fk">customerId</span><span class="ftype">UUID FK(Customer)</span></div>
     <div class="field"><span class="fname">status</span><span class="ftype">@Enumerated TicketStatus</span></div>
     <div class="field"><span class="fname">currentSector</span><span class="ftype">@Enumerated Sector</span></div>
     <div class="field"><span class="fname fk opt">assignedTo</span><span class="ftype opt">UUID FK(User) · nullable</span></div>
@@ -791,7 +793,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   </div>
   <div class="cls-body">
     <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
-    <div class="field"><span class="fname fk">ticketId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname fk">ticketId</span><span class="ftype">UUID FK(LeadTicket)</span></div>
     <div class="field"><span class="fname fk">userId</span><span class="ftype">UUID FK(User)</span></div>
     <div class="field"><span class="fname">channel</span><span class="ftype">@Enumerated ContactChannel</span></div>
     <div class="field"><span class="fname">note</span><span class="ftype">@Column(TEXT) String</span></div>
@@ -839,9 +841,9 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 <div class="cls">
   <div class="cls-head head-teal"><div class="cls-stereo">«interface»</div><div class="cls-name">ICustomerService</div></div>
   <div class="cls-body">
-    <div class="mth"><span class="mname">create(CreateCustomerRequest dto, User by)</span><span class="msig">: Customer</span></div>
-    <div class="mth"><span class="mname">findById(UUID id, User by)</span><span class="msig">: Customer</span></div>
-    <div class="mth"><span class="mname">search(String query, Pageable pageable, User by)</span><span class="msig">: Page&lt;Customer&gt;</span></div>
+    <div class="mth"><span class="mname">create(CreateCustomerRequest dto)</span><span class="msig">: Customer</span></div>
+    <div class="mth"><span class="mname">findById(UUID id)</span><span class="msig">: Customer</span></div>
+    <div class="mth"><span class="mname">search(String query, Pageable pageable)</span><span class="msig">: Page&lt;Customer&gt;</span></div>
   </div>
 </div>
 
@@ -851,11 +853,13 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
     <div class="field"><span class="fname fk">customerRepo</span><span class="ftype">CustomerRepository</span></div>
     <div class="field"><span class="fname fk">ticketService</span><span class="ftype">ITicketService</span></div>
     <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="field"><span class="fname fk">securityUtils</span><span class="ftype">SecurityUtils</span></div>
     <div class="sdiv">— implementação —</div>
-    <div class="mth"><span class="mname">create(dto, by)</span><span class="msig">: Customer</span>
-      <span class="mrule">checkOrThrow(by, CUSTOMER, CREATE, LEADS, null)</span>
+    <div class="mth"><span class="mname">create(dto)</span><span class="msig">: Customer</span>
+      <span class="mrule">currentUser = securityUtils.getCurrentUser()</span>
+      <span class="mrule">checkOrThrow(currentUser, CUSTOMER, CREATE, LEADS, null)</span>
       <span class="mrule">valida duplicidade de CPF e phone → ResourceAlreadyExistsException</span>
-      <span class="mrule">salva Customer → ticketService.openTicket(customer.id, by)</span>
+      <span class="mrule">salva Customer → ticketService.openTicket(customer.id)</span>
     </div>
   </div>
 </div>
@@ -863,13 +867,13 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 <div class="cls">
   <div class="cls-head head-teal"><div class="cls-stereo">«interface»</div><div class="cls-name">ITicketService</div></div>
   <div class="cls-body">
-    <div class="mth"><span class="mname">openTicket(UUID customerId, User by)</span><span class="msig">: LeadTicket</span></div>
-    <div class="mth"><span class="mname">addContactLog(UUID ticketId, CreateContactLogRequest dto, User by)</span><span class="msig">: ContactLog</span></div>
-    <div class="mth"><span class="mname">schedule(UUID ticketId, LocalDateTime scheduledAt, User by)</span><span class="msig">: LeadTicket</span></div>
-    <div class="mth"><span class="mname">changeStatus(UUID ticketId, TicketStatus nextStatus, User by)</span><span class="msig">: LeadTicket</span></div>
-    <div class="mth"><span class="mname">markPending(UUID ticketId, User by)</span><span class="msig">: LeadTicket</span></div>
-    <div class="mth"><span class="mname">listBySector(Sector sector, User by)</span><span class="msig">: List&lt;LeadTicket&gt;</span></div>
-    <div class="mth"><span class="mname">getHistory(UUID ticketId, User by)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
+    <div class="mth"><span class="mname">openTicket(UUID customerId)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">addContactLog(UUID ticketId, CreateContactLogRequest dto)</span><span class="msig">: ContactLog</span></div>
+    <div class="mth"><span class="mname">schedule(UUID ticketId, LocalDateTime scheduledAt)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">changeStatus(UUID ticketId, TicketStatus nextStatus)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">markPending(UUID ticketId)</span><span class="msig">: LeadTicket</span></div>
+    <div class="mth"><span class="mname">listBySector(Sector sector)</span><span class="msig">: List&lt;LeadTicket&gt;</span></div>
+    <div class="mth"><span class="mname">getHistory(UUID ticketId)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
   </div>
 </div>
 
@@ -879,13 +883,14 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
     <div class="field"><span class="fname fk">ticketRepo</span><span class="ftype">LeadTicketRepository</span></div>
     <div class="field"><span class="fname fk">logRepo</span><span class="ftype">ContactLogRepository</span></div>
     <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="field"><span class="fname fk">securityUtils</span><span class="ftype">SecurityUtils</span></div>
     <div class="sdiv">— implementação —</div>
-    <div class="mth"><span class="mname">openTicket(customerId, by)</span><span class="msig">: LeadTicket</span><span class="mrule">status=NEW · currentSector=LEADS · createdBy=by.id</span></div>
-    <div class="mth"><span class="mname">addContactLog(ticketId, dto, by)</span><span class="msig">: ContactLog</span><span class="mrule">checkOrThrow(by, CONTACT_LOG, CREATE, ticket.currentSector, null)</span><span class="mrule">apenas LEADS · salva sem alterar status</span></div>
-    <div class="mth"><span class="mname">schedule(ticketId, scheduledAt, by)</span><span class="msig">: LeadTicket</span><span class="mrule">checkOrThrow(by, TICKET, UPDATE, LEADS, null)</span><span class="mrule">status→SCHEDULED · currentSector→EVALUATOR · salva ContactLog automático</span></div>
-    <div class="mth"><span class="mname">changeStatus(ticketId, nextStatus, by)</span><span class="msig">: LeadTicket</span><span class="mrule">valida ALLOWED_TRANSITIONS · salva ContactLog automático (statusBefore/statusAfter)</span></div>
-    <div class="mth"><span class="mname">markPending(ticketId, by)</span><span class="msig">: LeadTicket</span><span class="mrule">checkOrThrow(by, TICKET, UPDATE, COMMERCIAL, null)</span><span class="mrule">status→PENDING · pendingAt=now</span></div>
-    <div class="mth"><span class="mname">listBySector(sector, by)</span><span class="msig">: List&lt;LeadTicket&gt;</span><span class="mrule">MANAGER→setor inteiro · demais→assignedTo=by.id</span></div>
+    <div class="mth"><span class="mname">openTicket(customerId)</span><span class="msig">: LeadTicket</span><span class="mrule">status=NEW · currentSector=LEADS · createdBy=securityUtils.getCurrentUserId()</span></div>
+    <div class="mth"><span class="mname">addContactLog(ticketId, dto)</span><span class="msig">: ContactLog</span><span class="mrule">currentUser = securityUtils.getCurrentUser() · checkOrThrow(currentUser, CONTACT_LOG, CREATE, ticket.currentSector, null)</span><span class="mrule">apenas LEADS · salva sem alterar status</span></div>
+    <div class="mth"><span class="mname">schedule(ticketId, scheduledAt)</span><span class="msig">: LeadTicket</span><span class="mrule">currentUser = securityUtils.getCurrentUser() · checkOrThrow(currentUser, TICKET, UPDATE, LEADS, null)</span><span class="mrule">status→SCHEDULED · currentSector→EVALUATOR · salva ContactLog automático</span></div>
+    <div class="mth"><span class="mname">changeStatus(ticketId, nextStatus)</span><span class="msig">: LeadTicket</span><span class="mrule">valida ALLOWED_TRANSITIONS · salva ContactLog automático (statusBefore/statusAfter)</span></div>
+    <div class="mth"><span class="mname">markPending(ticketId)</span><span class="msig">: LeadTicket</span><span class="mrule">currentUser = securityUtils.getCurrentUser() · checkOrThrow(currentUser, TICKET, UPDATE, COMMERCIAL, null)</span><span class="mrule">status→PENDING · pendingAt=now</span></div>
+    <div class="mth"><span class="mname">listBySector(sector)</span><span class="msig">: List&lt;LeadTicket&gt;</span><span class="mrule">currentUser = securityUtils.getCurrentUser() · MANAGER→setor inteiro · demais→assignedTo=currentUser.id</span></div>
     <div class="sdiv">— constante interna —</div>
     <div class="mth"><span class="mname mmod">-static final ALLOWED_TRANSITIONS: Map&lt;TicketStatus,Set&lt;TicketStatus&gt;&gt;</span><span class="mrule">NEW→{IN_CONTACT} · IN_CONTACT→{SCHEDULED,LOSS} · SCHEDULED→{IN_EVALUATION}</span><span class="mrule">IN_EVALUATION→{NEGOTIATION,LOSS} · NEGOTIATION→{WIN,PENDING} · RECYCLED→{NEW}</span></div>
   </div>
@@ -894,7 +899,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 <div class="cls">
   <div class="cls-head head-teal"><div class="cls-stereo">«interface»</div><div class="cls-name">IContactLogService</div></div>
   <div class="cls-body">
-    <div class="mth"><span class="mname">getByTicket(UUID ticketId, User by)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
+    <div class="mth"><span class="mname">getByTicket(UUID ticketId)</span><span class="msig">: List&lt;ContactLog&gt;</span></div>
   </div>
 </div>
 
@@ -903,7 +908,8 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   <div class="cls-body">
     <div class="field"><span class="fname fk">logRepo</span><span class="ftype">ContactLogRepository</span></div>
     <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
-    <div class="mth"><span class="mname">getByTicket(ticketId, by)</span><span class="msig">: List&lt;ContactLog&gt;</span><span class="mrule">checkOrThrow(by, CONTACT_LOG, READ, null, null)</span></div>
+    <div class="field"><span class="fname fk">securityUtils</span><span class="ftype">SecurityUtils</span></div>
+    <div class="mth"><span class="mname">getByTicket(ticketId)</span><span class="msig">: List&lt;ContactLog&gt;</span><span class="mrule">checkOrThrow(securityUtils.getCurrentUser(), CONTACT_LOG, READ, null, null)</span></div>
   </div>
 </div>
 
@@ -915,7 +921,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
      TAB 7 — COMMERCIAL DOMAIN
 ══════════════════════════════════════════ -->
 <div class="pn" id="p7">
-<div class="sec-label">io.sertaoBit.odontocore.crm.modules.commercial.domain.model</div>
+<div class="sec-label">io.sertaoBit.odontocore.crm.modules.commercial.model</div>
 <div class="grid g2">
 
 <div class="cls">
@@ -926,7 +932,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   </div>
   <div class="cls-body">
     <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
-    <div class="field"><span class="fname fk">ticketId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname fk">ticketId</span><span class="ftype">UUID FK(LeadTicket)</span></div>
     <div class="field"><span class="fname">createdBySector</span><span class="ftype">@Enumerated Sector · sempre EVALUATOR</span></div>
     <div class="field"><span class="fname fk">createdBy</span><span class="ftype">UUID FK(User)</span></div>
     <div class="field"><span class="fname">procedures</span><span class="ftype">@JdbcTypeCode(JSON) List&lt;DealProcedure&gt;</span></div>
@@ -966,12 +972,12 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   </div>
   <div class="cls-body">
     <div class="field"><span class="fname pk">id</span><span class="ftype">UUID · @Id @GeneratedValue(UUID)</span></div>
-    <div class="field"><span class="fname fk">dealId</span><span class="ftype">UUID · @ManyToOne</span></div>
+    <div class="field"><span class="fname fk">dealId</span><span class="ftype">UUID FK(Deal)</span></div>
     <div class="field"><span class="fname fk">changedBy</span><span class="ftype">UUID FK(User)</span></div>
     <div class="field"><span class="fname">changedBySector</span><span class="ftype">@Enumerated Sector</span></div>
     <div class="field"><span class="fname">fieldChanged</span><span class="ftype">String</span></div>
-    <div class="field"><span class="fname">valueBefore</span><span class="ftype">@JdbcTypeCode(JSON) Object</span></div>
-    <div class="field"><span class="fname">valueAfter</span><span class="ftype">@JdbcTypeCode(JSON) Object</span></div>
+    <div class="field"><span class="fname">valueBefore</span><span class="ftype">String · JSON serializado</span></div>
+    <div class="field"><span class="fname">valueAfter</span><span class="ftype">String · JSON serializado</span></div>
     <div class="field"><span class="fname">occurredAt</span><span class="ftype">LocalDateTime</span></div>
   </div>
 </div>
@@ -1069,11 +1075,11 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 <div class="cls">
   <div class="cls-head head-amber"><div class="cls-stereo">«interface»</div><div class="cls-name">ICommercialService</div></div>
   <div class="cls-body">
-    <div class="mth"><span class="mname">createDeal(UUID ticketId, CreateDealRequest dto, User by)</span><span class="msig">: Deal</span></div>
-    <div class="mth"><span class="mname">updateDeal(UUID dealId, UpdateDealRequest dto, User by)</span><span class="msig">: Deal</span></div>
-    <div class="mth"><span class="mname">applyDiscount(UUID dealId, ApplyDiscountRequest dto, User by)</span><span class="msig">: Deal</span></div>
-    <div class="mth"><span class="mname">closeDeal(UUID dealId, CloseDealRequest dto, User by)</span><span class="msig">: Deal</span></div>
-    <div class="mth"><span class="mname">getDealWithHistory(UUID dealId, User by)</span><span class="msig">: DealDetailResponse</span></div>
+    <div class="mth"><span class="mname">createDeal(UUID ticketId, CreateDealRequest dto)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">updateDeal(UUID dealId, UpdateDealRequest dto)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">applyDiscount(UUID dealId, ApplyDiscountRequest dto)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">closeDeal(UUID dealId, CloseDealRequest dto)</span><span class="msig">: Deal</span></div>
+    <div class="mth"><span class="mname">getDealWithHistory(UUID dealId)</span><span class="msig">: DealDetailResponse</span></div>
   </div>
 </div>
 
@@ -1084,39 +1090,44 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
     <div class="field"><span class="fname fk">historyRepo</span><span class="ftype">DealHistoryRepository</span></div>
     <div class="field"><span class="fname fk">ticketService</span><span class="ftype">ITicketService</span></div>
     <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="field"><span class="fname fk">securityUtils</span><span class="ftype">SecurityUtils</span></div>
     <div class="sdiv">— implementação —</div>
-    <div class="mth"><span class="mname">createDeal(ticketId, dto, by)</span><span class="msig">: Deal</span>
-      <span class="mrule">checkOrThrow(by, DEAL, CREATE, ticket.currentSector, null)</span>
+    <div class="mth"><span class="mname">createDeal(ticketId, dto)</span><span class="msig">: Deal</span>
+      <span class="mrule">currentUser = securityUtils.getCurrentUser()</span>
+      <span class="mrule">checkOrThrow(currentUser, DEAL, CREATE, ticket.currentSector, null)</span>
       <span class="mrule">exige ticket.currentSector == EVALUATOR</span>
       <span class="mrule">calcula totalValue · finalValue=totalValue (discountPct=0)</span>
-      <span class="mrule">salva Deal → ticketService.changeStatus(ticketId, NEGOTIATION, by)</span>
+      <span class="mrule">salva Deal → ticketService.changeStatus(ticketId, NEGOTIATION)</span>
     </div>
-    <div class="mth"><span class="mname">updateDeal(dealId, dto, by)</span><span class="msig">: Deal</span>
+    <div class="mth"><span class="mname">updateDeal(dealId, dto)</span><span class="msig">: Deal</span>
+      <span class="mrule">currentUser = securityUtils.getCurrentUser()</span>
       <span class="mrule">checkOrThrow: EVALUATOR→scope OWN(deal.createdBy) | COMMERCIAL→scope SECTOR</span>
-      <span class="mrule">para cada campo alterado → recordHistory(deal, field, before, after, by)</span>
+      <span class="mrule">para cada campo alterado → recordHistory(deal, field, before, after)</span>
       <span class="mrule">recalcula totalValue e finalValue</span>
     </div>
-    <div class="mth"><span class="mname">applyDiscount(dealId, dto, by)</span><span class="msig">: Deal</span>
+    <div class="mth"><span class="mname">applyDiscount(dealId, dto)</span><span class="msig">: Deal</span>
+      <span class="mrule">currentUser = securityUtils.getCurrentUser()</span>
       <span class="mrule">carrega conditions.maxDiscountPct da PermissionRule do role</span>
       <span class="mrule">se pct > max → throw DiscountApprovalRequiredException</span>
       <span class="mrule">finalValue = totalValue × (1 - pct/100) com HALF_UP</span>
     </div>
-    <div class="mth"><span class="mname">closeDeal(dealId, dto, by)</span><span class="msig">: Deal</span>
-      <span class="mrule">checkOrThrow(by, DEAL, CLOSE, COMMERCIAL, null)</span>
-      <span class="mrule">closedBy=by.id · closedAt=now → ticketService.changeStatus(WIN)</span>
+    <div class="mth"><span class="mname">closeDeal(dealId, dto)</span><span class="msig">: Deal</span>
+      <span class="mrule">currentUser = securityUtils.getCurrentUser()</span>
+      <span class="mrule">checkOrThrow(currentUser, DEAL, CLOSE, COMMERCIAL, null)</span>
+      <span class="mrule">closedBy=currentUser.id · closedAt=now → ticketService.changeStatus(WIN)</span>
     </div>
     <div class="mth"><span class="mname mmod">-calculateTotal(List&lt;DealProcedure&gt;)</span><span class="msig">: BigDecimal</span><span class="mrule">Σ(proc.tableValue × proc.quantity) com RoundingMode.HALF_UP</span></div>
-    <div class="mth"><span class="mname mmod">-recordHistory(Deal, String field, Object before, Object after, User)</span><span class="msig">: void</span></div>
+    <div class="mth"><span class="mname mmod">-recordHistory(Deal, String field, Object before, Object after)</span><span class="msig">: void</span><span class="mrule">changedBy=securityUtils.getCurrentUserId()</span></div>
   </div>
 </div>
 
 <div class="cls">
   <div class="cls-head head-blue"><div class="cls-stereo">«interface»</div><div class="cls-name">IConfigService</div></div>
   <div class="cls-body">
-    <div class="mth"><span class="mname">setRecycleConfig(RecycleConfigRequest dto, User by)</span><span class="msig">: RecycleConfig</span></div>
+    <div class="mth"><span class="mname">setRecycleConfig(RecycleConfigRequest dto)</span><span class="msig">: RecycleConfig</span></div>
     <div class="mth"><span class="mname">getRecycleConfig(Sector sector)</span><span class="msig">: RecycleConfig</span></div>
-    <div class="mth"><span class="mname">setBonusConfig(BonusConfigRequest dto, User by)</span><span class="msig">: BonusConfig</span></div>
-    <div class="mth"><span class="mname">registerAdsInvestment(AdsInvestmentRequest dto, User by)</span><span class="msig">: AdsInvestment</span></div>
+    <div class="mth"><span class="mname">setBonusConfig(BonusConfigRequest dto)</span><span class="msig">: BonusConfig</span></div>
+    <div class="mth"><span class="mname">registerAdsInvestment(AdsInvestmentRequest dto)</span><span class="msig">: AdsInvestment</span></div>
   </div>
 </div>
 
@@ -1127,9 +1138,11 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
     <div class="field"><span class="fname fk">bonusRepo</span><span class="ftype">BonusConfigRepository</span></div>
     <div class="field"><span class="fname fk">adsRepo</span><span class="ftype">AdsInvestmentRepository</span></div>
     <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
-    <div class="mth"><span class="mname">setRecycleConfig(dto, by)</span><span class="msig">: RecycleConfig</span><span class="mrule">checkOrThrow(by, CONFIG, CONFIGURE, dto.sector(), null) · upsert por sector</span></div>
+    <div class="field"><span class="fname fk">securityUtils</span><span class="ftype">SecurityUtils</span></div>
+    <div class="mth"><span class="mname">setRecycleConfig(dto)</span><span class="msig">: RecycleConfig</span><span class="mrule">checkOrThrow(securityUtils.getCurrentUser(), CONFIG, CONFIGURE, dto.sector(), null) · upsert por sector</span></div>
+    <div class="mth"><span class="mname">setBonusConfig(dto)</span><span class="msig">: BonusConfig</span><span class="mrule">checkOrThrow(securityUtils.getCurrentUser(), CONFIG, CONFIGURE, dto.sector(), null) · upsert por sector+role+periodRef</span></div>
     <div class="mth"><span class="mname">getRecycleConfig(sector)</span><span class="msig">: RecycleConfig</span><span class="mrule">busca por sector → fallback sector=null (global)</span></div>
-    <div class="mth"><span class="mname">registerAdsInvestment(dto, by)</span><span class="msig">: AdsInvestment</span><span class="mrule">checkOrThrow(by, CONFIG, CONFIGURE, null, null) · valida periodEnd >= periodStart</span></div>
+    <div class="mth"><span class="mname">registerAdsInvestment(dto)</span><span class="msig">: AdsInvestment</span><span class="mrule">checkOrThrow(securityUtils.getCurrentUser(), CONFIG, CONFIGURE, null, null) · valida periodEnd >= periodStart</span></div>
   </div>
 </div>
 
@@ -1165,14 +1178,14 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
 <div class="cls">
   <div class="cls-head head-blue"><div class="cls-stereo">«interface»</div><div class="cls-name">IAnalyticsService</div></div>
   <div class="cls-body">
-    <div class="mth"><span class="mname">getAdsROI(AdsChannel channel, DateRange period, User by)</span><span class="msig">: AdsROIResult</span></div>
-    <div class="mth"><span class="mname">getConversionByStage(DateRange period, Sector sector, User by)</span><span class="msig">: StageConversionResult</span></div>
-    <div class="mth"><span class="mname">getDropoffBySector(DateRange period, User by)</span><span class="msig">: List&lt;SectorDropoffResult&gt;</span></div>
-    <div class="mth"><span class="mname">getAttendantPerformance(UUID userId, DateRange period, User by)</span><span class="msig">: UserPerformanceResult</span></div>
-    <div class="mth"><span class="mname">getDentistPerformance(UUID userId, DateRange period, User by)</span><span class="msig">: UserPerformanceResult</span></div>
-    <div class="mth"><span class="mname">getSellerPerformance(UUID userId, DateRange period, User by)</span><span class="msig">: UserPerformanceResult</span></div>
-    <div class="mth"><span class="mname">getBonusApurado(UUID userId, String periodRef, User by)</span><span class="msig">: BigDecimal</span></div>
-    <div class="mth"><span class="mname">getGlobalDashboard(DateRange period, User by)</span><span class="msig">: GlobalDashboardResult</span></div>
+    <div class="mth"><span class="mname">getAdsROI(AdsChannel channel, DateRange period)</span><span class="msig">: AdsROIResult</span></div>
+    <div class="mth"><span class="mname">getConversionByStage(DateRange period, Sector sector)</span><span class="msig">: StageConversionResult</span></div>
+    <div class="mth"><span class="mname">getDropoffBySector(DateRange period)</span><span class="msig">: List&lt;SectorDropoffResult&gt;</span></div>
+    <div class="mth"><span class="mname">getAttendantPerformance(UUID userId, DateRange period)</span><span class="msig">: UserPerformanceResult</span></div>
+    <div class="mth"><span class="mname">getDentistPerformance(UUID userId, DateRange period)</span><span class="msig">: UserPerformanceResult</span></div>
+    <div class="mth"><span class="mname">getSellerPerformance(UUID userId, DateRange period)</span><span class="msig">: UserPerformanceResult</span></div>
+    <div class="mth"><span class="mname">getBonusApurado(UUID userId, String periodRef)</span><span class="msig">: BigDecimal</span></div>
+    <div class="mth"><span class="mname">getGlobalDashboard(DateRange period)</span><span class="msig">: GlobalDashboardResult</span></div>
   </div>
 </div>
 
@@ -1190,20 +1203,21 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
     <div class="field"><span class="fname fk">bonusRepo</span><span class="ftype">BonusConfigRepository</span></div>
     <div class="field"><span class="fname fk">userRepo</span><span class="ftype">UserRepository</span></div>
     <div class="field"><span class="fname fk">permissionService</span><span class="ftype">IPermissionService</span></div>
+    <div class="field"><span class="fname fk">securityUtils</span><span class="ftype">SecurityUtils</span></div>
     <div class="sdiv">— fórmulas centrais —</div>
-    <div class="mth"><span class="mname">getAdsROI(channel, period, by)</span><span class="msig">: AdsROIResult</span>
+    <div class="mth"><span class="mname">getAdsROI(channel, period)</span><span class="msig">: AdsROIResult</span>
       <span class="mrule">receita = dealRepo.sumFinalValueByAdChannelAndPeriod(channel, period)</span>
       <span class="mrule">custo = adsRepo.sumAmountByChannelAndPeriod(channel, period)</span>
       <span class="mrule">roi = receita.divide(custo, 2, HALF_UP) · costPerLead = custo / leadsCount</span>
     </div>
-    <div class="mth"><span class="mname">getConversionByStage(period, sector, by)</span><span class="msig">: StageConversionResult</span>
-      <span class="mrule">checkOrThrow(by, ANALYTICS, READ, sector, null)</span>
+    <div class="mth"><span class="mname">getConversionByStage(period, sector)</span><span class="msig">: StageConversionResult</span>
+      <span class="mrule">checkOrThrow(securityUtils.getCurrentUser(), ANALYTICS, READ, sector, null)</span>
       <span class="mrule">conta por status: captados / agendados / dealCriado / ganho</span>
     </div>
-    <div class="mth"><span class="mname">getGlobalDashboard(period, by)</span><span class="msig">: GlobalDashboardResult</span>
-      <span class="mrule">checkOrThrow(by, ANALYTICS, READ, null, null) → scope GLOBAL → apenas ADMIN/MANAGER</span>
+    <div class="mth"><span class="mname">getGlobalDashboard(period)</span><span class="msig">: GlobalDashboardResult</span>
+      <span class="mrule">checkOrThrow(securityUtils.getCurrentUser(), ANALYTICS, READ, null, null) → scope GLOBAL → apenas ADMIN/MANAGER</span>
     </div>
-    <div class="mth"><span class="mname">getBonusApurado(userId, periodRef, by)</span><span class="msig">: BigDecimal</span>
+    <div class="mth"><span class="mname">getBonusApurado(userId, periodRef)</span><span class="msig">: BigDecimal</span>
       <span class="mrule">carrega User → BonusConfig(sector, role, periodRef)</span>
       <span class="mrule">calcula metricValue do período → metricValue × bonusPct / 100</span>
     </div>
