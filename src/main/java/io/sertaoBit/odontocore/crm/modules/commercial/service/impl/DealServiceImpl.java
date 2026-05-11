@@ -208,7 +208,7 @@ public class DealServiceImpl implements DealService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public DealDetailResponseDTO getDealWithHistory(UUID dealId) {
 
         Deal deal = dealRepository.findById(dealId)
