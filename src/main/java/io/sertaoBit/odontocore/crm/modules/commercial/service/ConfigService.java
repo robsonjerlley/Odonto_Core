@@ -7,11 +7,9 @@ import io.sertaoBit.odontocore.crm.modules.commercial.model.AdsInvestment;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.BonusConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.RecycleConfig;
 
-import java.nio.file.AccessDeniedException;
-
 public interface ConfigService {
 
-    RecycleConfig setRecycleConfig(RecycleConfigRequestDTO dto) throws AccessDeniedException;
+    RecycleConfig setRecycleConfig(RecycleConfigRequestDTO dto);
 
     BonusConfig setBonusConfig(BonusConfigRequestDTO dto);
 
