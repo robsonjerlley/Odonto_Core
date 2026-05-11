@@ -1,8 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.mapper;
 
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealHistoryResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
+import io.sertaoBit.odontocore.crm.modules.commercial.model.DealHistory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mappings;
 
@@ -28,5 +30,7 @@ public interface DealMapper {
     Deal toEntity(DealCreateRequestDTO dto);
 
     DealResponseDTO toResponseDTO(Deal entity);
+
+    DealHistoryResponseDTO toResponseDTO(DealHistory entity);
 
 }
