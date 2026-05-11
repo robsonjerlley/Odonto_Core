@@ -1,9 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.api.controller;
 
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.deal.DealUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.DealResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.service.DealService;
+
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.service.DealService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
