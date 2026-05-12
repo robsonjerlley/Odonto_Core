@@ -6,6 +6,7 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,6 +30,7 @@ public class MainUser implements UserDetails {
     private boolean active;
 
     @Override
+    @NullMarked
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.role == null) {
             return Collections.emptyList();
@@ -45,7 +47,9 @@ public class MainUser implements UserDetails {
 
 
     @Override
+    @NullMarked
     public String getUsername() {
+
         return this.username;
     }
 

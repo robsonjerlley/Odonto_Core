@@ -86,7 +86,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
 </style>
 
 <div class="root">
-<span class="version">v2.0 — alinhado com CLAUDE.md · maio 2026</span>
+<span class="version">v3.0 — estado real do projeto · mai 2026</span>
 <div class="nav">
   <button class="navbtn on" onclick="sw(0)">core · enums</button>
   <button class="navbtn" onclick="sw(1)">identity · domain</button>
@@ -262,10 +262,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="cls-stereo">«@Repository» «extends JpaRepository&lt;User,UUID&gt;»</span>
           <span class="cls-name">UserRepository</span>
         </div>
-        <div class="method"><span class="mname">+ findByEmail(email: String)</span><span class="msig">Optional&lt;User&gt;</span></div>
-        <div class="method"><span class="mname">+ findAllBySector(sector: Sector)</span><span class="msig">List&lt;User&gt;</span></div>
+        <div class="method"><span class="mname">+ findByUsername(username: String)</span><span class="msig">Optional&lt;User&gt;</span></div>
+        <div class="method"><span class="mname">+ findBySector(sector: Sector)</span><span class="msig">List&lt;User&gt;</span></div>
         <div class="method"><span class="mname">+ findAllBySectorAndRole(sector: Sector, role: Role)</span><span class="msig">List&lt;User&gt;</span></div>
-        <div class="method"><span class="mname">+ existsByEmail(email: String)</span><span class="msig">boolean</span></div>
+        <div class="method"><span class="mname">+ existsByUsername(username: String)</span><span class="msig">boolean</span></div>
       </div>
 
       <div class="cls">
@@ -282,95 +282,105 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-purple">
           <span class="cls-stereo">«implements UserDetails» · identity/security</span>
-          <span class="cls-name">UserPrincipal</span>
-          <span class="cls-sub">objeto no SecurityContext — criado via from(User)</span>
+          <span class="cls-name">MainUser</span>
+          <span class="cls-sub">objeto no SecurityContext — criado via form(User)</span>
         </div>
         <div class="section-label">fields</div>
         <div class="field"><span class="vis">-</span><span class="fname">id</span><span class="ftype">UUID</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">email</span><span class="ftype">String</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">username</span><span class="ftype">String</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">passwordHash</span><span class="ftype">String</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">role</span><span class="ftype">Role</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">sector</span><span class="ftype">Sector</span></div>
         <div class="divider"></div>
         <div class="section-label">implements UserDetails</div>
         <div class="method"><span class="mname">+ getAuthorities()</span><span class="msig">Collection&lt;GrantedAuthority&gt;</span></div>
-        <div class="method"><span class="mname">+ getUsername()</span><span class="msig">String → email</span></div>
+        <div class="method"><span class="mname">+ getUsername()</span><span class="msig">String → username</span></div>
         <div class="method"><span class="mname">+ isEnabled()</span><span class="msig">boolean → user.active</span></div>
         <div class="divider"></div>
         <div class="section-label">factory</div>
-        <div class="method"><span class="mname">+ static from(user: User)</span><span class="msig">UserPrincipal</span></div>
+        <div class="method"><span class="mname">+ static form(user: User)</span><span class="msig">MainUser</span></div>
       </div>
 
       <div class="cls">
         <div class="cls-head h-purple">
-          <span class="cls-stereo">«@Component» · identity/security · claims: id, email, role, sector</span>
-          <span class="cls-name">JwtService</span>
+          <span class="cls-stereo">«@Component» · config/security · claims: subject(username)</span>
+          <span class="cls-name">JwtUtil</span>
+          <span class="cls-sub">⚠ pendente: incluir claims id, role, sector no token</span>
         </div>
-        <div class="method"><span class="mname">+ generateToken(principal: UserPrincipal)</span><span class="msig">String</span></div>
-        <div class="method"><span class="mname">+ extractEmail(token: String)</span><span class="msig">String</span></div>
-        <div class="method"><span class="mname">+ isTokenValid(token: String, principal: UserPrincipal)</span><span class="msig">boolean</span></div>
+        <div class="method"><span class="mname">+ generateToken(userDetails: UserDetails)</span><span class="msig">String</span></div>
+        <div class="method"><span class="mname">+ extractUsername(token: String)</span><span class="msig">String</span></div>
+        <div class="method"><span class="mname">+ isValid(token: String, userDetails: UserDetails)</span><span class="msig">boolean</span></div>
       </div>
 
       <div class="cls">
         <div class="cls-head h-purple">
-          <span class="cls-stereo">«@Component» «extends OncePerRequestFilter» · identity/security</span>
-          <span class="cls-name">JwtAuthFilter</span>
+          <span class="cls-stereo">«@Component» «extends OncePerRequestFilter» · config/security</span>
+          <span class="cls-name">JwtAuthenticationFilter</span>
         </div>
-        <div class="method"><span class="mname"># doFilterInternal(req, res, chain)</span><span class="msig">void</span><span class="mrule">extrai Bearer token → valida via JwtService → popula SecurityContext com UserPrincipal</span></div>
+        <div class="method"><span class="mname"># doFilterInternal(req, res, chain)</span><span class="msig">void</span><span class="mrule">extrai Bearer token → valida via JwtUtil → popula SecurityContext com MainUser</span></div>
       </div>
 
       <!-- Services -->
       <div class="cls">
         <div class="cls-head h-purple">
-          <span class="cls-stereo">«interface» + «@Service» PermissionServiceImpl</span>
+          <span class="cls-stereo">«@Service» direto (sem interface) · identity/service</span>
           <span class="cls-name">PermissionService</span>
           <span class="cls-sub">injetado: PermissionRuleRepository</span>
         </div>
         <div class="method">
           <span class="mname">+ canAccess(user: User, resource: Resource, action: Action,</span>
           <span class="msig">  targetSector: Sector, targetOwnerId: UUID): boolean</span>
-          <span class="mrule">busca regra por role+sector → fallback role only → resolve scope</span>
+          <span class="mrule">✔ implementado — busca por role+sector → fallback role only → resolve scope</span>
         </div>
         <div class="method">
+          <span class="mname">+ getPermission(role: Role)</span>
+          <span class="msig">List&lt;PermissionRule&gt;</span>
+        </div>
+        <div class="method" style="opacity:.55">
           <span class="mname">+ checkOrThrow(user: User, resource: Resource, action: Action,</span>
           <span class="msig">  targetSector: Sector, targetOwnerId: UUID): void</span>
-          <span class="mrule">lança AccessDeniedException (HTTP 403) se negado</span>
+          <span class="mrule">⚠ pendente — necessário para RBAC completo · lança AccessDeniedException (HTTP 403)</span>
         </div>
       </div>
 
       <div class="cls">
         <div class="cls-head h-purple">
-          <span class="cls-stereo">«interface» + «@Service» UserServiceImpl</span>
+          <span class="cls-stereo">«interface» + «@Service» UserServiceImpl · identity/service</span>
           <span class="cls-name">UserService</span>
-          <span class="cls-sub">injetado: UserRepository, PermissionService, PasswordEncoder</span>
+          <span class="cls-sub">injetado: UserRepository, PasswordEncoder, UserMapper, SecurityUtils</span>
         </div>
-        <div class="method"><span class="mname">+ createUser(dto: CreateUserRequest, by: User)</span><span class="msig">User</span><span class="mrule">valida CREATE USER · MANAGER cria só no próprio setor</span></div>
-        <div class="method"><span class="mname">+ deactivateUser(userId: UUID, by: User)</span><span class="msig">void</span><span class="mrule">soft-delete: active = false · preserva histórico</span></div>
-        <div class="method"><span class="mname">+ listUsersBySector(sector: Sector, by: User)</span><span class="msig">List&lt;User&gt;</span><span class="mrule">ADMIN vê todos · MANAGER vê só o próprio setor</span></div>
+        <div class="method"><span class="mname">+ create(dto: UserCreateRequestDTO)</span><span class="msig">UserResponseDTO</span><span class="mrule">createdBy do SecurityContext</span></div>
+        <div class="method"><span class="mname">+ register(dto: UserCreateRequestDTO)</span><span class="msig">UserResponseDTO</span><span class="mrule">role forçada para USER_ATTENDANT · sem autenticação exigida</span></div>
+        <div class="method"><span class="mname">+ updatePassword(username: String, newPassword: String)</span><span class="msig">UserResponseDTO</span></div>
+        <div class="method"><span class="mname">+ findByUsername(username: String)</span><span class="msig">UserResponseDTO</span></div>
+        <div class="method"><span class="mname">+ findBySector(sector: Sector)</span><span class="msig">List&lt;UserResponseDTO&gt;</span></div>
+        <div class="method"><span class="mname">+ findAllBySectorAndRole(sector: Sector, role: Role)</span><span class="msig">List&lt;UserResponseDTO&gt;</span></div>
+        <div class="method"><span class="mname">+ existsByUsername(username: String)</span><span class="msig">Boolean</span></div>
+        <div class="method"><span class="mname">+ delete(id: UUID)</span><span class="msig">void</span></div>
       </div>
 
-      <div class="cls">
-        <div class="cls-head h-purple">
-          <span class="cls-stereo">«interface» + «@Service» AuthServiceImpl</span>
+      <div class="cls" style="opacity:.6">
+        <div class="cls-head h-purple" style="border-color:var(--amber-d)">
+          <span class="cls-stereo">⚠ pendente · lógica em AuthController direto (sem service layer)</span>
           <span class="cls-name">AuthService</span>
-          <span class="cls-sub">injetado: UserRepository, JwtService, PasswordEncoder</span>
+          <span class="cls-sub">AuthController chama JwtUtil + AuthenticationManager diretamente — mover para service</span>
         </div>
-        <div class="method"><span class="mname">+ login(email: String, password: String)</span><span class="msig">AuthResponse</span></div>
-        <div class="method"><span class="mname">+ refreshToken(token: String)</span><span class="msig">AuthResponse</span></div>
+        <div class="method"><span class="mname">+ login(username: String, password: String)</span><span class="msig">AuthResponseDTO</span></div>
+        <div class="method"><span class="mname">+ refreshToken(token: String)</span><span class="msig">AuthResponseDTO</span></div>
       </div>
 
       <div class="cls">
         <div class="cls-head h-purple">
-          <span class="cls-stereo">«@Component» «implements UserDetailsService»</span>
-          <span class="cls-name">UserDetailsServiceImpl</span>
+          <span class="cls-stereo">«@Service» «implements UserDetailsService» · identity/security</span>
+          <span class="cls-name">MainUserDetailsService</span>
           <span class="cls-sub">separado de UserService — evita dependência circular com Spring Security</span>
         </div>
-        <div class="method"><span class="mname">+ loadUserByUsername(email: String)</span><span class="msig">UserDetails</span><span class="mrule">retorna UserPrincipal · lança UsernameNotFoundException</span></div>
+        <div class="method"><span class="mname">+ loadUserByUsername(username: String)</span><span class="msig">UserDetails</span><span class="mrule">retorna MainUser via form(User) · lança UsernameNotFoundException</span></div>
       </div>
 
-      <div class="cls">
-        <div class="cls-head h-purple">
-          <span class="cls-stereo">«@Component» «implements ApplicationRunner»</span>
+      <div class="cls" style="opacity:.6">
+        <div class="cls-head h-purple" style="border-color:var(--amber-d)">
+          <span class="cls-stereo">⚠ pendente · «@Component» «implements ApplicationRunner»</span>
           <span class="cls-name">PermissionSeeder</span>
           <span class="cls-sub">popula matriz padrão de PermissionRule se vazia na inicialização</span>
         </div>
@@ -503,8 +513,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
 
       <div class="cls">
         <div class="cls-head h-teal">
-          <span class="cls-stereo">«interface» + «@Service» TicketServiceImpl</span>
-          <span class="cls-name">TicketService</span>
+          <span class="cls-stereo">«interface» + «@Service» LeadTicketServiceImpl</span>
+          <span class="cls-name">LeadTicketService</span>
           <span class="cls-sub">injetado: LeadTicketRepository, CustomerRepository, ContactLogRepository, SecurityUtils</span>
         </div>
         <div class="section-label">constante estática</div>
@@ -538,9 +548,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
   </div>
 
   <div class="note">
-    <strong>ALLOWED_TRANSITIONS (dentro de TicketServiceImpl)</strong><br>
+    <strong>ALLOWED_TRANSITIONS (dentro de LeadTicketServiceImpl)</strong><br>
     NEW → {IN_CONTACT} · IN_CONTACT → {SCHEDULED, LOSS} · SCHEDULED → {IN_EVALUATION} · IN_EVALUATION → {NEGOTIATION, LOSS} · NEGOTIATION → {WIN, PENDING} · PENDING → {RECYCLED} · RECYCLED → {NEW}<br><br>
-    Transição inválida → <code>IllegalStateException</code> → HTTP 422. Não há <code>StatusTransitionValidator</code> separado — a lógica é encapsulada no próprio <code>TicketServiceImpl</code>.
+    Transição inválida → <code>IllegalStateException</code> → HTTP 422. Não há <code>StatusTransitionValidator</code> separado — a lógica é encapsulada no próprio <code>LeadTicketServiceImpl</code>.
   </div>
 </div>
 
@@ -698,15 +708,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <!-- Services -->
       <div class="cls">
         <div class="cls-head h-amber">
-          <span class="cls-stereo">«interface» + «@Service» CommercialServiceImpl</span>
-          <span class="cls-name">CommercialService</span>
-          <span class="cls-sub">injetado: DealRepository, DealHistoryRepository, TicketService, PermissionService</span>
+          <span class="cls-stereo">«interface» + «@Service» DealServiceImpl</span>
+          <span class="cls-name">DealService</span>
+          <span class="cls-sub">injetado: DealRepository, DealHistoryService, LeadTicketService, PermissionService</span>
         </div>
-        <div class="method"><span class="mname">+ createDeal(ticketId: UUID, dto: CreateDealRequest, by: User)</span><span class="msig">Deal</span><span class="mrule">apenas EVALUATOR · calcula totalValue · ticket → NEGOTIATION · currentSector → COMMERCIAL</span></div>
-        <div class="method"><span class="mname">+ updateDeal(dealId: UUID, dto: UpdateDealRequest, by: User)</span><span class="msig">Deal</span><span class="mrule">registra DealHistory por campo alterado</span></div>
-        <div class="method"><span class="mname">+ applyDiscount(dealId: UUID, pct: BigDecimal, by: User)</span><span class="msig">Deal</span><span class="mrule">acima de conditions.maxDiscountPct → DiscountApprovalRequiredException</span></div>
-        <div class="method"><span class="mname">+ closeDeal(dealId: UUID, paymentMethod: String, by: User)</span><span class="msig">Deal</span><span class="mrule">apenas COMMERCIAL/MANAGER · ticket → WIN · closedAt = now · finalValue = totalValue × (1 - discountPct/100) HALF_UP</span></div>
-        <div class="method"><span class="mname">+ getDealWithHistory(dealId: UUID, by: User)</span><span class="msig">DealDetailResponse</span></div>
+        <div class="method"><span class="mname">+ createDeal(dto: DealCreateRequestDTO)</span><span class="msig">DealResponseDTO</span><span class="mrule">apenas EVALUATOR · calcula totalValue · ticket → NEGOTIATION · currentSector → COMMERCIAL</span></div>
+        <div class="method"><span class="mname">+ updateDeal(id: UUID, dto: DealUpdateRequestDTO)</span><span class="msig">DealResponseDTO</span><span class="mrule">registra DealHistory por campo alterado</span></div>
+        <div class="method"><span class="mname">+ applyDiscount(id: UUID, dto: ApplyDiscountRequestDTO)</span><span class="msig">DealResponseDTO</span><span class="mrule">acima de maxDiscountPct → DiscountApprovalRequiredException</span></div>
+        <div class="method"><span class="mname">+ closeDeal(id: UUID, dto: CloseDealRequestDTO)</span><span class="msig">DealResponseDTO</span><span class="mrule">ticket → WIN · finalValue = totalValue × (1 - discountPct/100) HALF_UP</span></div>
+        <div class="method"><span class="mname">+ findById(id: UUID)</span><span class="msig">DealDetailResponseDTO</span></div>
+        <div class="method"><span class="mname">+ findByTicketId(ticketId: UUID)</span><span class="msig">DealResponseDTO</span></div>
+      </div>
+
+      <div class="cls">
+        <div class="cls-head h-amber">
+          <span class="cls-stereo">«interface» + «@Service» DealHistoryServiceImpl</span>
+          <span class="cls-name">DealHistoryService</span>
+          <span class="cls-sub">injetado: DealHistoryRepository · IMUTÁVEL — apenas INSERT</span>
+        </div>
+        <div class="method"><span class="mname">+ record(dealId: UUID, changedBy: UUID, changedBySector: Sector, fieldChanged: String, valueBefore: String, valueAfter: String)</span><span class="msig">DealHistory</span></div>
+        <div class="method"><span class="mname">+ findByDealId(dealId: UUID)</span><span class="msig">List&lt;DealHistoryResponseDTO&gt;</span></div>
       </div>
 
       <div class="cls">
@@ -715,9 +736,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="cls-name">ConfigService</span>
           <span class="cls-sub">injetado: RecycleConfigRepository, BonusConfigRepository, AdsInvestmentRepository, PermissionService</span>
         </div>
-        <div class="method"><span class="mname">+ setRecycleConfig(dto: RecycleConfigRequest, by: User)</span><span class="msig">RecycleConfig</span><span class="mrule">apenas ADMIN/MANAGER · upsert por sector</span></div>
-        <div class="method"><span class="mname">+ setBonusConfig(dto: BonusConfigRequest, by: User)</span><span class="msig">BonusConfig</span><span class="mrule">apenas ADMIN/MANAGER</span></div>
-        <div class="method"><span class="mname">+ registerAdsInvestment(dto: AdsInvestmentRequest, by: User)</span><span class="msig">AdsInvestment</span></div>
+        <div class="method"><span class="mname">+ setRecycleConfig(dto: RecycleConfigRequestDTO)</span><span class="msig">RecycleConfig</span><span class="mrule">apenas ADMIN/MANAGER · upsert por sector</span></div>
+        <div class="method"><span class="mname">+ setBonusConfig(dto: BonusConfigRequestDTO)</span><span class="msig">BonusConfig</span><span class="mrule">apenas ADMIN/MANAGER</span></div>
+        <div class="method"><span class="mname">+ registerAdsInvestment(dto: AdsInvestmentRequestDTO)</span><span class="msig">AdsInvestment</span></div>
       </div>
 
       <div class="cls">
@@ -739,13 +760,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
 ══════════════════════════════════════════ -->
 <div class="pn" id="p7">
 
-  <!-- CORREÇÕES PENDENTES NO CÓDIGO -->
+  <!-- PENDÊNCIAS REAIS NO CÓDIGO -->
   <div class="note" style="border-left-color:var(--red);margin-bottom:14px">
-    <strong>⚠ Pendências no código antes de implementar</strong><br><br>
-    1. <code>AnalyticsService.java</code> está em <code>service/impl/</code> — mover para <code>service/</code> e renomear para <code>AnalyticsService</code>.<br>
-    2. <code>AnalyticsServiceImpl</code> não declara <code>implements AnalyticsService</code>.<br>
-    3. Assinatura inconsistente: interface usa <code>UUID userId</code>, impl usa <code>User by</code> — alinhar para <code>UUID userId</code> na interface e resolver o <code>User</code> internamente na impl.<br>
-    4. <code>getConversionByStage</code> declarado na interface mas ausente na impl — compilador vai reclamar após corrigir o ponto 2.
+    <strong>⚠ Pendências críticas para produção</strong><br><br>
+    1. <code>AnalyticsServiceImpl.getAdsRoi()</code> tem <strong>erro de compilação</strong> — código incompleto na impl (linha 57 quebrada).<br>
+    2. Todos os métodos da impl retornam <code>null</code> / stub — lógica de negócio não implementada.<br>
+    3. <code>PermissionService.checkOrThrow()</code> ausente — chamadas de RBAC na impl falharão.<br>
+    4. <code>GlobalExceptionHandler</code> ausente — <code>IllegalStateException</code> não retorna 422, <code>AccessDeniedException</code> não retorna 403.<br>
+    5. <code>ResourceAlreadyExistsException</code> ausente — HTTP 409 não funciona.<br>
+    6. <code>PermissionSeeder</code> ausente — banco sobe sem nenhuma regra de permissão.
   </div>
 
   <!-- DTOs EXISTENTES -->
@@ -795,13 +818,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
     </div>
   </div>
 
-  <!-- DTOs A CRIAR -->
+  <!-- DTOs EXISTENTES — continuação -->
   <div class="pkg" style="margin-bottom:14px">
-    <div class="pkg-title"><div class="dot" style="background:var(--red)"></div>io.sertaoBit.odontocore.crm.modules.analytics.api.dto — records a criar</div>
+    <div class="pkg-title"><div class="dot" style="background:var(--teal-d)"></div>io.sertaoBit.odontocore.crm.modules.analytics.api.dto — records existentes (continuação)</div>
     <div class="pkg-body g2">
 
       <div class="cls">
-        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✘ criar</span><span class="cls-name">SectorDropoffResultDTO</span><span class="cls-sub">retorno de getDropoffBySector — gargalo por setor</span></div>
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✔ existe</span><span class="cls-name">SectorDropOffResultDTO</span><span class="cls-sub">retorno de getDropOffBySector — gargalo por setor</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">sector</span><span class="ftype">Sector</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">entryCount</span><span class="ftype">Long</span><span class="fann nn">tickets que entraram no setor</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">exitCount</span><span class="ftype">Long</span><span class="fann nn">tickets que avançaram</span></div>
@@ -810,11 +833,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       </div>
 
       <div class="cls">
-        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✘ criar</span><span class="cls-name">GlobalDashboardResultDTO</span><span class="cls-sub">retorno de getGlobalDashboard — apenas ADMIN/MANAGER</span></div>
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✔ existe</span><span class="cls-name">GlobalDashBoardResultDTO</span><span class="cls-sub">retorno de getGlobalDashBoard — apenas ADMIN/MANAGER</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">period</span><span class="ftype">DataRangeDTO</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">adsRoi</span><span class="ftype">List&lt;AdsRoiResultDTO&gt;</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">stageConversion</span><span class="ftype">StageConversionResultDTO</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">sectorDropoff</span><span class="ftype">List&lt;SectorDropoffResultDTO&gt;</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">sectorDropoff</span><span class="ftype">List&lt;SectorDropOffResultDTO&gt;</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">topPerformers</span><span class="ftype">List&lt;UserPerformanceResultDTO&gt;</span></div>
       </div>
 

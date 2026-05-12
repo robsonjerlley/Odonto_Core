@@ -5,7 +5,9 @@
       "PowerShell(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\" -Recurse -File | Where-Object { $_.Extension -notin @\\('.class', '.java'\\) } | Select-Object FullName)",
       "Bash(git commit *)",
       "Bash(git add *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\\\\odontocore.crm\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }
