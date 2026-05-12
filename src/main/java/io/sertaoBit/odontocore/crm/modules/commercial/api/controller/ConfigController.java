@@ -20,6 +20,7 @@ public class ConfigController {
 
 
     public ConfigController(ConfigService configService) {
+
         this.configService = configService;
     }
 
