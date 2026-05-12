@@ -323,7 +323,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-purple">
           <span class="cls-stereo">«interface» + «@Service» PermissionServiceImpl</span>
-          <span class="cls-name">IPermissionService</span>
+          <span class="cls-name">PermissionService</span>
           <span class="cls-sub">injetado: PermissionRuleRepository</span>
         </div>
         <div class="method">
@@ -341,8 +341,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-purple">
           <span class="cls-stereo">«interface» + «@Service» UserServiceImpl</span>
-          <span class="cls-name">IUserService</span>
-          <span class="cls-sub">injetado: UserRepository, IPermissionService, PasswordEncoder</span>
+          <span class="cls-name">UserService</span>
+          <span class="cls-sub">injetado: UserRepository, PermissionService, PasswordEncoder</span>
         </div>
         <div class="method"><span class="mname">+ createUser(dto: CreateUserRequest, by: User)</span><span class="msig">User</span><span class="mrule">valida CREATE USER · MANAGER cria só no próprio setor</span></div>
         <div class="method"><span class="mname">+ deactivateUser(userId: UUID, by: User)</span><span class="msig">void</span><span class="mrule">soft-delete: active = false · preserva histórico</span></div>
@@ -352,7 +352,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-purple">
           <span class="cls-stereo">«interface» + «@Service» AuthServiceImpl</span>
-          <span class="cls-name">IAuthService</span>
+          <span class="cls-name">AuthService</span>
           <span class="cls-sub">injetado: UserRepository, JwtService, PasswordEncoder</span>
         </div>
         <div class="method"><span class="mname">+ login(email: String, password: String)</span><span class="msig">AuthResponse</span></div>
@@ -363,7 +363,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="cls-head h-purple">
           <span class="cls-stereo">«@Component» «implements UserDetailsService»</span>
           <span class="cls-name">UserDetailsServiceImpl</span>
-          <span class="cls-sub">separado de IUserService — evita dependência circular com Spring Security</span>
+          <span class="cls-sub">separado de UserService — evita dependência circular com Spring Security</span>
         </div>
         <div class="method"><span class="mname">+ loadUserByUsername(email: String)</span><span class="msig">UserDetails</span><span class="mrule">retorna UserPrincipal · lança UsernameNotFoundException</span></div>
       </div>
@@ -491,7 +491,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-teal">
           <span class="cls-stereo">«interface» + «@Service» CustomerServiceImpl</span>
-          <span class="cls-name">ICustomerService</span>
+          <span class="cls-name">CustomerService</span>
           <span class="cls-sub">injetado: CustomerRepository, LeadTicketRepository, SecurityUtils</span>
         </div>
         <div class="method"><span class="mname">+ create(dto: CustomerCreateRequestDTO)</span><span class="msig">CustomerResponseDTO</span><span class="mrule">valida CPF duplicado · abre LeadTicket(NEW) automaticamente via repo</span></div>
@@ -504,7 +504,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-teal">
           <span class="cls-stereo">«interface» + «@Service» TicketServiceImpl</span>
-          <span class="cls-name">ITicketService</span>
+          <span class="cls-name">TicketService</span>
           <span class="cls-sub">injetado: LeadTicketRepository, CustomerRepository, ContactLogRepository, SecurityUtils</span>
         </div>
         <div class="section-label">constante estática</div>
@@ -524,7 +524,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-teal">
           <span class="cls-stereo">«interface» + «@Service» ContactLogServiceImpl</span>
-          <span class="cls-name">IContactLogService</span>
+          <span class="cls-name">ContactLogService</span>
           <span class="cls-sub">injetado: ContactLogRepository, LeadTicketRepository, SecurityUtils · IMUTÁVEL — sem update</span>
         </div>
         <div class="method"><span class="mname">+ create(dto: ContactLogCreateRequestDTO)</span><span class="msig">ContactLogResponseDTO</span><span class="mrule">userId do SecurityContext · statusBefore do ticket atual</span></div>
@@ -699,8 +699,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-amber">
           <span class="cls-stereo">«interface» + «@Service» CommercialServiceImpl</span>
-          <span class="cls-name">ICommercialService</span>
-          <span class="cls-sub">injetado: DealRepository, DealHistoryRepository, ITicketService, IPermissionService</span>
+          <span class="cls-name">CommercialService</span>
+          <span class="cls-sub">injetado: DealRepository, DealHistoryRepository, TicketService, PermissionService</span>
         </div>
         <div class="method"><span class="mname">+ createDeal(ticketId: UUID, dto: CreateDealRequest, by: User)</span><span class="msig">Deal</span><span class="mrule">apenas EVALUATOR · calcula totalValue · ticket → NEGOTIATION · currentSector → COMMERCIAL</span></div>
         <div class="method"><span class="mname">+ updateDeal(dealId: UUID, dto: UpdateDealRequest, by: User)</span><span class="msig">Deal</span><span class="mrule">registra DealHistory por campo alterado</span></div>
@@ -712,8 +712,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-blue">
           <span class="cls-stereo">«interface» + «@Service» ConfigServiceImpl</span>
-          <span class="cls-name">IConfigService</span>
-          <span class="cls-sub">injetado: RecycleConfigRepository, BonusConfigRepository, AdsInvestmentRepository, IPermissionService</span>
+          <span class="cls-name">ConfigService</span>
+          <span class="cls-sub">injetado: RecycleConfigRepository, BonusConfigRepository, AdsInvestmentRepository, PermissionService</span>
         </div>
         <div class="method"><span class="mname">+ setRecycleConfig(dto: RecycleConfigRequest, by: User)</span><span class="msig">RecycleConfig</span><span class="mrule">apenas ADMIN/MANAGER · upsert por sector</span></div>
         <div class="method"><span class="mname">+ setBonusConfig(dto: BonusConfigRequest, by: User)</span><span class="msig">BonusConfig</span><span class="mrule">apenas ADMIN/MANAGER</span></div>
@@ -738,73 +738,190 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
      7 · ANALYTICS SERVICE
 ══════════════════════════════════════════ -->
 <div class="pn" id="p7">
-  <div class="pkg">
-    <div class="pkg-title"><div class="dot" style="background:var(--blue)"></div>io.sertaoBit.odontocore.crm.modules.analytics</div>
-    <div class="pkg-body g2">
+
+  <!-- CORREÇÕES PENDENTES NO CÓDIGO -->
+  <div class="note" style="border-left-color:var(--red);margin-bottom:14px">
+    <strong>⚠ Pendências no código antes de implementar</strong><br><br>
+    1. <code>AnalyticsService.java</code> está em <code>service/impl/</code> — mover para <code>service/</code> e renomear para <code>AnalyticsService</code>.<br>
+    2. <code>AnalyticsServiceImpl</code> não declara <code>implements AnalyticsService</code>.<br>
+    3. Assinatura inconsistente: interface usa <code>UUID userId</code>, impl usa <code>User by</code> — alinhar para <code>UUID userId</code> na interface e resolver o <code>User</code> internamente na impl.<br>
+    4. <code>getConversionByStage</code> declarado na interface mas ausente na impl — compilador vai reclamar após corrigir o ponto 2.
+  </div>
+
+  <!-- DTOs EXISTENTES -->
+  <div class="pkg" style="margin-bottom:14px">
+    <div class="pkg-title"><div class="dot" style="background:var(--gray)"></div>io.sertaoBit.odontocore.crm.modules.analytics.api.dto — records existentes</div>
+    <div class="pkg-body g4">
 
       <div class="cls">
-        <div class="cls-head h-gray"><span class="cls-stereo">«record»</span><span class="cls-name">DateRange</span></div>
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✔ existe</span><span class="cls-name">DataRangeDTO</span><span class="cls-sub">parâmetro de período em todos os métodos</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">from</span><span class="ftype">LocalDate</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">to</span><span class="ftype">LocalDate</span></div>
       </div>
 
       <div class="cls">
-        <div class="cls-head h-gray"><span class="cls-stereo">«record»</span><span class="cls-name">AdsROIResult</span></div>
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✔ existe</span><span class="cls-name">AdsRoiResultDTO</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">channel</span><span class="ftype">AdsChannel</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">totalInvested</span><span class="ftype">BigDecimal</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">totalInvestment</span><span class="ftype">BigDecimal</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">totalRevenue</span><span class="ftype">BigDecimal</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">roiMultiplier</span><span class="ftype">BigDecimal</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">leadsCount</span><span class="ftype">long</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">closedCount</span><span class="ftype">long</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">leadsCount</span><span class="ftype">Long</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">closedCount</span><span class="ftype">Long</span></div>
       </div>
 
       <div class="cls">
-        <div class="cls-head h-gray"><span class="cls-stereo">«record»</span><span class="cls-name">StageConversionResult</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">capturedCount</span><span class="ftype">long</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">scheduledCount</span><span class="ftype">long</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">dealCreatedCount</span><span class="ftype">long</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">closedCount</span><span class="ftype">long</span></div>
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✔ existe</span><span class="cls-name">StageConversionResultDTO</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">captureCount</span><span class="ftype">Long</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">scheduledCount</span><span class="ftype">Long</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">dealCreatedCount</span><span class="ftype">Long</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">closedCount</span><span class="ftype">Long</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">leadsConversionPct</span><span class="ftype">BigDecimal</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">avaliacaoConversionPct</span><span class="ftype">BigDecimal</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">comercialConversionPct</span><span class="ftype">BigDecimal</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">evaluationConversionPct</span><span class="ftype">BigDecimal</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">commercialConversionPct</span><span class="ftype">BigDecimal</span></div>
       </div>
 
       <div class="cls">
-        <div class="cls-head h-gray"><span class="cls-stereo">«record»</span><span class="cls-name">UserPerformanceResult</span></div>
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✔ existe</span><span class="cls-name">UserPerformanceResultDTO</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">userId</span><span class="ftype">UUID</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">userName</span><span class="ftype">String</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">sector</span><span class="ftype">Sector</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">totalAssigned</span><span class="ftype">long</span></div>
-        <div class="field"><span class="vis">+</span><span class="fname">totalConverted</span><span class="ftype">long</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">totalAssigned</span><span class="ftype">Long</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">totalConverted</span><span class="ftype">Long</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">conversionPct</span><span class="ftype">BigDecimal</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">avgTicketValue</span><span class="ftype">BigDecimal</span></div>
         <div class="field"><span class="vis">+</span><span class="fname">bonusApurado</span><span class="ftype">BigDecimal</span></div>
       </div>
 
-      <div class="cls" style="grid-column:1/-1">
+    </div>
+  </div>
+
+  <!-- DTOs A CRIAR -->
+  <div class="pkg" style="margin-bottom:14px">
+    <div class="pkg-title"><div class="dot" style="background:var(--red)"></div>io.sertaoBit.odontocore.crm.modules.analytics.api.dto — records a criar</div>
+    <div class="pkg-body g2">
+
+      <div class="cls">
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✘ criar</span><span class="cls-name">SectorDropoffResultDTO</span><span class="cls-sub">retorno de getDropoffBySector — gargalo por setor</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">sector</span><span class="ftype">Sector</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">entryCount</span><span class="ftype">Long</span><span class="fann nn">tickets que entraram no setor</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">exitCount</span><span class="ftype">Long</span><span class="fann nn">tickets que avançaram</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">lossCount</span><span class="ftype">Long</span><span class="fann nn">tickets que saíram como LOSS</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">dropoffPct</span><span class="ftype">BigDecimal</span><span class="fann nn">lossCount ÷ entryCount × 100</span></div>
+      </div>
+
+      <div class="cls">
+        <div class="cls-head h-gray"><span class="cls-stereo">«record» ✘ criar</span><span class="cls-name">GlobalDashboardResultDTO</span><span class="cls-sub">retorno de getGlobalDashboard — apenas ADMIN/MANAGER</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">period</span><span class="ftype">DataRangeDTO</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">adsRoi</span><span class="ftype">List&lt;AdsRoiResultDTO&gt;</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">stageConversion</span><span class="ftype">StageConversionResultDTO</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">sectorDropoff</span><span class="ftype">List&lt;SectorDropoffResultDTO&gt;</span></div>
+        <div class="field"><span class="vis">+</span><span class="fname">topPerformers</span><span class="ftype">List&lt;UserPerformanceResultDTO&gt;</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- INTERFACE + IMPL -->
+  <div class="pkg">
+    <div class="pkg-title"><div class="dot" style="background:var(--blue)"></div>io.sertaoBit.odontocore.crm.modules.analytics.service — interface + impl</div>
+    <div class="pkg-body" style="display:flex;flex-direction:column;gap:10px">
+
+      <div class="cls">
         <div class="cls-head h-blue">
-          <span class="cls-stereo">«interface» + «@Service» AnalyticsServiceImpl · @Transactional(readOnly=true) · nunca escreve</span>
-          <span class="cls-name">IAnalyticsService</span>
-          <span class="cls-sub">injetado: DealRepository, AdsInvestmentRepository, LeadTicketRepository, ContactLogRepository, UserRepository, BonusConfigRepository, IPermissionService</span>
+          <span class="cls-stereo">«interface» · service/AnalyticsService.java</span>
+          <span class="cls-name">AnalyticsService</span>
+          <span class="cls-sub">contrato público — NÃO fica em service/impl/</span>
         </div>
-        <div class="pkg-body g2" style="padding:10px;background:transparent">
-          <div>
-            <div class="method"><span class="mname">+ getAdsROI(channel: AdsChannel, period: DateRange, by: User)</span><span class="msig">AdsROIResult</span><span class="mrule">Σ Deal.finalValue (WIN, adChannel=channel) ÷ Σ AdsInvestment.amount · apenas ADMIN/MANAGER</span></div>
-            <div class="method"><span class="mname">+ getConversionByStage(period: DateRange, sector: Sector, by: User)</span><span class="msig">StageConversionResult</span><span class="mrule">contagens por status no período · MANAGER vê só próprio setor</span></div>
-            <div class="method"><span class="mname">+ getDropoffBySector(period: DateRange, by: User)</span><span class="msig">List&lt;SectorDropoffResult&gt;</span><span class="mrule">entradas vs saídas por setor · identifica gargalo</span></div>
-            <div class="method"><span class="mname">+ getGlobalDashboard(period: DateRange, by: User)</span><span class="msig">GlobalDashboardResult</span><span class="mrule">agrega ROI + funil + top performers · apenas ADMIN/MANAGER</span></div>
-          </div>
-          <div>
-            <div class="method"><span class="mname">+ getAttendantPerformance(userId: UUID, period: DateRange, by: User)</span><span class="msig">UserPerformanceResult</span><span class="mrule">agendamentos ÷ leads atribuídos · ATTENDANT vê apenas o próprio</span></div>
-            <div class="method"><span class="mname">+ getDentistPerformance(userId: UUID, period: DateRange, by: User)</span><span class="msig">UserPerformanceResult</span><span class="mrule">Deals criados ÷ consultas · taxa de aceite</span></div>
-            <div class="method"><span class="mname">+ getSellerPerformance(userId: UUID, period: DateRange, by: User)</span><span class="msig">UserPerformanceResult</span><span class="mrule">fechamentos ÷ Deals recebidos · desconto médio</span></div>
-            <div class="method"><span class="mname">+ getBonusApurado(userId: UUID, periodRef: String, by: User)</span><span class="msig">BigDecimal</span><span class="mrule">métrica do período × BonusConfig.bonusPct do setor/role</span></div>
-          </div>
+        <div class="method"><span class="mname">+ getAdsRoi(channel: AdsChannel, period: DataRangeDTO, userId: UUID)</span><span class="msig">AdsRoiResultDTO</span></div>
+        <div class="method"><span class="mname">+ getConversionByStage(period: DataRangeDTO, sector: Sector, userId: UUID)</span><span class="msig">StageConversionResultDTO</span></div>
+        <div class="method"><span class="mname">+ getDropoffBySector(period: DataRangeDTO, userId: UUID)</span><span class="msig">List&lt;SectorDropoffResultDTO&gt;</span></div>
+        <div class="method"><span class="mname">+ getUserPerformance(targetUserId: UUID, period: DataRangeDTO, userId: UUID)</span><span class="msig">UserPerformanceResultDTO</span><span class="mrule">despacha pela role/sector do targetUser: ATTENDANT → agendamentos; EVALUATOR → aceite de tratamento; COMMERCIAL → fechamentos + desconto médio</span></div>
+        <div class="method"><span class="mname">+ getBonusApurado(targetUserId: UUID, periodRef: String, userId: UUID)</span><span class="msig">BigDecimal</span></div>
+        <div class="method"><span class="mname">+ getGlobalDashboard(period: DataRangeDTO, userId: UUID)</span><span class="msig">GlobalDashboardResultDTO</span></div>
+      </div>
+
+      <div class="cls">
+        <div class="cls-head h-blue">
+          <span class="cls-stereo">«@Service» «@Transactional(readOnly=true)» · service/impl/AnalyticsServiceImpl.java</span>
+          <span class="cls-name">AnalyticsServiceImpl implements AnalyticsService</span>
+          <span class="cls-sub">nunca escreve · lê cross-db via repositórios injetados · sem @ManyToOne entre identity_db e crm_db</span>
+        </div>
+        <div class="section-label">dependências injetadas</div>
+        <div class="field"><span class="vis">-</span><span class="fname">customerRepository</span><span class="ftype">CustomerRepository</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">ticketRepository</span><span class="ftype">LeadTicketRepository</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">dealRepository</span><span class="ftype">DealRepository</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">adsInvestmentRepository</span><span class="ftype">AdsInvestmentRepository</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">userRepository</span><span class="ftype">UserRepository</span><span class="fann nn">identity_db — para nome em UserPerformanceResultDTO</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">bonusConfigRepository</span><span class="ftype">BonusConfigRepository</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">permissionService</span><span class="ftype">PermissionService</span></div>
+        <div class="divider"></div>
+        <div class="section-label">lógica de negócio por método</div>
+        <div class="method">
+          <span class="mname">+ getAdsRoi(channel, period, userId)</span>
+          <span class="msig">AdsRoiResultDTO</span>
+          <span class="mrule">1. checkOrThrow(userId, ANALYTICS, READ) — apenas ADMIN/MANAGER</span>
+          <span class="mrule">2. customers = customerRepository.findByAdChannel(channel)</span>
+          <span class="mrule">3. customerIds = extrair IDs</span>
+          <span class="mrule">4. tickets = ticketRepository.findByCustomerIdIn(customerIds) com status WIN e closedAt no período</span>
+          <span class="mrule">5. deals = dealRepository.findByTicketIdIn(ticketIds)</span>
+          <span class="mrule">6. totalRevenue = Σ deal.finalValue</span>
+          <span class="mrule">7. totalInvestment = adsInvestmentRepository.sumAmountByChannelAndPeriod(channel, from, to)</span>
+          <span class="mrule">8. roiMultiplier = totalRevenue ÷ totalInvestment (BigDecimal, HALF_UP, escala 4)</span>
+          <span class="mrule">9. return new AdsRoiResultDTO(channel, totalInvestment, totalRevenue, roiMultiplier, customers.size(), deals.size())</span>
+        </div>
+        <div class="method">
+          <span class="mname">+ getConversionByStage(period, sector, userId)</span>
+          <span class="msig">StageConversionResultDTO</span>
+          <span class="mrule">1. checkOrThrow — MANAGER vê só o próprio setor</span>
+          <span class="mrule">2. tickets no período: createdAt entre from e to, filtrado por sector se informado</span>
+          <span class="mrule">3. captureCount = total de tickets no período</span>
+          <span class="mrule">4. scheduledCount = tickets com status SCHEDULED ou posterior</span>
+          <span class="mrule">5. dealCreatedCount = tickets com Deal associado</span>
+          <span class="mrule">6. closedCount = tickets WIN</span>
+          <span class="mrule">7. leadsConversionPct = scheduledCount ÷ captureCount × 100</span>
+          <span class="mrule">8. evaluationConversionPct = dealCreatedCount ÷ scheduledCount × 100</span>
+          <span class="mrule">9. commercialConversionPct = closedCount ÷ dealCreatedCount × 100</span>
+        </div>
+        <div class="method">
+          <span class="mname">+ getDropoffBySector(period, userId)</span>
+          <span class="msig">List&lt;SectorDropoffResultDTO&gt;</span>
+          <span class="mrule">Para cada Sector: entry = tickets que tiveram currentSector=X no período · loss = tickets que saíram como LOSS naquele setor · dropoffPct = loss ÷ entry × 100</span>
+        </div>
+        <div class="method">
+          <span class="mname">+ getUserPerformance(targetUserId, period, userId)</span>
+          <span class="msig">UserPerformanceResultDTO</span>
+          <span class="mrule">1. resolver targetUser via userRepository → obter sector e role</span>
+          <span class="mrule">2. scope: OWN (userId == targetUserId) ou MANAGER/ADMIN (qualquer um)</span>
+          <span class="mrule">3. despachar pela sector do targetUser:</span>
+          <span class="mrule">   ATTENDANT → totalAssigned = tickets assignedTo=targetUserId · totalConverted = chegaram a SCHEDULED · avgTicketValue = 0</span>
+          <span class="mrule">   EVALUATOR → totalAssigned = tickets IN_EVALUATION assignados · totalConverted = deals criados por targetUserId · avgTicketValue = média deal.totalValue</span>
+          <span class="mrule">   COMMERCIAL → totalAssigned = deals recebidos no período · totalConverted = deals WIN closedBy=targetUserId · avgTicketValue = média deal.finalValue · desconto médio = média deal.discountPct</span>
+          <span class="mrule">4. conversionPct = totalConverted ÷ totalAssigned × 100 (BigDecimal HALF_UP)</span>
+          <span class="mrule">5. bonusApurado = getBonusApurado(targetUserId, periodRef derivado de period, userId)</span>
+        </div>
+        <div class="method">
+          <span class="mname">+ getBonusApurado(targetUserId, periodRef, userId)</span>
+          <span class="msig">BigDecimal</span>
+          <span class="mrule">1. resolver User via userRepository para obter role e sector</span>
+          <span class="mrule">2. config = bonusConfigRepository.findByRoleAndSectorAndPeriodRef(role, sector, periodRef)</span>
+          <span class="mrule">3. metricValue = calcular a métrica correspondente ao config.metricKey (ex: "scheduledCount", "closedCount")</span>
+          <span class="mrule">4. return metricValue × config.bonusPct ÷ 100 (BigDecimal HALF_UP)</span>
+        </div>
+        <div class="method">
+          <span class="mname">+ getGlobalDashboard(period, userId)</span>
+          <span class="msig">GlobalDashboardResultDTO</span>
+          <span class="mrule">1. checkOrThrow(userId, ANALYTICS, READ) — userId não filtra dado, serve só pra checar permissão (apenas ADMIN/MANAGER)</span>
+          <span class="mrule">2. agrega: getAdsRoi para cada AdsChannel · getConversionByStage sem filtro de setor · getDropoffBySector · top performers por setor</span>
         </div>
       </div>
 
     </div>
   </div>
+
+  <div class="note" style="margin-top:14px">
+    <strong>Regra cross-db</strong> — <code>AnalyticsServiceImpl</code> lê <code>identity_db</code> (UserRepository) e <code>crm_db</code> (todos os outros) via repositórios injetados pelo Spring. Nunca use <code>@ManyToOne</code> entre entidades de bancos diferentes. FKs para User em crm_db são <code>UUID</code> simples — resolva o <code>User</code> chamando <code>userRepository.findById(uuid)</code> dentro da impl quando precisar de nome ou role.
+  </div>
+
 </div>
 
 <!-- ══════════════════════════════════════════

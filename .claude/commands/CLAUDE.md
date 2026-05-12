@@ -142,9 +142,9 @@ permissionService.checkOrThrow(currentUser, Resource.DEAL, Action.CREATE, ticket
 Resolução: busca regra (role+sector+resource+action) → fallback (role+resource+action) → aplica scope: GLOBAL=sempre | SECTOR=user.sector==targetSector | OWN=user.id==targetOwnerId
 
 ### Serviços
-- `IPermissionService` / `PermissionServiceImpl` — canAccess(), checkOrThrow()
-- `IUserService` / `UserServiceImpl` — createUser(), deactivateUser(), listUsersBySector()
-- `IAuthService` / `AuthServiceImpl` — login(), refreshToken()
+- `PermissionService` / `PermissionServiceImpl` — canAccess(), checkOrThrow()
+- `UserService` / `UserServiceImpl` — createUser(), deactivateUser(), listUsersBySector()
+- `AuthService` / `AuthServiceImpl` — login(), refreshToken()
 - `UserDetailsServiceImpl` (@Component, implements UserDetailsService) — separado de UserService para evitar dependência circular
 - `PermissionSeeder` (@Component, implements ApplicationRunner) — popula matriz padrão se vazia
 
@@ -192,8 +192,8 @@ Transição inválida → `IllegalStateException` → HTTP 422
 - **BonusConfig**: id, sector, role, metricKey, bonusPct, targetValue?, active=true, configuredBy(UUID), periodRef, createdAt
 
 ### Serviços
-- `ICommercialService` / `CommercialServiceImpl` — createDeal(), updateDeal(), applyDiscount(), closeDeal()
-- `IConfigService` / `ConfigServiceImpl` — setRecycleConfig(), setBonusConfig(), registerAdsInvestment()
+- `CommercialService` / `CommercialServiceImpl` — createDeal(), updateDeal(), applyDiscount(), closeDeal()
+- `ConfigService` / `ConfigServiceImpl` — setRecycleConfig(), setBonusConfig(), registerAdsInvestment()
 - `RecycleJob` (@Component, @Scheduled) — **não segue Interface+Impl**, roda 02:00 diário
 
 ### Regras de negócio críticas
@@ -207,7 +207,7 @@ Transição inválida → `IllegalStateException` → HTTP 422
 ## Módulo analytics
 
 ### Serviço
-- `IAnalyticsService` / `AnalyticsServiceImpl` — `@Transactional(readOnly=true)` — **nunca escreve**
+- `AnalyticsService` / `AnalyticsServiceImpl` — `@Transactional(readOnly=true)` — **nunca escreve**
 - Lê cross-db via repositórios injetados — sem @ManyToOne entre bancos distintos
 
 ### Métodos principais
@@ -215,9 +215,7 @@ Transição inválida → `IllegalStateException` → HTTP 422
 getAdsROI(channel, period) → receita(Deals GANHO com adChannel=channel) ÷ custo(AdsInvestment)
 getConversionByStage(period, sector) → captados / agendados / dealCriado / ganho com %
 getDropoffBySector(period) → onde a esteira perde mais clientes
-getAttendantPerformance(userId, period) → agendamentos ÷ leads atribuídos
-getDentistPerformance(userId, period) → Deals criados ÷ consultas · taxa de aceite
-getSellerPerformance(userId, period) → fechamentos ÷ Deals recebidos · desconto médio
+getUserPerformance(targetUserId, period) → métricas por setor/role do usuário alvo (ATTENDANT: agendamentos; EVALUATOR: aceite de tratamento; COMMERCIAL: fechamentos+desconto médio)
 getBonusApurado(userId, periodRef) → metricValue × BonusConfig.bonusPct
 getGlobalDashboard(period) → apenas ADMIN/MANAGER — agrega tudo
 ```
@@ -231,7 +229,7 @@ getGlobalDashboard(period) → apenas ADMIN/MANAGER — agrega tudo
 
 | Decisão | Padrão |
 |---|---|
-| Interfaces de serviço | `IUserService` + `UserServiceImpl` em **todos** os serviços |
+| Interfaces de serviço | `UserService` + `UserServiceImpl` em **todos** os serviços — sem prefixo `I` |
 | Exceção a Interface+Impl | `RecycleJob`, `UserDetailsServiceImpl`, `PermissionSeeder` (implementam interfaces Spring) |
 | Prefixo de repositórios | sem prefixo `I` — `UserRepository`, `DealRepository` etc |
 | Mapeamento | MapStruct com `@Mapper(componentModel = "spring")` |
