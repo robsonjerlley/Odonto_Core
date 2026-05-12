@@ -4,6 +4,7 @@ package io.sertaoBit.odontocore.crm.config.security;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.sertaoBit.odontocore.crm.modules.identity.security.MainUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -27,9 +28,12 @@ public class JwtUtil {
     }
 
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(MainUser mainUser) {
         return Jwts.builder()
-                .subject(userDetails.getUsername())
+                .subject(mainUser.getUsername())
+                .claim("id", mainUser.getId())
+                .claim("role", mainUser.getRole())
+                .claim("sector", mainUser.getSector())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSecretKey())

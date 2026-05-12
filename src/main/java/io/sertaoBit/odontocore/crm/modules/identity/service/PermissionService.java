@@ -9,6 +9,7 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.PermissionRule;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.PermissionRuleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,6 +46,18 @@ public class PermissionService {
         return resolveScope(ruleOpt.get(), user, targetSector, targetOwnerId);
     }
 
+
+    public void checkOrThrow(
+            User user,
+            Resource resource,
+            Action action,
+            Sector targetSector,
+            UUID targetOwnerId
+    ) {
+        if (!canAccess(user, resource, action, targetSector, targetOwnerId)) {
+            throw new AccessDeniedException("Access denied");
+        }
+    }
 
     public List<PermissionRule> getPermission(Role role) {
         return ruleRepository.findAllByRole(role);

@@ -303,11 +303,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
 
       <div class="cls">
         <div class="cls-head h-purple">
-          <span class="cls-stereo">«@Component» · config/security · claims: subject(username)</span>
+          <span class="cls-stereo">«@Component» · config/security · claims: subject(username), id, role, sector</span>
           <span class="cls-name">JwtUtil</span>
-          <span class="cls-sub">⚠ pendente: incluir claims id, role, sector no token</span>
         </div>
-        <div class="method"><span class="mname">+ generateToken(userDetails: UserDetails)</span><span class="msig">String</span></div>
+        <div class="method"><span class="mname">+ generateToken(mainUser: MainUser)</span><span class="msig">String</span></div>
         <div class="method"><span class="mname">+ extractUsername(token: String)</span><span class="msig">String</span></div>
         <div class="method"><span class="mname">+ isValid(token: String, userDetails: UserDetails)</span><span class="msig">boolean</span></div>
       </div>
@@ -336,10 +335,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="mname">+ getPermission(role: Role)</span>
           <span class="msig">List&lt;PermissionRule&gt;</span>
         </div>
-        <div class="method" style="opacity:.55">
+        <div class="method">
           <span class="mname">+ checkOrThrow(user: User, resource: Resource, action: Action,</span>
           <span class="msig">  targetSector: Sector, targetOwnerId: UUID): void</span>
-          <span class="mrule">⚠ pendente — necessário para RBAC completo · lança AccessDeniedException (HTTP 403)</span>
+          <span class="mrule">✔ implementado — chama canAccess() · lança AccessDeniedException (HTTP 403) se negado</span>
         </div>
       </div>
 
@@ -359,14 +358,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="method"><span class="mname">+ delete(id: UUID)</span><span class="msig">void</span></div>
       </div>
 
-      <div class="cls" style="opacity:.6">
-        <div class="cls-head h-purple" style="border-color:var(--amber-d)">
-          <span class="cls-stereo">⚠ pendente · lógica em AuthController direto (sem service layer)</span>
+      <div class="cls">
+        <div class="cls-head h-purple">
+          <span class="cls-stereo">«@Service» direto (sem interface) · config/security/service</span>
           <span class="cls-name">AuthService</span>
-          <span class="cls-sub">AuthController chama JwtUtil + AuthenticationManager diretamente — mover para service</span>
+          <span class="cls-sub">injetado: AuthenticationManager, JwtUtil</span>
         </div>
-        <div class="method"><span class="mname">+ login(username: String, password: String)</span><span class="msig">AuthResponseDTO</span></div>
-        <div class="method"><span class="mname">+ refreshToken(token: String)</span><span class="msig">AuthResponseDTO</span></div>
+        <div class="method"><span class="mname">+ login(username: String, password: String)</span><span class="msig">AuthResponseDTO</span><span class="mrule">✔ implementado — autentica via AuthenticationManager · gera JWT com MainUser</span></div>
+        <div class="method" style="opacity:.55"><span class="mname">+ refreshToken(token: String)</span><span class="msig">AuthResponseDTO</span><span class="mrule">⚠ pendente</span></div>
       </div>
 
       <div class="cls">
@@ -378,13 +377,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="method"><span class="mname">+ loadUserByUsername(username: String)</span><span class="msig">UserDetails</span><span class="mrule">retorna MainUser via form(User) · lança UsernameNotFoundException</span></div>
       </div>
 
-      <div class="cls" style="opacity:.6">
-        <div class="cls-head h-purple" style="border-color:var(--amber-d)">
-          <span class="cls-stereo">⚠ pendente · «@Component» «implements ApplicationRunner»</span>
+      <div class="cls">
+        <div class="cls-head h-purple">
+          <span class="cls-stereo">«@Component» «implements ApplicationRunner» · identity/service</span>
           <span class="cls-name">PermissionSeeder</span>
           <span class="cls-sub">popula matriz padrão de PermissionRule se vazia na inicialização</span>
         </div>
-        <div class="method"><span class="mname">+ run(args: ApplicationArguments)</span><span class="msig">void</span><span class="mrule">executa apenas se PermissionRuleRepository.count() == 0</span></div>
+        <div class="method"><span class="mname">+ run(args: ApplicationArguments)</span><span class="msig">void</span><span class="mrule">✔ implementado — guard count() == 0 · semeia matriz completa: ADM_SYSTEM(GLOBAL), ADM/USER_LEADS, USER_ATTENDANT, ADM/USER_EVALUATOR, ADM/USER_COMMERCIAL</span></div>
       </div>
 
     </div>
@@ -765,10 +764,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
     <strong>⚠ Pendências críticas para produção</strong><br><br>
     1. <code>AnalyticsServiceImpl.getAdsRoi()</code> tem <strong>erro de compilação</strong> — código incompleto na impl (linha 57 quebrada).<br>
     2. Todos os métodos da impl retornam <code>null</code> / stub — lógica de negócio não implementada.<br>
-    3. <code>PermissionService.checkOrThrow()</code> ausente — chamadas de RBAC na impl falharão.<br>
-    4. <code>GlobalExceptionHandler</code> ausente — <code>IllegalStateException</code> não retorna 422, <code>AccessDeniedException</code> não retorna 403.<br>
-    5. <code>ResourceAlreadyExistsException</code> ausente — HTTP 409 não funciona.<br>
-    6. <code>PermissionSeeder</code> ausente — banco sobe sem nenhuma regra de permissão.
+    3. <code>GlobalExceptionHandler</code> ausente — <code>IllegalStateException</code> não retorna 422, <code>AccessDeniedException</code> não retorna 403.<br>
+    4. <code>ResourceAlreadyExistsException</code> ausente — HTTP 409 não funciona.<br>
+    5. <code>AuthService.refreshToken()</code> pendente — endpoint de refresh não funcional.
   </div>
 
   <!-- DTOs EXISTENTES -->
