@@ -65,10 +65,6 @@ public class PermissionService {
     }
 
 
-    public void seedDefaultRules() {
-
-
-    }
 
     private Boolean resolveScope(
             PermissionRule rule,

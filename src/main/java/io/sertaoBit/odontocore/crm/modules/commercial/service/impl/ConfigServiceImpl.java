@@ -14,7 +14,6 @@ import io.sertaoBit.odontocore.crm.modules.commercial.repository.BonusConfigRepo
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.RecycleConfigRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.ConfigService;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,19 +38,22 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional
     public RecycleConfig setRecycleConfig(RecycleConfigRequestDTO dto) {
+
         var currentUser = securityUtils.getCurrentUser();
-        if (!permissionService.canAccess(
+        permissionService.checkOrThrow(
                 currentUser, Resource.CONFIG,
                 Action.CONFIGURE, dto.sector(),
-                null)) {
-            throw new AccessDeniedException("User not have access");
-        }
+                null
+        );
 
         RecycleConfig recycleConfig = RecycleConfig.builder()
                 .sector(dto.sector())
                 .afterDays(dto.afterDays())
                 .configuredBy(currentUser.getId())
                 .build();
+
+        configRepository.findBySectorAndActiveTrue(dto.sector())
+                .ifPresent(old -> { old.setActive(false); configRepository.save(old); });
 
         return configRepository.save(recycleConfig);
     }
@@ -60,12 +62,11 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional
     public BonusConfig setBonusConfig(BonusConfigRequestDTO dto) {
         var currentUser = securityUtils.getCurrentUser();
-        if (!permissionService.canAccess(
+        permissionService.checkOrThrow(
                 currentUser, Resource.CONFIG,
                 Action.CONFIGURE, dto.sector(),
-                null)) {
-            throw new AccessDeniedException("User not have access");
-        }
+                null
+        );
 
         BonusConfig bonusConfig = BonusConfig.builder()
                 .sector(dto.sector())
@@ -83,13 +84,12 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional
     public AdsInvestment registerAdsInvestment(AdsInvestmentRequestDTO dto) {
-        var  currentUser = securityUtils.getCurrentUser();
-        if (!permissionService.canAccess(
+        var currentUser = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
                 currentUser, Resource.CONFIG,
                 Action.CONFIGURE, null,
-                null)) {
-            throw new AccessDeniedException("User not have access");
-        }
+                null
+        );
 
         AdsInvestment adsInvestment = AdsInvestment.builder()
                 .channel(dto.channel())
