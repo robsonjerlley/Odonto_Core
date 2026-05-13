@@ -18,6 +18,8 @@ public interface DealRepository extends JpaRepository<Deal, UUID> {
 
     List<Deal> findByCreatedByAndClosedAtBetween(UUID userId, LocalDateTime from, LocalDateTime to);
 
+    List<Deal> findByClosedByAndClosedAtBetween(UUID userId, LocalDateTime from, LocalDateTime to);
+
     List<Deal> findByTicketIdIn(List<UUID> ticketIds);
 
 }

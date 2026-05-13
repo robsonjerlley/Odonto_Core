@@ -146,8 +146,9 @@ public class DealServiceImpl implements DealService {
 
         Deal saved = dealRepository.save(deal);
         dealHistoryService.record(
-                saved.getId(),currentUser,
-                "procedures",proceduresBefore,
+                saved.getId(),
+                currentUser,
+                proceduresBefore,
                 saved.getProcedures()
         );
 
@@ -194,18 +195,7 @@ public class DealServiceImpl implements DealService {
         dealHistoryService.record(
                 saved.getId(),
                 currentUser,
-                "discountPct",
-                discountBefore,
-                saved.getDiscountPct()
-        );
-        dealHistoryService.record(
-                saved.getId(),
-                currentUser,
-                "finalValue",
-                finalValueBefore,
-                saved.getFinalValue()
-        );
-
+                discountBefore, saved.getDiscountPct());
         return saved;
     }
 
@@ -248,10 +238,7 @@ public class DealServiceImpl implements DealService {
         dealHistoryService.record(
                 saved.getId(),
                 currentUser,
-                "closedAt",
-                null,
-                saved.getClosedAt()
-        );
+                null, saved.getClosedAt());
 
         return saved;
     }

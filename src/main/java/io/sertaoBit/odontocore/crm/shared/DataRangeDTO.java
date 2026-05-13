@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.analytics.api.dto;
+package io.sertaoBit.odontocore.crm.shared;
 
 import java.time.LocalDate;
 

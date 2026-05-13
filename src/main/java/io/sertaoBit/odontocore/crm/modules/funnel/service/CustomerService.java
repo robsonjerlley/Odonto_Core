@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
@@ -21,6 +22,8 @@ public interface CustomerService {
     List<CustomerResponseDTO> findByName(String name);
 
     CustomerResponseDTO findByCpf(String cpf);
+
+      List<CustomerResponseDTO> findByAdChannel(AdsChannel  channel);
 
     void deleteById(UUID id);
 

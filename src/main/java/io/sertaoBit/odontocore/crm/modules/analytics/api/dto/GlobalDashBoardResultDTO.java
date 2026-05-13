@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.analytics.api.dto;
 
+import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 import java.util.List;
 
 public record GlobalDashBoardResultDTO(

@@ -7,7 +7,9 @@
       "Bash(git add *)",
       "Bash(git push *)",
       "Bash(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\\\\odontocore.crm\" -Directory)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(git -C \"B:/projects/odontocore.crm/odontocore.crm\" status)",
+      "Bash(git -C \"B:/projects/odontocore.crm/odontocore.crm\" diff)"
     ]
   }
 }

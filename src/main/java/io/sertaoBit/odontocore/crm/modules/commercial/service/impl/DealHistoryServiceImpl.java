@@ -26,13 +26,10 @@ public class DealHistoryServiceImpl implements DealHistoryService {
 
     @Override
     @Transactional
-    public void record(UUID dealId, User user, String field, Object before, Object after) {
+    public void record(UUID dealId, User user, Object before, Object after) {
         try {
             DealHistory history = DealHistory.builder()
                     .dealId(dealId)
-                    .changedBy(user.getId())
-                    .changedBySector(user.getSector())
-                    .fieldChanged(field)
                     .valueBefore(objectMapper.writeValueAsString(before))
                     .valueAfter(objectMapper.writeValueAsString(after))
                     .occurredAt(LocalDateTime.now())

@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.analytics.service;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.*;
+import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 
 import java.math.BigDecimal;
 import java.util.List;

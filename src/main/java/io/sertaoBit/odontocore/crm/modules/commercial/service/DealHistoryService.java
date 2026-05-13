@@ -8,7 +8,10 @@ import java.util.UUID;
 
 public interface DealHistoryService {
 
-    void record(UUID dealId, User user, String field, Object before, Object after);
+    void record(
+            UUID dealId,User user,
+            Object before, Object after
+    );
 
     List<DealHistory> findByDealId(UUID dealId);
 }

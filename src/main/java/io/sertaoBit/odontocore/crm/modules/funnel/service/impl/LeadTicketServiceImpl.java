@@ -7,7 +7,6 @@ import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.LeadTicketMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
@@ -15,6 +14,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
+import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +66,9 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Override
     @Transactional
     public LeadTicketResponseDTO create(LeadTicketCreateRequestDTO dto) {
-             customerRepository.existsById(dto.customerId());
+        if (!customerRepository.existsById(dto.customerId())) {
+            throw new ResourceNotFoundException("Customer not found: " + dto.customerId());
+        }
 
         var userId = securityUtils.getCurrentUserId();
         LeadTicket leadTicket = LeadTicket.builder()
@@ -166,6 +168,15 @@ public class LeadTicketServiceImpl implements LeadTicketService {
                 .toList();
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LeadTicketResponseDTO> findByPeriod(DataRangeDTO period) {
+        return ticketRepository.findByCreatedAtBetween(
+                period.from().atStartOfDay(),
+                period.to().atTime(23, 59, 59)
+        ).stream().map(ticketMapper::toResponseDTO).toList();
+    }
 
     @Override
     @Transactional

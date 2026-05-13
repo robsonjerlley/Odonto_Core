@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
@@ -14,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -103,6 +103,15 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(customerMapper::toResponseDTO)
                 .orElseThrow(() -> new RuntimeException("Customer not found " + cpf));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerResponseDTO> findByAdChannel(AdsChannel channel) {
+        return customerRepository.findByChannel(channel).stream()
+                .map(customerMapper::toResponseDTO).toList();
+
+    }
+
 
     @Override
     @Transactional

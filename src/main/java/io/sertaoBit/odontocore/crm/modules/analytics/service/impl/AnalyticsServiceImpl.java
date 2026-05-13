@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.analytics.service.impl;
 import io.sertaoBit.odontocore.crm.core.enums.*;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.*;
+import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 import io.sertaoBit.odontocore.crm.modules.analytics.service.AnalyticsService;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.AdsInvestmentRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.BonusConfigRepository;
