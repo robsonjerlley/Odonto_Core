@@ -486,7 +486,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="method"><span class="mname">+ findByCustomerId(customerId: UUID)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
         <div class="method"><span class="mname">+ findByStatus(status: TicketStatus)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
         <div class="method"><span class="mname">+ findByAssignedTo(userId: UUID)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
-        <div class="method"><span class="mname">+ findByCurrentSector(sector: Sector)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
         <div class="method"><span class="mname">+ findByStatusAndPendingAtBefore(status: TicketStatus, date: LocalDateTime)</span><span class="msig">List&lt;LeadTicket&gt;</span></div>
       </div>
 
@@ -507,6 +506,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="method"><span class="mname">+ update(id: UUID, dto: CustomerUpdateRequestDTO)</span><span class="msig">CustomerResponseDTO</span><span class="mrule">apenas name, cpf, phone, email</span></div>
         <div class="method"><span class="mname">+ findById(id: UUID)</span><span class="msig">CustomerResponseDTO</span></div>
         <div class="method"><span class="mname">+ findAll()</span><span class="msig">List&lt;CustomerResponseDTO&gt;</span></div>
+        <div class="method"><span class="mname">+ findByChannel(channel: AdsChannel)</span><span class="msig">List&lt;CustomerResponseDTO&gt;</span><span class="mrule">usado pelo AnalyticsService para calcular ROI por canal</span></div>
         <div class="method"><span class="mname">+ deleteById(id: UUID)</span><span class="msig">void</span></div>
       </div>
 
@@ -717,6 +717,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="method"><span class="mname">+ closeDeal(id: UUID, dto: CloseDealRequestDTO)</span><span class="msig">DealResponseDTO</span><span class="mrule">ticket → WIN · finalValue = totalValue × (1 - discountPct/100) HALF_UP</span></div>
         <div class="method"><span class="mname">+ findById(id: UUID)</span><span class="msig">DealDetailResponseDTO</span></div>
         <div class="method"><span class="mname">+ findByTicketId(ticketId: UUID)</span><span class="msig">DealResponseDTO</span></div>
+        <div class="method"><span class="mname">+ sumRevenueByTicketIds(ticketIds: List&lt;UUID&gt;)</span><span class="msig">BigDecimal</span><span class="mrule">Σ deal.finalValue dos deals ativos dos tickets informados · usado pelo AnalyticsService</span></div>
       </div>
 
       <div class="cls">
@@ -865,15 +866,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
         <div class="cls-head h-blue">
           <span class="cls-stereo">«@Service» «@Transactional(readOnly=true)» · service/impl/AnalyticsServiceImpl.java</span>
           <span class="cls-name">AnalyticsServiceImpl implements AnalyticsService</span>
-          <span class="cls-sub">nunca escreve · lê cross-db via repositórios injetados · sem @ManyToOne entre identity_db e crm_db</span>
+          <span class="cls-sub">nunca escreve · delega para services de cada domínio · sem acesso direto a repositories de outros módulos</span>
         </div>
         <div class="section-label">dependências injetadas</div>
-        <div class="field"><span class="vis">-</span><span class="fname">customerRepository</span><span class="ftype">CustomerRepository</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">ticketRepository</span><span class="ftype">LeadTicketRepository</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">dealRepository</span><span class="ftype">DealRepository</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">adsInvestmentRepository</span><span class="ftype">AdsInvestmentRepository</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">customerService</span><span class="ftype">CustomerService</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">leadTicketService</span><span class="ftype">LeadTicketService</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">dealService</span><span class="ftype">DealService</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">adsInvestmentRepository</span><span class="ftype">AdsInvestmentRepository</span><span class="fann nn">próprio domínio — acesso direto permitido</span></div>
+        <div class="field"><span class="vis">-</span><span class="fname">bonusConfigRepository</span><span class="ftype">BonusConfigRepository</span><span class="fann nn">próprio domínio — acesso direto permitido</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">userRepository</span><span class="ftype">UserRepository</span><span class="fann nn">identity_db — para nome em UserPerformanceResultDTO</span></div>
-        <div class="field"><span class="vis">-</span><span class="fname">bonusConfigRepository</span><span class="ftype">BonusConfigRepository</span></div>
         <div class="field"><span class="vis">-</span><span class="fname">permissionService</span><span class="ftype">PermissionService</span></div>
         <div class="divider"></div>
         <div class="section-label">lógica de negócio por método</div>
@@ -881,14 +882,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
           <span class="mname">+ getAdsRoi(channel, period, userId)</span>
           <span class="msig">AdsRoiResultDTO</span>
           <span class="mrule">1. checkOrThrow(userId, ANALYTICS, READ) — apenas ADMIN/MANAGER</span>
-          <span class="mrule">2. customers = customerRepository.findByAdChannel(channel)</span>
-          <span class="mrule">3. customerIds = extrair IDs</span>
-          <span class="mrule">4. tickets = ticketRepository.findByCustomerIdIn(customerIds) com status WIN e closedAt no período</span>
-          <span class="mrule">5. deals = dealRepository.findByTicketIdIn(ticketIds)</span>
-          <span class="mrule">6. totalRevenue = Σ deal.finalValue</span>
+          <span class="mrule">2. customers = customerService.findByChannel(channel)</span>
+          <span class="mrule">3. customerIds = extrair IDs dos customers</span>
+          <span class="mrule">4. winTickets = leadTicketService.findByStatus(WIN) → filtrar em memória pelos customerIds</span>
+          <span class="mrule">5. ticketIds = extrair IDs dos winTickets filtrados</span>
+          <span class="mrule">6. totalRevenue = dealService.sumRevenueByTicketIds(ticketIds)</span>
           <span class="mrule">7. totalInvestment = adsInvestmentRepository.sumAmountByChannelAndPeriod(channel, from, to)</span>
-          <span class="mrule">8. roiMultiplier = totalRevenue ÷ totalInvestment (BigDecimal, HALF_UP, escala 4)</span>
-          <span class="mrule">9. return new AdsRoiResultDTO(channel, totalInvestment, totalRevenue, roiMultiplier, customers.size(), deals.size())</span>
+          <span class="mrule">8. roiMultiplier = totalRevenue ÷ totalInvestment (BigDecimal, HALF_UP, escala 2) — retorna ZERO se investment = 0</span>
+          <span class="mrule">9. return new AdsRoiResultDTO(channel, totalInvestment, totalRevenue, roiMultiplier, customers.size(), winTickets.size())</span>
         </div>
         <div class="method">
           <span class="mname">+ getConversionByStage(period, sector, userId)</span>
