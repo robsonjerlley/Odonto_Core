@@ -4,6 +4,8 @@ import io.sertaoBit.odontocore.crm.core.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -39,6 +41,7 @@ public class PermissionRule {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PermissionScope scope;
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> conditions;
     private boolean allowed;
