@@ -2,6 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.Action;
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.Resource;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.adsInvestment.AdsInvestmentRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.bonusConfig.BonusConfigRequestDTO;
@@ -14,8 +15,11 @@ import io.sertaoBit.odontocore.crm.modules.commercial.repository.BonusConfigRepo
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.RecycleConfigRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.ConfigService;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
+import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 public class ConfigServiceImpl implements ConfigService {
@@ -101,5 +105,14 @@ public class ConfigServiceImpl implements ConfigService {
                 .build();
 
         return adsInvestmentRepository.save(adsInvestment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal sumInvestmentByChannelAndPeriod(AdsChannel channel, DataRangeDTO period) {
+
+        return  adsInvestmentRepository.sumAmountByChannelAndPeriod(channel,period.from(),period.to());
+
+
     }
 }

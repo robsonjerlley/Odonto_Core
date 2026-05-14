@@ -19,7 +19,7 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
     List<Customer> findBySource(CustomerSource source);
 
-    List<Customer> findByChannel(AdsChannel adChannel);
+    List<Customer> findByAdChannel(AdsChannel adChannel);
 
 
 }

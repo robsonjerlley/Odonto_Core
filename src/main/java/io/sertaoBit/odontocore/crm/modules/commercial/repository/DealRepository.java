@@ -22,4 +22,6 @@ public interface DealRepository extends JpaRepository<Deal, UUID> {
 
     List<Deal> findByTicketIdIn(List<UUID> ticketIds);
 
+    List<Deal> findByCreatedByAndCreatedAtBetween(UUID createdBy, LocalDateTime from, LocalDateTime to);
+
 }

@@ -107,7 +107,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public List<CustomerResponseDTO> findByAdChannel(AdsChannel channel) {
-        return customerRepository.findByChannel(channel).stream()
+        return customerRepository.findByAdChannel(channel).stream()
                 .map(customerMapper::toResponseDTO).toList();
 
     }
