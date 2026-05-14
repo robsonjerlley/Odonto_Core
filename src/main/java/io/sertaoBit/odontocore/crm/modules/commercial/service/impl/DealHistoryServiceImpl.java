@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import tools.jackson.databind.ObjectMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.DealHistory;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealHistoryRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.DealHistoryService;
@@ -27,17 +27,13 @@ public class DealHistoryServiceImpl implements DealHistoryService {
     @Override
     @Transactional
     public void record(UUID dealId, User user, Object before, Object after) {
-        try {
-            DealHistory history = DealHistory.builder()
-                    .dealId(dealId)
-                    .valueBefore(objectMapper.writeValueAsString(before))
-                    .valueAfter(objectMapper.writeValueAsString(after))
-                    .occurredAt(LocalDateTime.now())
-                    .build();
-            dealHistoryRepository.save(history);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Erro ao serializar histórico do deal", e);
-        }
+        DealHistory history = DealHistory.builder()
+                .dealId(dealId)
+                .valueBefore(objectMapper.writeValueAsString(before))
+                .valueAfter(objectMapper.writeValueAsString(after))
+                .occurredAt(LocalDateTime.now())
+                .build();
+        dealHistoryRepository.save(history);
     }
 
     @Override

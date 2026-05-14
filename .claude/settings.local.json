@@ -9,7 +9,9 @@
       "Bash(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\\\\odontocore.crm\" -Directory)",
       "Bash(Select-Object Name)",
       "Bash(git -C \"B:/projects/odontocore.crm/odontocore.crm\" status)",
-      "Bash(git -C \"B:/projects/odontocore.crm/odontocore.crm\" diff)"
+      "Bash(git -C \"B:/projects/odontocore.crm/odontocore.crm\" diff)",
+      "Skill(jarvis)",
+      "Bash(docker exec *)"
     ]
   }
 }
