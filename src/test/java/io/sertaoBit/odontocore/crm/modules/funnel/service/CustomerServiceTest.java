@@ -1,14 +1,16 @@
 
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
+import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
+import io.sertaoBit.odontocore.crm.core.enums.CustomerSource;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.CustomerServiceImpl;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,9 +18,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.AdsChannel.INSTAGRAM;
+import static io.sertaoBit.odontocore.crm.core.enums.CustomerSource.ADS_PAID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -26,40 +31,26 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CustomerServiceTest - Testes Unitários do Serviço")
 class CustomerServiceTest {
-    /*
+
     private CustomerServiceImpl customerService;
 
     @Mock
     private CustomerRepository customerRepository;
 
     @Mock
-    private IDepartmentRepository departmentRepository;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private CustomerMapper customerMapper;
 
-    private LeadTicketRepository ticketRepository;
+    @Mock
+    private SecurityUtils securityUtils;
 
-    private UUID customerId;
-    private UUID departmentId;
-    private UUID userId;
 
     @BeforeEach
     void setUp() {
         customerService = new CustomerServiceImpl(
                 customerRepository,
                 customerMapper,
-                userRepository,
-
-
-                );
-
-        customerId = UUID.randomUUID();
-        departmentId = UUID.randomUUID();
-        userId = UUID.randomUUID();
+                securityUtils
+        );
     }
 
     // ========== CREATE TESTS ==========
@@ -67,26 +58,32 @@ class CustomerServiceTest {
 
     @Test
     @DisplayName("Deve buscar customerId por ID com sucesso")
-    void testFindByIdSuccess() {
-        // Arrange
-        Customer customer = new Customer();
-        customer.setId(customerId);
-        customer.setName("João Silva");
+    void create() {
 
-        CustomerResponseDTO responseDTO = mock(CustomerResponseDTO.class);
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(customerMapper.toResponseDTO(customer)).thenReturn(responseDTO);
+        // Arrange
+        UUID userId = UUID.randomUUID();
+
+        CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
+                "Jão da Silva",
+                "123456789",
+                "email",
+                "12385698741",
+                ADS_PAID,
+                INSTAGRAM,
+                "Um novo sorriso",
+                securityUtils.getCurrentUserId()
+        );
 
         // Act
-        CustomerResponseDTO result = customerService.findById(customerId);
+
+         CustomerResponseDTO   result  =  customerService.create(dto);
 
         // Assert
         assertNotNull(result);
-        assertEquals(customerId, result.id());
-        assertEquals("João Silva", result.name());
-        verify(customerRepository, times(1)).findById(customerId);
+        verify(customerRepository, times(1)).save(any(Customer.class));
+        verify(securityUtils, times(1)).getCurrentUserId();
     }
-
+    /*
     @Test
     @DisplayName("Deve lançar erro quando customerId não encontrado por ID")
     void testFindByIdNotFound() {
@@ -212,7 +209,7 @@ class CustomerServiceTest {
         assertTrue(exception.getMessage().contains("Customer not found"));
         verify(customerRepository, never()).deleteById(any());
     }
+*/
 
-     */
 }
 

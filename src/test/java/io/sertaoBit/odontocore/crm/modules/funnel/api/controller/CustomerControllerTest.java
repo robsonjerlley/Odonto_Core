@@ -1,9 +1,9 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -59,7 +59,7 @@ class CustomerControllerTest {
         CustomerCreateRequestDTO requestDTO = new CustomerCreateRequestDTO(
                 "João Silva", "123.456.789-00", "11999999999",
                 "São Paulo", "Rua A, 123", "Cliente importante",
-                TicketStatus.TICKET_OPEN, departmentId
+                TicketStatus.NEW,
         );
 
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
@@ -69,8 +69,6 @@ class CustomerControllerTest {
                 "11999999999",
                 "São Paulo",
                 "Rua A, 123",
-                Collections.singletonList("Cliente importante"),
-                TicketStatus.TICKET_OPEN,
                 userId
         );
 
