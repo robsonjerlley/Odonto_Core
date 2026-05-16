@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-
+@Builder
 public class User {
 
     @Id

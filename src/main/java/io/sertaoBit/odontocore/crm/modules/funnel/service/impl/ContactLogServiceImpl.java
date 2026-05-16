@@ -1,6 +1,8 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.Action;
+import io.sertaoBit.odontocore.crm.core.enums.Resource;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
@@ -10,6 +12,8 @@ import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ContactLogMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ContactLogService;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,27 +28,32 @@ public class ContactLogServiceImpl implements ContactLogService {
     private final ContactLogMapper contactLogMapper;
     private final LeadTicketRepository ticketRepository;
     private final SecurityUtils securityUtils;
+    private final PermissionService permissionService;
 
     public ContactLogServiceImpl(
             ContactLogRepository contactLogRepository,
             ContactLogMapper contactLogMapper,
             LeadTicketRepository ticketRepository,
-            SecurityUtils securityUtils
+            SecurityUtils securityUtils,
+            PermissionService permissionService
     ) {
         this.contactLogRepository = contactLogRepository;
         this.contactLogMapper = contactLogMapper;
         this.ticketRepository = ticketRepository;
         this.securityUtils = securityUtils;
-
+        this.permissionService = permissionService;
     }
 
     @Override
     @Transactional
     public ContactLogResponseDTO create(ContactLogCreateRequestDTO dto) {
-        LeadTicket ticket = ticketRepository.findById(dto.ticketId())
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not foud"));
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(user, Resource.CONTACT_LOG, Action.CREATE, user.getSector(), null);
 
-        var userId = securityUtils.getCurrentUserId();
+        LeadTicket ticket = ticketRepository.findById(dto.ticketId())
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+
+        var userId = user.getId();
 
         ContactLog contactLog = ContactLog.builder()
                 .ticketId(dto.ticketId())
