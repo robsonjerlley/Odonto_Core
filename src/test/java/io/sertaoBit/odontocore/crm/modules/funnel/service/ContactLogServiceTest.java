@@ -18,10 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -150,5 +152,137 @@ class ContactLogServiceTest {
 
     }
 
+
+    @Test
+    @DisplayName("Deve retornar uma lista de contactLogs pelo Id com sucesso")
+    void findByTicketId(){
+        //Arrange
+        UUID ticketId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        ContactLog contactLog = ContactLog.builder()
+                .id(UUID.randomUUID())
+                .ticketId(ticketId)
+                .userId(userId)
+                .channel(FACEBOOK)
+                .note("Cliente atingido pela promoção de junho")
+                .statusBefore(IN_CONTACT)
+                .createdAt(LocalDateTime.now())
+                .occurredAt(LocalDateTime.now())
+                .build();
+
+        ContactLogResponseDTO expectedDTO = new ContactLogResponseDTO(
+                contactLog.getId(),
+                contactLog.getTicketId(),
+                contactLog.getUserId(),
+                contactLog.getChannel(),
+                contactLog.getNote(),
+                contactLog.getStatusBefore(),
+                null,
+                contactLog.getOccurredAt(),
+                null
+        );
+
+        when(contactLogRepository.findByTicketId(ticketId)).thenReturn(List.of(contactLog));
+        when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(expectedDTO);
+
+
+        List<ContactLogResponseDTO> result = contactLogService.findByTicketId(ticketId);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(ticketId, result.get(0).ticketId());
+
+        verify(contactLogRepository, times(1)).findByTicketId(ticketId);
+        verify(contactLogMapper, times(1)).toResponseDTO(contactLog);
+
+    }
+
+
+    @Test
+    @DisplayName("Deve retornar contactLog pelo Id com sucesso")
+    void findById(){
+
+        UUID ticketId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        ContactLog contactLog = ContactLog.builder()
+                .id(UUID.randomUUID())
+                .ticketId(ticketId)
+                .userId(userId)
+                .channel(FACEBOOK)
+                .note("Cliente atingido pela promoção de junho")
+                .statusBefore(IN_CONTACT)
+                .createdAt(LocalDateTime.now())
+                .occurredAt(LocalDateTime.now())
+                .build();
+
+        ContactLogResponseDTO expectedDTO = new ContactLogResponseDTO(
+                contactLog.getId(),
+                contactLog.getTicketId(),
+                contactLog.getUserId(),
+                contactLog.getChannel(),
+                contactLog.getNote(),
+                contactLog.getStatusBefore(),
+                null,
+                contactLog.getOccurredAt(),
+                null
+        );
+
+
+        when(contactLogRepository.findById(contactLog.getId())).thenReturn(Optional.of(contactLog));
+        when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(expectedDTO);
+
+
+        ContactLogResponseDTO result =  contactLogService.findById(contactLog.getId());
+
+        assertNotNull(result);
+        assertEquals(contactLog.getId(), result.id());
+
+        verify(contactLogRepository, times(1)).findById(contactLog.getId());
+        verify(contactLogMapper, times(1)).toResponseDTO(contactLog);
+
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException quando contactLog não encontrado por Id")
+    void findById_shouldThrow_WhenNotFound() {
+        UUID id = UUID.randomUUID();
+
+        when(contactLogRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> contactLogService.findById(id));
+
+        verify(contactLogRepository, times(1)).findById(id);
+        verify(contactLogMapper, never()).toResponseDTO(any());
+    }
+
+
+    @Test
+    @DisplayName("Deve deletar contactLog com sucesso")
+    void delete() {
+        UUID id = UUID.randomUUID();
+
+        when(contactLogRepository.existsById(id)).thenReturn(true);
+
+        contactLogService.delete(id);
+
+        verify(contactLogRepository, times(1)).existsById(id);
+        verify(contactLogRepository, times(1)).deleteById(id);
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao deletar contactLog inexistente")
+    void delete_shouldThrow_WhenNotFound() {
+        UUID id = UUID.randomUUID();
+
+        when(contactLogRepository.existsById(id)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> contactLogService.delete(id));
+
+        verify(contactLogRepository, times(1)).existsById(id);
+        verify(contactLogRepository, never()).deleteById(any());
+    }
 
 }
