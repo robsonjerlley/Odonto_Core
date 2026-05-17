@@ -163,9 +163,9 @@ Resolução: busca regra (role+sector+resource+action) → fallback (role+resour
 - **ContactLog**: id, ticketId, userId(UUID), channel, note(TEXT), statusBefore?, statusAfter?, occurredAt, createdAt — **imutável, sem UPDATE**
 
 ### Serviços
-- `ICustomerService` / `CustomerServiceImpl` — create() abre LeadTicket automaticamente
-- `ITicketService` / `TicketServiceImpl` — contém ALLOWED_TRANSITIONS, salva ContactLog automático em toda mudança de status
-- `IContactLogService` / `ContactLogServiceImpl`
+- `CustomerService` / `CustomerServiceImpl` — create() abre LeadTicket automaticamente
+- `LeadTicketService` / `LeadTicketServiceImpl` — contém ALLOWED_TRANSITIONS, salva ContactLog automático em toda mudança de status
+- `ContactLogService` / `ContactLogServiceImpl`
 
 ### ALLOWED_TRANSITIONS
 ```

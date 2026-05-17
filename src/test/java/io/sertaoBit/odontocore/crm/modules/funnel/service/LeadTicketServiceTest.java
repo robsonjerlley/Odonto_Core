@@ -13,7 +13,6 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepositor
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.LeadTicketServiceImpl;
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,12 +21,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.NEW;
+import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,8 +51,7 @@ public class LeadTicketServiceTest {
     private LeadTicketMapper ticketMapper;
 
     @BeforeEach
-    void setUp(){
-
+    void setUp() {
         leadTicketService = new LeadTicketServiceImpl(
                 ticketRepository,
                 customerRepository,
@@ -62,8 +59,6 @@ public class LeadTicketServiceTest {
                 ticketMapper,
                 securityUtils,
                 contactLogRepository);
-
-
     }
 
     @Test
@@ -74,12 +69,11 @@ public class LeadTicketServiceTest {
         when(securityUtils.getCurrentUserId()).thenReturn(userId);
 
         UUID customerId = UUID.randomUUID();
-        Customer customer = Customer.builder().id(customerId).build();
         when(customerRepository.existsById(customerId)).thenReturn(true);
 
         LeadTicketCreateRequestDTO dto = new LeadTicketCreateRequestDTO(
                 customerId, Sector.LEADS, userId,
-                LocalDateTime.of(2026, 6 , 16, 16, 25)
+                LocalDateTime.of(2026, 6, 16, 16, 25)
         );
 
         LeadTicket leadTicket = LeadTicket.builder()
@@ -119,10 +113,57 @@ public class LeadTicketServiceTest {
         assertEquals(dto.scheduledAt(), result.scheduledAt());
         assertEquals(dto.assignedTo(), result.assignedTo());
 
-        verify(ticketRepository, times(1) ).save(any(LeadTicket.class));
+        verify(ticketRepository, times(1)).save(any(LeadTicket.class));
         verify(securityUtils, times(1)).getCurrentUserId();
         verify(ticketMapper, times(1)).toResponseDTO(any(LeadTicket.class));
+    }
 
+    @Test
+    @DisplayName("Deve alterar o status do ticket com sucesso")
+    void changeStatus() {
+
+        // ARRANGE
+        UUID ticketId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        LeadTicket ticket = LeadTicket.builder()
+                .id(ticketId)
+                .status(NEGOTIATION)
+                .build();
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(securityUtils.getCurrentUserId()).thenReturn(userId);
+        when(ticketRepository.save(any(LeadTicket.class))).thenReturn(ticket);
+
+        LeadTicketResponseDTO expectedResponse = new LeadTicketResponseDTO(
+                ticketId,
+                UUID.randomUUID(),
+                WIN,
+                Sector.COMMERCIAL,
+                null,
+                null,
+                null,
+                LocalDateTime.now(),
+                userId,
+                null,
+                LocalDateTime.now(),
+                null,
+                null
+        );
+        when(ticketMapper.toResponseDTO(any(LeadTicket.class))).thenReturn(expectedResponse);
+
+        // ACT
+        LeadTicketResponseDTO result = leadTicketService.changeStatus(ticketId, WIN);
+
+        // ASSERT
+        assertNotNull(result);
+        assertEquals(WIN, result.status());
+
+        // VERIFY
+        verify(ticketRepository).findById(ticketId);
+        verify(contactLogRepository).save(any(ContactLog.class));
+        verify(ticketRepository).save(any(LeadTicket.class));
+        verify(ticketMapper).toResponseDTO(any(LeadTicket.class));
     }
 
 }
