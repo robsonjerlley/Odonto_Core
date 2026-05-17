@@ -3,10 +3,10 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
+import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
-import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.LeadTicketMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
@@ -26,8 +26,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -166,4 +165,122 @@ public class LeadTicketServiceTest {
         verify(ticketMapper).toResponseDTO(any(LeadTicket.class));
     }
 
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao criar ticket com customer inexistente")
+    void create_customerNotFound() {
+        UUID customerId = UUID.randomUUID();
+        when(customerRepository.existsById(customerId)).thenReturn(false);
+
+        LeadTicketCreateRequestDTO dto = new LeadTicketCreateRequestDTO(
+                customerId, Sector.LEADS, null, null
+        );
+
+        assertThrows(ResourceNotFoundException.class, () -> leadTicketService.create(dto));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao alterar status de ticket inexistente")
+    void changeStatus_ticketNotFound() {
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> leadTicketService.changeStatus(ticketId, IN_CONTACT));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar IllegalStateException em transição inválida de status")
+    void changeStatus_invalidTransition() {
+        UUID ticketId = UUID.randomUUID();
+        LeadTicket ticket = LeadTicket.builder().id(ticketId).status(NEW).build();
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        assertThrows(IllegalStateException.class,
+                () -> leadTicketService.changeStatus(ticketId, WIN));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve setar closedAt ao mover para WIN e pendingAt ao mover para PENDING")
+    void changeStatus_setsAuditDates() {
+        UUID ticketId = UUID.randomUUID();
+
+        LeadTicket ticketForWin = LeadTicket.builder().id(ticketId).status(NEGOTIATION).build();
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticketForWin));
+        when(securityUtils.getCurrentUserId()).thenReturn(UUID.randomUUID());
+        when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(ticketMapper.toResponseDTO(any())).thenReturn(null);
+
+        leadTicketService.changeStatus(ticketId, WIN);
+        assertNotNull(ticketForWin.getClosedAt());
+
+        LeadTicket ticketForPending = LeadTicket.builder().id(ticketId).status(NEGOTIATION).build();
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticketForPending));
+
+        leadTicketService.changeStatus(ticketId, PENDING);
+        assertNotNull(ticketForPending.getPendingAt());
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao buscar ticket por id inexistente")
+    void findById_notFound() {
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> leadTicketService.findById(ticketId));
+    }
+
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao buscar tickets de customer inexistente")
+    void findByCustomer_customerNotFound() {
+        UUID customerId = UUID.randomUUID();
+        when(customerRepository.existsById(customerId)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> leadTicketService.findByCustomer(customerId));
+
+        verify(ticketRepository, never()).findByCustomerId(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao buscar tickets de usuário inexistente")
+    void findByAssignedToUser_userNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.existsById(userId)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> leadTicketService.findByAssignedToUser(userId));
+
+        verify(ticketRepository, never()).findByAssignedTo(any());
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao deletar ticket inexistente")
+    void deleteById_notFound() {
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.existsById(ticketId)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> leadTicketService.deleteById(ticketId));
+
+        verify(ticketRepository, never()).deleteById(any());
+    }
+
+    @Test
+    @DisplayName("Deve deletar ticket com sucesso")
+    void deleteById_success() {
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.existsById(ticketId)).thenReturn(true);
+
+        leadTicketService.deleteById(ticketId);
+
+        verify(ticketRepository).deleteById(ticketId);
+    }
 }
