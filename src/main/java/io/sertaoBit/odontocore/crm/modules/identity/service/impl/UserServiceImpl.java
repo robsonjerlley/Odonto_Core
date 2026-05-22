@@ -43,6 +43,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponseDTO create(UserCreateRequestDTO dto) {
         User newUser = userMapper.toEntity(dto);
+        newUser.setActive(true);
         newUser.setCreatedBy(securityUtils.getCurrentUserId());
         newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
         return userMapper.toResponseDTO(userRepository.save(newUser));
@@ -53,6 +54,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponseDTO register(UserCreateRequestDTO dto) {
         User newUser = userMapper.toEntity(dto);
+        newUser.setActive(true);
         newUser.setRole(Role.USER_ATTENDANT);
         newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
         return userMapper.toResponseDTO(userRepository.save(newUser));
