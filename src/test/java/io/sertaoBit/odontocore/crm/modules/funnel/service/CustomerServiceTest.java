@@ -1,18 +1,24 @@
-
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.Role;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
+import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.CustomerServiceImpl;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,45 +38,140 @@ class CustomerServiceTest {
 
     private CustomerServiceImpl customerService;
 
-    @Mock
-    private CustomerRepository customerRepository;
-
-    @Mock
-    private CustomerMapper customerMapper;
-
-    @Mock
-    private SecurityUtils securityUtils;
-
+    @Mock private CustomerRepository customerRepository;
+    @Mock private LeadTicketRepository leadTicketRepository;
+    @Mock private CustomerMapper customerMapper;
+    @Mock private SecurityUtils securityUtils;
 
     @BeforeEach
     void setUp() {
         customerService = new CustomerServiceImpl(
                 customerRepository,
+                leadTicketRepository,
                 customerMapper,
                 securityUtils
         );
     }
 
+    private User buildUser(Sector sector) {
+        return User.builder()
+                .id(UUID.randomUUID())
+                .name("Atendente Teste")
+                .username("atendente@teste.com")
+                .passwordHash("hash")
+                .sector(sector)
+                .role(Role.USER_LEADS)
+                .active(true)
+                .build();
+    }
+
     // ========== CREATE TESTS ==========
 
-
     @Test
-    @DisplayName("Deve criar customer com sucesso")
-    void create() {
-
+    @DisplayName("Deve criar customer e abrir LeadTicket automaticamente")
+    void create_deveAbrirLeadTicketComSetoDoUsuarioLogado() {
         // Arrange
-        UUID userId = UUID.randomUUID();
-        when(securityUtils.getCurrentUserId()).thenReturn(userId);
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
 
         CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
-                "Jão da Silva",
-                "123456789",
-                "83999999",
-                "mail",
-                ADS_PAID,
-                INSTAGRAM,
-                "Um novo sorriso",
-                null
+                "Jão da Silva", "123456789", "83999999",
+                "mail", ADS_PAID, INSTAGRAM, "Um novo sorriso", null
+        );
+
+        Customer savedCustomer = Customer.builder()
+                .id(UUID.randomUUID())
+                .name(dto.name())
+                .cpf(dto.cpf())
+                .phone(dto.phone())
+                .email(dto.email())
+                .source(dto.source())
+                .adChannel(dto.adChannel())
+                .adCampaign(dto.adCampaign())
+                .createdBy(currentUser.getId())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(customerRepository.save(any(Customer.class))).thenReturn(savedCustomer);
+        when(customerMapper.toResponseDTO(savedCustomer)).thenReturn(
+                new CustomerResponseDTO(
+                        savedCustomer.getId(), savedCustomer.getName(), savedCustomer.getCpf(),
+                        savedCustomer.getPhone(), savedCustomer.getEmail(), savedCustomer.getSource(),
+                        savedCustomer.getAdChannel(), savedCustomer.getAdCampaign(),
+                        savedCustomer.getCreatedAt(), savedCustomer.getUpdatedAt(),
+                        savedCustomer.getCreatedBy(), null
+                )
+        );
+
+        // Act
+        CustomerResponseDTO result = customerService.create(dto);
+
+        // Assert — customer
+        assertNotNull(result);
+        assertEquals(dto.name(), result.name());
+        assertEquals(currentUser.getId(), result.createdBy());
+
+        // Assert — ticket aberto automaticamente
+        ArgumentCaptor<LeadTicket> ticketCaptor = ArgumentCaptor.forClass(LeadTicket.class);
+        verify(leadTicketRepository, times(1)).save(ticketCaptor.capture());
+
+        LeadTicket ticket = ticketCaptor.getValue();
+        assertEquals(savedCustomer.getId(), ticket.getCustomerId());
+        assertEquals(TicketStatus.NEW, ticket.getStatus());
+        assertEquals(Sector.LEADS, ticket.getCurrentSector());
+        assertEquals(currentUser.getId(), ticket.getCreatedBy());
+
+        // Assert — sequência correta: customer antes, ticket depois
+        var orderVerifier = inOrder(customerRepository, leadTicketRepository);
+        orderVerifier.verify(customerRepository).save(any(Customer.class));
+        orderVerifier.verify(leadTicketRepository).save(any(LeadTicket.class));
+    }
+
+    @Test
+    @DisplayName("Deve usar o setor do usuário logado no ticket — ATTENDANT abre em ATTENDANT")
+    void create_setorDoTicketRefleteSetorDoUsuario() {
+        // Arrange
+        User attendant = buildUser(Sector.ATTENDANT);
+        when(securityUtils.getCurrentUser()).thenReturn(attendant);
+
+        CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
+                "Maria Souza", "987654321", "83988888",
+                null, ADS_PAID, null, null, null
+        );
+
+        Customer savedCustomer = Customer.builder()
+                .id(UUID.randomUUID())
+                .name(dto.name())
+                .createdBy(attendant.getId())
+                .build();
+
+        when(customerRepository.save(any(Customer.class))).thenReturn(savedCustomer);
+        when(customerMapper.toResponseDTO(savedCustomer)).thenReturn(
+                new CustomerResponseDTO(savedCustomer.getId(), savedCustomer.getName(),
+                        null, null, null, null, null, null, null, null,
+                        savedCustomer.getCreatedBy(), null)
+        );
+
+        // Act
+        customerService.create(dto);
+
+        // Assert
+        ArgumentCaptor<LeadTicket> captor = ArgumentCaptor.forClass(LeadTicket.class);
+        verify(leadTicketRepository).save(captor.capture());
+        assertEquals(Sector.ATTENDANT, captor.getValue().getCurrentSector());
+    }
+
+    @Test
+    @DisplayName("Deve criar customer com sucesso e retornar DTO correto")
+    void create_retornaResponseDTOCorreto() {
+        // Arrange
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+
+        CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
+                "Jão da Silva", "123456789", "83999999",
+                "mail", ADS_PAID, INSTAGRAM, "Um novo sorriso", null
         );
 
         Customer customer = Customer.builder()
@@ -82,57 +183,46 @@ class CustomerServiceTest {
                 .source(dto.source())
                 .adChannel(dto.adChannel())
                 .adCampaign(dto.adCampaign())
-                .createdBy(userId)
+                .createdBy(currentUser.getId())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
         when(customerRepository.save(any(Customer.class))).thenReturn(customer);
 
-
         CustomerResponseDTO expectedDTO = new CustomerResponseDTO(
-                customer.getId(),
-                customer.getName(),
-                customer.getCpf(),
-                customer.getPhone(),
-                customer.getEmail(),
-                customer.getSource(),
-                customer.getAdChannel(),
-                customer.getAdCampaign(),
-                customer.getCreatedAt(),
-                customer.getUpdatedAt(),
-                customer.getCreatedBy(),
-                null
+                customer.getId(), customer.getName(), customer.getCpf(),
+                customer.getPhone(), customer.getEmail(), customer.getSource(),
+                customer.getAdChannel(), customer.getAdCampaign(),
+                customer.getCreatedAt(), customer.getUpdatedAt(),
+                customer.getCreatedBy(), null
         );
-
         when(customerMapper.toResponseDTO(customer)).thenReturn(expectedDTO);
+
         // Act
         CustomerResponseDTO result = customerService.create(dto);
-
 
         // Assert
         assertNotNull(result);
         assertEquals(dto.name(), result.name());
         assertEquals(dto.cpf(), result.cpf());
-        assertEquals(userId, result.createdBy());
-
+        assertEquals(currentUser.getId(), result.createdBy());
 
         verify(customerRepository, times(1)).save(any(Customer.class));
-        verify(securityUtils, times(1)).getCurrentUserId();
+        verify(securityUtils, times(1)).getCurrentUser();
         verify(customerMapper, times(1)).toResponseDTO(customer);
     }
+
+    // ========== FIND TESTS ==========
 
     @Test
     @DisplayName("Deve lançar erro quando customerId não encontrado por ID")
     void testFindByIdNotFound() {
-        // Arrange
         UUID customerId = UUID.randomUUID();
         when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            customerService.findById(customerId);
-        });
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                customerService.findById(customerId));
 
         assertTrue(exception.getMessage().contains("Customer not found"));
     }
@@ -140,7 +230,6 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Deve buscar customerId por CPF com sucesso")
     void testFindByCpfSuccess() {
-        // Arrange
         UUID customerId = UUID.randomUUID();
         String cpf = "123.456.789-00";
 
@@ -148,26 +237,17 @@ class CustomerServiceTest {
         customer.setId(customerId);
         customer.setCpf(cpf);
 
-
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
-                customerId, null, cpf, null,
-                null, null, null,
-                null, null, null, null,
-                null
-
-
+                customerId, null, cpf, null, null, null, null,
+                null, null, null, null, null
         );
-
 
         when(customerRepository.findByCpf(cpf)).thenReturn(Optional.of(customer));
         when(customerMapper.toResponseDTO(customer)).thenReturn(responseDTO);
 
-        // Act
         CustomerResponseDTO result = customerService.findByCpf(cpf);
 
-        // Assert
         assertNotNull(result);
-
         assertEquals(cpf, result.cpf());
         verify(customerRepository, times(1)).findByCpf(cpf);
     }
@@ -177,7 +257,6 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Deve atualizar customerId com sucesso")
     void testUpdateCustomerSuccess() {
-        // Arrange
         String cpf = "123.456.789-00";
         UUID customerId = UUID.randomUUID();
 
@@ -187,32 +266,21 @@ class CustomerServiceTest {
         existingCustomer.setCpf(cpf);
         existingCustomer.setPhone("8399875878");
 
-
         CustomerUpdateRequestDTO dto = new CustomerUpdateRequestDTO(
-                customerId, "João da Silva", cpf,
-                "8399875878", null
+                customerId, "João da Silva", cpf, "8399875878", null
         );
-
 
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
                 dto.id(), dto.name(), dto.cpf(), dto.phone(),
-                null, null, null,
-                null, null, null, null,
-                null
-
-
+                null, null, null, null, null, null, null, null
         );
-
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
         when(customerRepository.save(any(Customer.class))).thenReturn(existingCustomer);
-
         when(customerMapper.toResponseDTO(existingCustomer)).thenReturn(responseDTO);
 
-        // Act
         CustomerResponseDTO result = customerService.update(customerId, dto);
 
-        // Assert
         assertNotNull(result);
         assertEquals("João da Silva", result.name());
         verify(customerRepository, times(1)).save(any(Customer.class));
@@ -221,7 +289,6 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Deve impedir atualizar customerId com CPF duplicado")
     void testUpdateCustomerDuplicateCPF() {
-        // Arrange
         UUID customerId = UUID.randomUUID();
         String oldCpf = "123.456.789-00";
         String newCpf = "987.654.321-00";
@@ -235,20 +302,16 @@ class CustomerServiceTest {
         Customer otherCustomer = new Customer();
         otherCustomer.setId(UUID.randomUUID());
         otherCustomer.setCpf(newCpf);
-        otherCustomer.setName("Antonio Alves");
-        otherCustomer.setPhone("839995875");
 
         CustomerUpdateRequestDTO dto = new CustomerUpdateRequestDTO(
-                customerId, "João da Silva", newCpf,
-                "987.654.321-00", null
+                customerId, "João da Silva", newCpf, "987.654.321-00", null
         );
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
-        when(customerRepository.findByCpf(otherCustomer.getCpf())).thenReturn(Optional.of(otherCustomer));
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            customerService.update(customerId, dto);
-        });
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
+        when(customerRepository.findByCpf(newCpf)).thenReturn(Optional.of(otherCustomer));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                customerService.update(customerId, dto));
 
         assertTrue(exception.getMessage().contains("já existe na base de dados"));
         verify(customerRepository, never()).save(any());
@@ -259,35 +322,24 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Deve deletar customerId com sucesso")
     void testDeleteCustomerSuccess() {
-        // Arrange
         UUID customerId = UUID.randomUUID();
-        Customer existingCustomer = new Customer();
-        existingCustomer.setId(customerId);
         when(customerRepository.existsById(customerId)).thenReturn(true);
 
-        // Act
         customerService.deleteById(customerId);
 
-        // Assert
         verify(customerRepository, times(1)).deleteById(customerId);
     }
 
     @Test
     @DisplayName("Deve lançar erro ao deletar customerId inexistente")
     void testDeleteCustomerNotFound() {
-        // Arrange
         UUID noExistingId = UUID.randomUUID();
         when(customerRepository.existsById(noExistingId)).thenReturn(false);
 
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            customerService.deleteById(noExistingId);
-        });
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                customerService.deleteById(noExistingId));
 
         assertTrue(exception.getMessage().contains("Customer not found"));
         verify(customerRepository, never()).deleteById(any());
     }
-
-
 }
-

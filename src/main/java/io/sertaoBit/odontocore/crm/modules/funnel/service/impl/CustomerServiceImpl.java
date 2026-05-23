@@ -2,13 +2,16 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
+import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,39 +23,51 @@ import java.util.UUID;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final LeadTicketRepository leadTicketRepository;
     private final CustomerMapper customerMapper;
-    private final SecurityUtils  securityUtils;
+    private final SecurityUtils securityUtils;
 
     public CustomerServiceImpl(
             CustomerRepository customerRepository,
+            LeadTicketRepository leadTicketRepository,
             CustomerMapper customerMapper,
-             SecurityUtils securityUtils
+            SecurityUtils securityUtils
     ) {
         this.customerRepository = customerRepository;
+        this.leadTicketRepository = leadTicketRepository;
         this.customerMapper = customerMapper;
         this.securityUtils = securityUtils;
-
     }
 
 
     @Override
     @Transactional
     public CustomerResponseDTO create(CustomerCreateRequestDTO dto) {
-        var createdBy = securityUtils.getCurrentUserId();
+        var currentUser = securityUtils.getCurrentUser();
 
-          Customer  customer = Customer.builder()
-                    .name(dto.name())
-                    .cpf(dto.cpf())
-                    .phone(dto.phone())
-                    .email(dto.email())
-                    .source(dto.source())
-                    .adChannel(dto.adChannel())
-                    .adCampaign(dto.adCampaign())
-                    .createdBy(createdBy)
-                    .referredBy(dto.referredBy())
-                    .build();
-            return customerMapper.toResponseDTO(customerRepository.save(customer));
+        Customer customer = Customer.builder()
+                .name(dto.name())
+                .cpf(dto.cpf())
+                .phone(dto.phone())
+                .email(dto.email())
+                .source(dto.source())
+                .adChannel(dto.adChannel())
+                .adCampaign(dto.adCampaign())
+                .createdBy(currentUser.getId())
+                .referredBy(dto.referredBy())
+                .build();
 
+        Customer saved = customerRepository.save(customer);
+
+        LeadTicket ticket = LeadTicket.builder()
+                .customerId(saved.getId())
+                .status(TicketStatus.NEW)
+                .currentSector(currentUser.getSector())
+                .createdBy(currentUser.getId())
+                .build();
+        leadTicketRepository.save(ticket);
+
+        return customerMapper.toResponseDTO(saved);
     }
 
     @Override
