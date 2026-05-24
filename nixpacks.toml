@@ -1,0 +1,10 @@
+providers = ['java']
+
+[phases.setup]
+nixPkgs = ['maven', 'jdk21']
+
+[phases.build]
+cmds = ['./mvnw -B -DskipTests clean package']
+
+[start]
+cmd = 'java -Dserver.port=$PORT -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -jar target/odontocore.crm-0.0.1-SNAPSHOT.jar'
