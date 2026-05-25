@@ -1,8 +1,10 @@
 package io.sertaoBit.odontocore.crm;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
-class ApplicationTests extends AbstractTestcontainerTest {
+@SpringBootTest
+class ApplicationTests {
 
 	@Test
 	void contextLoads() {
