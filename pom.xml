@@ -96,6 +96,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- ====== TESTES - H2 Database (em memória) ====== -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- ====== TESTES - JUnit 5 ====== -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
