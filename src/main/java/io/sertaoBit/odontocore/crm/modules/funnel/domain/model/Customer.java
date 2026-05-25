@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "customers", schema = "crm_db")
+@Table(name = "customers")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

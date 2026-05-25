@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "deal_history", schema = "crm_db")
+@Table(name = "deal_history")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

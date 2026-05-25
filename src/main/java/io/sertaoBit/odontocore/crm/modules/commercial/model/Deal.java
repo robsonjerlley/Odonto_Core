@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "deals", schema = "crm_db")
+@Table(name = "deals")
 @Getter
 @Setter
 @NoArgsConstructor

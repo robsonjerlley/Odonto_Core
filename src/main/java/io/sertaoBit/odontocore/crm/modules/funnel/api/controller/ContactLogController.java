@@ -44,7 +44,7 @@ public class ContactLogController {
         return ResponseEntity.ok(contactLogService.findById(id));
     }
 
-    @GetMapping("/findByTicketId/{id}")
+    @GetMapping("/findByTicketId/{ticketId}")
     public ResponseEntity<List<ContactLogResponseDTO>> findByTicketId(
             @PathVariable UUID ticketId
     ) {
