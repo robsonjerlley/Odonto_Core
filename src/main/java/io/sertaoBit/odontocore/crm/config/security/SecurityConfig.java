@@ -86,7 +86,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/customers/**").authenticated()
                         .requestMatchers("/api/v1/analytics/**").authenticated()
                         .requestMatchers("/api/v1/tickets/**").authenticated()
-                        .requestMatchers("/api/v1/contac-logs/**").authenticated()
+                        .requestMatchers("/api/v1/contact-logs/**").authenticated()
                         .requestMatchers("/api/v1/deal/**").authenticated()
                         .requestMatchers("/api/v1/config/**").authenticated()
                         .requestMatchers("/api/v1/authentication/**").permitAll()
