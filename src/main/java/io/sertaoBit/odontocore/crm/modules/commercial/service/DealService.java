@@ -4,12 +4,16 @@ import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.Apply
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealDetailResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 
+import java.util.Optional;
 import java.util.UUID;
 
 
 public interface DealService {
+
+    Optional<DealResponseDTO> findByTicket(UUID ticketId);
 
     Deal create(UUID ticketId, DealCreateRequestDTO dto);
 

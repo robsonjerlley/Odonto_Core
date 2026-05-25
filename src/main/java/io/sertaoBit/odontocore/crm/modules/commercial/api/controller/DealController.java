@@ -32,6 +32,13 @@ public class DealController {
         this.dealMapper = dealMapper;
     }
 
+    @GetMapping("/findByTicket/{ticketId}")
+    public ResponseEntity<DealResponseDTO> findByTicket(@PathVariable UUID ticketId) {
+        return dealService.findByTicket(ticketId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+
     @PostMapping("/{ticketId}")
     public ResponseEntity<DealResponseDTO> create(
             @PathVariable UUID ticketId,

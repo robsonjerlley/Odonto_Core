@@ -10,6 +10,7 @@ import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.Apply
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealDetailResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.mapper.DealMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.DealProcedure;
@@ -27,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -53,6 +55,13 @@ public class DealServiceImpl implements DealService {
         this.permissionService = permissionService;
         this.dealMapper = dealMapper;
         this.dealHistoryService = dealHistoryService;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<DealResponseDTO> findByTicket(UUID ticketId) {
+        return dealRepository.findByTicketIdAndArchivedFalse(ticketId)
+                .map(dealMapper::toResponseDTO);
     }
 
     @Override
