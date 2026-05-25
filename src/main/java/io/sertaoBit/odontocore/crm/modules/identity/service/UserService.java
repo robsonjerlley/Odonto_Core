@@ -12,6 +12,8 @@ import java.util.UUID;
 
 public interface UserService {
 
+    List<UserResponseDTO> findAll();
+
     UserResponseDTO create(UserCreateRequestDTO requestDTO);
 
     UserResponseDTO register(UserCreateRequestDTO requestDTO);

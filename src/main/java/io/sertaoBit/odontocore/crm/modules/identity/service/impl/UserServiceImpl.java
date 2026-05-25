@@ -40,6 +40,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> findAll() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toResponseDTO).toList();
+    }
+
+    @Override
     @Transactional
     public UserResponseDTO create(UserCreateRequestDTO dto) {
         User newUser = userMapper.toEntity(dto);

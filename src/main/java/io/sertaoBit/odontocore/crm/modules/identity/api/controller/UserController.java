@@ -26,6 +26,11 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<UserResponseDTO>> findAll() {
+        return ResponseEntity.ok(userService.findAll());
+    }
+
     @PostMapping("/create")
     public ResponseEntity<UserResponseDTO> create(
             @RequestBody @Valid UserCreateRequestDTO requestDTO
