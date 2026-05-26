@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
+import io.sertaoBit.odontocore.crm.exception.ResourceAlreadyExistsException;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
@@ -74,11 +75,10 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public CustomerResponseDTO update(UUID id, CustomerUpdateRequestDTO dto) {
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Customer not found " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
 
-        if (!customer.getCpf().equals(dto.cpf()) && customerRepository.findByCpf(dto.cpf())
-                .isPresent()) {
-            throw new RuntimeException("O novo CPF informado  " + dto.cpf() + " já existe na base de dados");
+        if (!customer.getCpf().equals(dto.cpf()) && customerRepository.findByCpf(dto.cpf()).isPresent()) {
+            throw new ResourceAlreadyExistsException("CPF " + dto.cpf() + " já existe na base de dados");
         }
         customer.setName(dto.name());
         customer.setCpf(dto.cpf());
@@ -100,7 +100,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponseDTO findById(UUID id) {
         return customerRepository.findById(id)
                 .map(customerMapper::toResponseDTO)
-                .orElseThrow(() -> new RuntimeException("Customer not found " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
     }
 
     @Override
@@ -116,7 +116,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerResponseDTO findByCpf(String cpf) {
         return customerRepository.findByCpf(cpf)
                 .map(customerMapper::toResponseDTO)
-                .orElseThrow(() -> new RuntimeException("Customer not found " + cpf));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found by CPF " + cpf));
     }
 
     @Override
