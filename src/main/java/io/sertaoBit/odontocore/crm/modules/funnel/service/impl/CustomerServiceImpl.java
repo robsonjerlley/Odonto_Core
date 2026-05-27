@@ -2,22 +2,28 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
+import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceAlreadyExistsException;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -25,17 +31,20 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final LeadTicketRepository leadTicketRepository;
+    private final ContactLogRepository  contactLogRepository;
     private final CustomerMapper customerMapper;
     private final SecurityUtils securityUtils;
 
     public CustomerServiceImpl(
             CustomerRepository customerRepository,
             LeadTicketRepository leadTicketRepository,
+            ContactLogRepository contactLogRepository,
             CustomerMapper customerMapper,
             SecurityUtils securityUtils
     ) {
         this.customerRepository = customerRepository;
         this.leadTicketRepository = leadTicketRepository;
+        this.contactLogRepository = contactLogRepository;
         this.customerMapper = customerMapper;
         this.securityUtils = securityUtils;
     }
@@ -50,7 +59,9 @@ public class CustomerServiceImpl implements CustomerService {
                 .name(dto.name())
                 .cpf(dto.cpf())
                 .phone(dto.phone())
+                .phone2(dto.phone2())
                 .email(dto.email())
+                .initialNote(dto.initialNote())
                 .source(dto.source())
                 .adChannel(dto.adChannel())
                 .adCampaign(dto.adCampaign())
@@ -68,6 +79,17 @@ public class CustomerServiceImpl implements CustomerService {
                 .build();
         leadTicketRepository.save(ticket);
 
+        if(dto.initialNote() != null && !dto.initialNote().isBlank()) {
+            ContactLog contactLog = ContactLog.builder()
+                    .ticketId(ticket.getId())
+                    .userId(currentUser.getId())
+                    .channel(dto.channel() != null ? dto.channel() : ContactChannel.OTHER)
+                    .note(dto.initialNote())
+                    .occurredAt(LocalDateTime.now())
+                    .build();
+            contactLogRepository.save(contactLog);
+        }
+
         return customerMapper.toResponseDTO(saved);
     }
 
@@ -77,7 +99,10 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
 
-        if (!customer.getCpf().equals(dto.cpf()) && customerRepository.findByCpf(dto.cpf()).isPresent()) {
+        if (Objects.equals(customer.getCpf(), dto.cpf())
+        && dto.cpf() != null
+        && customerRepository.findByCpf(dto.cpf()).isPresent()
+        ) {
             throw new ResourceAlreadyExistsException("CPF " + dto.cpf() + " já existe na base de dados");
         }
         customer.setName(dto.name());

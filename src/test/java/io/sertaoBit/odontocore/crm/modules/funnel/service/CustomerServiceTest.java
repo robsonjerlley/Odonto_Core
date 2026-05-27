@@ -10,6 +10,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerRespo
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.CustomerServiceImpl;
@@ -40,6 +41,7 @@ class CustomerServiceTest {
 
     @Mock private CustomerRepository customerRepository;
     @Mock private LeadTicketRepository leadTicketRepository;
+    @Mock private ContactLogRepository contactLogRepository;
     @Mock private CustomerMapper customerMapper;
     @Mock private SecurityUtils securityUtils;
 
@@ -48,6 +50,7 @@ class CustomerServiceTest {
         customerService = new CustomerServiceImpl(
                 customerRepository,
                 leadTicketRepository,
+                contactLogRepository,
                 customerMapper,
                 securityUtils
         );
@@ -76,7 +79,7 @@ class CustomerServiceTest {
 
         CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
                 "Jão da Silva", "123456789", "83999999",
-                "mail", ADS_PAID, INSTAGRAM, "Um novo sorriso", null
+                "mail", ADS_PAID, INSTAGRAM, "Um novo sorriso",null, null
         );
 
         Customer savedCustomer = Customer.builder()
