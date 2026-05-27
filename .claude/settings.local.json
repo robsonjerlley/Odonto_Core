@@ -14,7 +14,8 @@
       "Bash(docker exec *)",
       "Bash(Get-ChildItem -Recurse -Path \"B:\\\\projects\\\\odontocore.crm\\\\odontocore.crm\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object -First 50)",
-      "PowerShell(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\\\\odontocore.crm\" -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Extension -eq \".java\"} | Select-Object -First 30)"
+      "PowerShell(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\\\\odontocore.crm\" -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Extension -eq \".java\"} | Select-Object -First 30)",
+      "Bash(mvn compile *)"
     ]
   }
 }
