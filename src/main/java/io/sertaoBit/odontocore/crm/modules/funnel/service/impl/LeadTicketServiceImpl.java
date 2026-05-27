@@ -7,6 +7,7 @@ import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
+import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.LeadTicketMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
@@ -92,6 +93,15 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
         var currentStatus = leadTicket.getStatus();
         Set<TicketStatus> allowed = ALLOWED_TRANSITIONS.get(currentStatus);
+
+        if(status == SCHEDULED) {
+            Customer customer = customerRepository.findById(leadTicket.getCustomerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
+            if(customer.getCpf() == null || customer.getCpf().isBlank()) {
+                throw new IllegalArgumentException("CPF é obrigatório para a formalização do agendamento.");
+            }
+        }
+
         if (allowed == null || !allowed.contains(status)) {
             throw new IllegalStateException("Transition not allowed " + currentStatus + " -> " + status);
         }
