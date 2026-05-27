@@ -12,13 +12,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "customers")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
 @Builder
+@Table(name = "customers",
+      uniqueConstraints =  @UniqueConstraint(name = "uq_customer_cpf", columnNames = "cpf")
+)
 public class Customer {
 
     @Id
@@ -26,11 +28,15 @@ public class Customer {
     private UUID id;
     @Column(nullable = false)
     private String name;
-    @Column(unique = true)
     private String cpf;
     @Column(nullable = false)
     private String phone;
+    private String phone2;
+    private String address;
+    @Enumerated(EnumType.STRING)
     private String email;
+    @Column(columnDefinition = "TEXT")
+    private String initialNote;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CustomerSource source;
@@ -49,3 +55,5 @@ public class Customer {
 
 
 }
+
+

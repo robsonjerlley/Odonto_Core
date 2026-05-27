@@ -11,6 +11,7 @@ public record CustomerUpdateRequestDTO(
         @NotBlank String name,
         @CPF String cpf,
         @NotBlank String phone,
+        String phone2,
         String email
 ) {
 }
