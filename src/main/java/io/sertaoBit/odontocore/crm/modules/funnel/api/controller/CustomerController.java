@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
@@ -40,9 +41,13 @@ public class CustomerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CustomerResponseDTO>> findAll() {
+    public ResponseEntity<List<CustomerResponseDTO>> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false)AdsChannel adChannel
+            ) {
 
-        return ResponseEntity.ok(customerService.findAll());
+        return ResponseEntity.ok(customerService.search(name, phone, adChannel));
     }
 
     @GetMapping("/{id}")
@@ -60,13 +65,6 @@ public class CustomerController {
     }
 
 
-    @GetMapping("/username/{username}")
-    public ResponseEntity<List<CustomerResponseDTO>> findByName(
-            @PathVariable @Validated String username
-    ) {
-        List<CustomerResponseDTO> customersDTO = customerService.findByName(username);
-        return ResponseEntity.ok(customersDTO);
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(

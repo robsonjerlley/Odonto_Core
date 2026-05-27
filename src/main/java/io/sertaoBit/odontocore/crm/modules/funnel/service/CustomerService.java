@@ -17,13 +17,17 @@ public interface CustomerService {
 
     List<CustomerResponseDTO> findAll();
 
+    List<CustomerResponseDTO> search(String name, String phone, AdsChannel adChannel);
+
     CustomerResponseDTO findById(UUID id);
 
     List<CustomerResponseDTO> findByName(String name);
 
     CustomerResponseDTO findByCpf(String cpf);
 
-      List<CustomerResponseDTO> findByAdChannel(AdsChannel  channel);
+    List<CustomerResponseDTO> findByPhone(String phone);
+
+    List<CustomerResponseDTO> findByAdChannel(AdsChannel  channel);
 
     void deleteById(UUID id);
 

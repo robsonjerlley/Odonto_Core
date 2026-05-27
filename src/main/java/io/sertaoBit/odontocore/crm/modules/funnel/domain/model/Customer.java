@@ -33,7 +33,6 @@ public class Customer {
     private String phone;
     private String phone2;
     private String address;
-    @Enumerated(EnumType.STRING)
     private String email;
     @Column(columnDefinition = "TEXT")
     private String initialNote;

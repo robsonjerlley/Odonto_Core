@@ -181,10 +181,9 @@ Aplicação do escopo:
 |---|---|---|
 | `POST` | `/api/v1/users/create` | Cria usuário (por ADM) |
 | `PATCH` | `/api/v1/users/updatePassword/{username}/passwordHash` | Atualiza senha |
-| `GET` | `/api/v1/users/findByUsername/{username}` | Busca por username |
-| `GET` | `/api/v1/users/findBySector/{sector}` | Lista por setor |
-| `GET` | `/api/v1/users/findBySectorAndRole/{sector}/{role}` | Lista por setor e role |
-| `GET` | `/api/v1/users/existsByUsername/{username}` | Verifica existência |
+| `GET` | `/api/v1/users/{id}` | Busca por ID (UUID) |
+| `GET` | `/api/v1/users/username/{username}` | Busca por username (identificador único) |
+| `GET` | `/api/v1/users?sector=&role=` | Filtra por setor e/ou role (ambos opcionais) |
 | `DELETE` | `/api/v1/users/{id}` | Remove usuário |
 
 ### API — Auth
@@ -235,10 +234,9 @@ occurredAt, createdAt
 |---|---|---|
 | `POST` | `/api/v1/customers` | Cria customer + abre LeadTicket automaticamente |
 | `PATCH` | `/api/v1/customers/{id}` | Atualiza dados do customer |
-| `GET` | `/api/v1/customers` | Lista todos |
-| `GET` | `/api/v1/customers/{id}` | Busca por ID |
-| `GET` | `/api/v1/customers/cpf/{cpf}` | Busca por CPF |
-| `GET` | `/api/v1/customers/username/{username}` | Busca por nome (contains, case-insensitive) |
+| `GET` | `/api/v1/customers/{id}` | Busca por ID (UUID) |
+| `GET` | `/api/v1/customers/cpf/{cpf}` | Busca por CPF (identificador único — ver ADR-001) |
+| `GET` | `/api/v1/customers?name=&phone=&adChannel=` | Filtros de busca (todos opcionais) |
 | `DELETE` | `/api/v1/customers/{id}` | Remove customer |
 
 ### API — Tickets
@@ -247,11 +245,8 @@ occurredAt, createdAt
 |---|---|---|
 | `POST` | `/api/v1/tickets` | Cria ticket manualmente |
 | `PATCH` | `/api/v1/tickets/{id}/status` | Muda status (valida ALLOWED_TRANSITIONS) |
-| `GET` | `/api/v1/tickets` | Lista todos |
-| `GET` | `/api/v1/tickets/{id}` | Busca por ID |
-| `GET` | `/api/v1/tickets/findByCustomer/{customerId}` | Lista tickets do customer |
-| `GET` | `/api/v1/tickets/ticketStatus/{status}` | Filtra por status |
-| `GET` | `/api/v1/tickets/assignedToUser/{userId}` | Filtra por responsável |
+| `GET` | `/api/v1/tickets/{id}` | Busca por ID (UUID) |
+| `GET` | `/api/v1/tickets?customerId=&status=&assignedTo=` | Filtros de busca (todos opcionais) |
 | `DELETE` | `/api/v1/tickets/{id}` | Remove ticket |
 
 ### API — Contact Logs
@@ -259,9 +254,8 @@ occurredAt, createdAt
 | Método | Endpoint | Ação |
 |---|---|---|
 | `POST` | `/api/v1/contact-logs` | Registra log de contato manual |
-| `GET` | `/api/v1/contact-logs` | Lista todos |
-| `GET` | `/api/v1/contact-logs/{id}` | Busca por ID |
-| `GET` | `/api/v1/contact-logs/findByTicketId/{id}` | Lista logs do ticket |
+| `GET` | `/api/v1/contact-logs/{id}` | Busca por ID (UUID) |
+| `GET` | `/api/v1/contact-logs?ticketId=` | Filtra logs pelo ticket |
 | `DELETE` | `/api/v1/contact-logs/{id}` | Remove log |
 
 ---
@@ -390,6 +384,9 @@ Todos os endpoints recebem `period` como `@ModelAttribute DataRangeDTO(from, to)
 | Enums no banco | sempre `@Enumerated(EnumType.STRING)` |
 | Entidades imutáveis | `ContactLog`, `DealHistory` — sem `@Setter`, apenas INSERT |
 | Cross-db | FKs para `User` em `crm_db` são `UUID` simples, sem `@ManyToOne` |
+| Busca por identificador único | `GET /resource/{uniqueKey}` — retorna objeto único ou 404 (ver ADR-001) |
+| Busca por filtros | `GET /resource?param=value` — retorna `List<DTO>` sempre, pode ser vazia (ver ADR-001) |
+| Nomes de rotas | sem prefixos semânticos (`findBy`, `search`, `get`) em URLs (ver ADR-001) |
 
 ### Códigos de erro HTTP
 

@@ -238,6 +238,9 @@ getGlobalDashboard(period) → apenas ADMIN/MANAGER — agrega tudo
 | Entidades imutáveis | `ContactLog`, `DealHistory` — sem `@Setter`, apenas INSERT |
 | Cross-db | FKs para User em crm_db são `UUID` simples, sem `@ManyToOne` |
 | Erros HTTP | 403 AccessDeniedException · 404 ResourceNotFoundException · 409 ResourceAlreadyExistsException · 422 IllegalStateException |
+| Busca por identificador único | `GET /resource/{uniqueKey}` — retorna objeto único ou 404 (ver `.claude/adr/ADR-001`) |
+| Busca por filtros | `GET /resource?param=value` — retorna `List<DTO>` sempre, pode ser vazia (ver `.claude/adr/ADR-001`) |
+| Nomes de rotas | sem prefixos semânticos (`findBy`, `search`, `get`) em URLs — proibido (ver `.claude/adr/ADR-001`) |
 
 ---
 

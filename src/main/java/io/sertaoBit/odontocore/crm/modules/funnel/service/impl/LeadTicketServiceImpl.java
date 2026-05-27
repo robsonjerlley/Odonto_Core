@@ -94,16 +94,17 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         var currentStatus = leadTicket.getStatus();
         Set<TicketStatus> allowed = ALLOWED_TRANSITIONS.get(currentStatus);
 
-        if(status == SCHEDULED) {
-            Customer customer = customerRepository.findById(leadTicket.getCustomerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
-            if(customer.getCpf() == null || customer.getCpf().isBlank()) {
-                throw new IllegalArgumentException("CPF é obrigatório para a formalização do agendamento.");
-            }
-        }
 
         if (allowed == null || !allowed.contains(status)) {
             throw new IllegalStateException("Transition not allowed " + currentStatus + " -> " + status);
+        }
+
+        if (status == SCHEDULED) {
+            Customer customer = customerRepository.findById(leadTicket.getCustomerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
+            if (customer.getCpf() == null || customer.getCpf().isBlank()) {
+                throw new IllegalStateException("CPF é obrigatório para a formalização do agendamento.");
+            }
         }
 
         leadTicket.setStatus(status);

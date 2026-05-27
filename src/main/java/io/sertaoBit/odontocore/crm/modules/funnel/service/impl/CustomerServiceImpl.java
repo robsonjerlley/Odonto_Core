@@ -20,7 +20,6 @@ import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -99,7 +98,7 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
 
-        if (Objects.equals(customer.getCpf(), dto.cpf())
+        if (!Objects.equals(customer.getCpf(), dto.cpf())
         && dto.cpf() != null
         && customerRepository.findByCpf(dto.cpf()).isPresent()
         ) {
@@ -110,6 +109,15 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setEmail(dto.email());
         customer.setPhone(dto.phone());
         return customerMapper.toResponseDTO(customerRepository.save(customer));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerResponseDTO> search(String name, String phone, AdsChannel adChannel) {
+       if(name != null) return findByName(name);
+       if(phone != null) return findByPhone(phone);
+       if(adChannel != null) return findByAdChannel(adChannel);
+       return findAll();
     }
 
     @Override
@@ -142,6 +150,14 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findByCpf(cpf)
                 .map(customerMapper::toResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found by CPF " + cpf));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CustomerResponseDTO> findByPhone(String phone) {
+        return customerRepository.findByPhone(phone).stream()
+                .map(customerMapper::toResponseDTO)
+                .toList();
     }
 
     @Override
