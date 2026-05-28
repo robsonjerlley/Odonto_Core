@@ -14,10 +14,11 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepositor
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ContactLogService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -48,7 +49,13 @@ public class ContactLogServiceImpl implements ContactLogService {
     @Transactional
     public ContactLogResponseDTO create(ContactLogCreateRequestDTO dto) {
         User user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(user, Resource.CONTACT_LOG, Action.CREATE, user.getSector(), null);
+        permissionService.checkOrThrow(
+                user,
+                Resource.CONTACT_LOG,
+                Action.CREATE,
+                user.getSector(),
+                user.getId()
+        );
 
         LeadTicket ticket = ticketRepository.findById(dto.ticketId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
@@ -79,28 +86,21 @@ public class ContactLogServiceImpl implements ContactLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ContactLogResponseDTO> findAll() {
-        return contactLogRepository.findAll().stream()
-                .map(contactLogMapper::toResponseDTO)
-                .toList();
+    public Page<ContactLogResponseDTO> search(UUID ticketId, Pageable pageable) {
+        if (ticketId != null) return findByTicketId(ticketId, pageable);
+        return findAll(pageable);
     }
 
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ContactLogResponseDTO> findByTicketId(UUID ticketId) {
-        return contactLogRepository.findByTicketId(ticketId).stream()
-                .map(contactLogMapper::toResponseDTO)
-                .toList();
+    private Page<ContactLogResponseDTO> findAll(Pageable pageable) {
+        return contactLogRepository.findAll(pageable)
+                .map(contactLogMapper::toResponseDTO);
     }
 
 
-    @Override
-    @Transactional
-    public void delete(UUID id) {
-        if (!contactLogRepository.existsById(id)) {
-            throw new ResourceNotFoundException("ContactLog not found by id: " + id);
-        }
-        contactLogRepository.deleteById(id);
+    private Page<ContactLogResponseDTO> findByTicketId(UUID ticketId, Pageable pageable) {
+        return contactLogRepository.findByTicketId(ticketId, pageable)
+                .map(contactLogMapper::toResponseDTO);
     }
+
 }

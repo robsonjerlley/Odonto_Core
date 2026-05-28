@@ -14,9 +14,12 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepositor
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.TICKET;
+import static io.sertaoBit.odontocore.crm.core.enums.Role.USER_ATTENDANT;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 
 @Service
@@ -47,13 +53,14 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     private final SecurityUtils securityUtils;
     private final ContactLogRepository contactLogRepository;
     private final LeadTicketMapper ticketMapper;
+    private final PermissionService permissionService;
 
 
     public LeadTicketServiceImpl(
             LeadTicketRepository ticketRepository,
             CustomerRepository customerRepository,
             UserRepository userRepository,
-            LeadTicketMapper ticketMapper, SecurityUtils securityUtils, ContactLogRepository contactLogRepository
+            LeadTicketMapper ticketMapper, SecurityUtils securityUtils, ContactLogRepository contactLogRepository, PermissionService permissionService
     ) {
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;
@@ -61,24 +68,33 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         this.ticketMapper = ticketMapper;
         this.securityUtils = securityUtils;
         this.contactLogRepository = contactLogRepository;
+        this.permissionService = permissionService;
     }
 
 
     @Override
     @Transactional
     public LeadTicketResponseDTO create(LeadTicketCreateRequestDTO dto) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                TICKET,
+                CREATE,
+                user.getSector(),
+                user.getId()
+        );
+
         if (!customerRepository.existsById(dto.customerId())) {
             throw new ResourceNotFoundException("Customer not found: " + dto.customerId());
         }
 
-        var userId = securityUtils.getCurrentUserId();
         LeadTicket leadTicket = LeadTicket.builder()
                 .customerId(dto.customerId())
                 .status(NEW)
                 .currentSector(dto.currentSector())
                 .assignedTo(dto.assignedTo())
                 .scheduledAt(dto.scheduledAt())
-                .createdBy(userId)
+                .createdBy(user.getId())
                 .build();
 
         return ticketMapper.toResponseDTO(ticketRepository.save(leadTicket));
@@ -88,8 +104,24 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Override
     @Transactional
     public LeadTicketResponseDTO changeStatus(UUID id, TicketStatus status) {
+        User user = securityUtils.getCurrentUser();
+
         LeadTicket leadTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found by id: " + id));
+
+        permissionService.checkOrThrow(
+                user,
+                TICKET,
+                UPDATE,
+                leadTicket.getCurrentSector(),
+                leadTicket.getCreatedBy()
+        );
+
+        if (user.getRole() == USER_ATTENDANT
+                && (status == LOSS || status == IN_CONTACT)
+        ) {
+            throw new AccessDeniedException("Perfil de usuário não autorizdado para efetuar esta trazação.");
+        }
 
         var currentStatus = leadTicket.getStatus();
         Set<TicketStatus> allowed = ALLOWED_TRANSITIONS.get(currentStatus);
@@ -107,6 +139,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
             }
         }
 
+
         leadTicket.setStatus(status);
 
         LocalDateTime now = LocalDateTime.now();
@@ -118,7 +151,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
         ContactLog log = ContactLog.builder()
                 .ticketId(id)
-                .userId(securityUtils.getCurrentUserId())
+                .userId(user.getId())
                 .channel(ContactChannel.OTHER)
                 .note("Status changed: " + currentStatus + " → " + status)
                 .statusBefore(currentStatus)
@@ -187,6 +220,15 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Override
     @Transactional
     public void deleteById(UUID id) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                TICKET,
+                DELETE,
+                user.getSector(),
+                user.getId()
+        );
+
         if (!ticketRepository.existsById(id)) {
             throw new ResourceNotFoundException("Ticket not found by id: " + id);
         }

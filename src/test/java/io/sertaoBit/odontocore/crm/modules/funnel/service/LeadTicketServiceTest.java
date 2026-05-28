@@ -14,6 +14,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.impl.LeadTicketServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,8 @@ public class LeadTicketServiceTest {
     private ContactLogRepository contactLogRepository;
     @Mock
     private LeadTicketMapper ticketMapper;
+    @Mock
+    private PermissionService permissionService;
 
     @BeforeEach
     void setUp() {
@@ -57,7 +60,8 @@ public class LeadTicketServiceTest {
                 userRepository,
                 ticketMapper,
                 securityUtils,
-                contactLogRepository);
+                contactLogRepository,
+                permissionService);
     }
 
     @Test

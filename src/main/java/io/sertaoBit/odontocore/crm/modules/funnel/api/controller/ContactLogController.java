@@ -3,12 +3,14 @@ package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ContactLogService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -32,11 +34,6 @@ public class ContactLogController {
     }
 
 
-    @GetMapping
-    public ResponseEntity<List<ContactLogResponseDTO>> findAll() {
-        return ResponseEntity.ok(contactLogService.findAll());
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ContactLogResponseDTO> findById(
             @PathVariable UUID id
@@ -44,16 +41,12 @@ public class ContactLogController {
         return ResponseEntity.ok(contactLogService.findById(id));
     }
 
-    @GetMapping("/findByTicketId/{ticketId}")
-    public ResponseEntity<List<ContactLogResponseDTO>> findByTicketId(
-            @PathVariable UUID ticketId
+    @GetMapping
+    public ResponseEntity<Page<ContactLogResponseDTO>> search(
+            @RequestParam(required = false) UUID ticketId,
+            @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(contactLogService.findByTicketId(ticketId));
+        return ResponseEntity.ok(contactLogService.search(ticketId, pageable));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        contactLogService.delete(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
 }

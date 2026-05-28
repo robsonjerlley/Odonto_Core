@@ -2,9 +2,9 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-
-import java.util.List;
 import java.util.UUID;
 
 
@@ -14,11 +14,7 @@ public interface ContactLogService {
 
     ContactLogResponseDTO findById(UUID id);
 
-    List<ContactLogResponseDTO> findAll();
-
-    List<ContactLogResponseDTO> findByTicketId(UUID ticketId);
-
-    void delete(UUID id);
+    Page<ContactLogResponseDTO> search(UUID ticketId, Pageable pageable);
 
 
 }
