@@ -10,11 +10,12 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.mapper.UserMapper;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -39,11 +40,10 @@ public class UserServiceImpl implements UserService {
         this.securityUtils = securityUtils;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<UserResponseDTO> findAll() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toResponseDTO).toList();
+
+    private Page<UserResponseDTO> findAll(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(userMapper::toResponseDTO);
     }
 
     @Override
@@ -79,6 +79,14 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponseDTO(userRepository.save(user));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponseDTO> search(Sector sector, Role role, Pageable pageable) {
+        if (sector != null && role != null) return findAllBySectorAndRole(sector, role, pageable);
+        if (sector != null) return findBySector(sector, pageable);
+        return findAll(pageable);
+    }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -90,31 +98,22 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found!" + username));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<UserResponseDTO> findBySector(Sector sector) {
+
+    private Page<UserResponseDTO> findBySector(Sector sector, Pageable pageable) {
         Objects.requireNonNull(sector, "sector must not be null");
 
-        return userRepository.findBySector(sector).stream()
-                .map(userMapper::toResponseDTO).toList();
+        return userRepository.findBySector(sector, pageable)
+                .map(userMapper::toResponseDTO);
 
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<UserResponseDTO> findAllBySectorAndRole(Sector sector, Role role) {
+
+    private Page<UserResponseDTO> findAllBySectorAndRole(Sector sector, Role role, Pageable pageable) {
         Objects.requireNonNull(sector, "sector must not be null");
         Objects.requireNonNull(role, "role must not be null");
 
-        return userRepository.findAllBySectorAndRole(sector, role).stream()
-                .map(userMapper::toResponseDTO).toList();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Boolean existsByUsername(String username) {
-        Objects.requireNonNull(username, "username must not be null");
-        return userRepository.existsByUsername(username);
+        return userRepository.findAllBySectorAndRole(sector, role, pageable)
+                .map(userMapper::toResponseDTO);
     }
 
 

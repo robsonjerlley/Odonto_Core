@@ -1,8 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.identity.repository;
 
-import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,11 +17,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByUsername(String username);
 
-    List<User> findBySector(Sector sector);
+    Page<User> findBySector(Sector sector, Pageable pageable);
 
-    List<User> findAllBySectorAndRole(Sector sector, Role role);
-
-    Boolean existsByUsername(String username);
+    Page<User> findAllBySectorAndRole(Sector sector, Role role, Pageable pageable);
 
     List<User> findByActiveTrue();
 

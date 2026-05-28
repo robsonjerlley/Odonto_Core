@@ -2,7 +2,6 @@ package io.sertaoBit.odontocore.crm.modules.funnel.repository;
 
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
-import org.jspecify.annotations.NullMarked;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,9 +15,6 @@ import java.util.UUID;
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
     Page<Customer> findByNameContainingIgnoreCase(String name, Pageable pageable);
-
-    @NullMarked
-    Page<Customer> findAll(Pageable pageable);
 
     Optional<Customer> findByCpf(String cpf);
 
