@@ -241,6 +241,7 @@ getGlobalDashboard(period) → apenas ADMIN/MANAGER — agrega tudo
 | Busca por identificador único | `GET /resource/{uniqueKey}` — retorna objeto único ou 404 (ver `.claude/adr/ADR-001`) |
 | Busca por filtros | `GET /resource?param=value` — retorna `List<DTO>` sempre, pode ser vazia (ver `.claude/adr/ADR-001`) |
 | Nomes de rotas | sem prefixos semânticos (`findBy`, `search`, `get`) em URLs — proibido (ver `.claude/adr/ADR-001`) |
+| Interface de service | expõe apenas o que o consumidor externo chama — sub-rotinas internas ficam `private` na impl (ver `.claude/adr/ADR-002`) |
 
 ---
 

@@ -17,11 +17,12 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepositor
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -30,7 +31,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final LeadTicketRepository leadTicketRepository;
-    private final ContactLogRepository  contactLogRepository;
+    private final ContactLogRepository contactLogRepository;
     private final CustomerMapper customerMapper;
     private final SecurityUtils securityUtils;
 
@@ -78,7 +79,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .build();
         leadTicketRepository.save(ticket);
 
-        if(dto.initialNote() != null && !dto.initialNote().isBlank()) {
+        if (dto.initialNote() != null && !dto.initialNote().isBlank()) {
             ContactLog contactLog = ContactLog.builder()
                     .ticketId(ticket.getId())
                     .userId(currentUser.getId())
@@ -99,8 +100,8 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
 
         if (!Objects.equals(customer.getCpf(), dto.cpf())
-        && dto.cpf() != null
-        && customerRepository.findByCpf(dto.cpf()).isPresent()
+                && dto.cpf() != null
+                && customerRepository.findByCpf(dto.cpf()).isPresent()
         ) {
             throw new ResourceAlreadyExistsException("CPF " + dto.cpf() + " já existe na base de dados");
         }
@@ -113,19 +114,18 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CustomerResponseDTO> search(String name, String phone, AdsChannel adChannel) {
-       if(name != null) return findByName(name);
-       if(phone != null) return findByPhone(phone);
-       if(adChannel != null) return findByAdChannel(adChannel);
-       return findAll();
+    public Page<CustomerResponseDTO> search(String phone, String name, AdsChannel adChannel, Pageable pageable) {
+        if (phone != null) return findByPhone(phone, pageable);
+        if (name != null) return findByName(name, pageable);
+        if (adChannel != null) return findByAdChannel(adChannel, pageable);
+        return findAll(pageable);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerResponseDTO> findAll() {
-        return customerRepository.findAll().stream()
-                .map(customerMapper::toResponseDTO)
-                .toList();
+
+    private Page<CustomerResponseDTO> findAll(Pageable pageable) {
+        return customerRepository.findAll(pageable)
+                .map(customerMapper::toResponseDTO);
+
     }
 
     @Override
@@ -136,12 +136,10 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerResponseDTO> findByName(String name) {
-        return customerRepository.findByNameContainingIgnoreCase(name).stream()
-                .map(customerMapper::toResponseDTO)
-               .toList();
+    private Page<CustomerResponseDTO> findByName(String name, Pageable pageable) {
+        return customerRepository.findByNameContainingIgnoreCase(name, pageable)
+                .map(customerMapper::toResponseDTO);
+
     }
 
     @Override
@@ -152,19 +150,16 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found by CPF " + cpf));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerResponseDTO> findByPhone(String phone) {
-        return customerRepository.findByPhone(phone).stream()
-                .map(customerMapper::toResponseDTO)
-                .toList();
+
+    private Page<CustomerResponseDTO> findByPhone(String phone, Pageable pageable) {
+        return customerRepository.findByPhone(phone, pageable)
+                .map(customerMapper::toResponseDTO);
+
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<CustomerResponseDTO> findByAdChannel(AdsChannel channel) {
-        return customerRepository.findByAdChannel(channel).stream()
-                .map(customerMapper::toResponseDTO).toList();
+    private Page<CustomerResponseDTO> findByAdChannel(AdsChannel channel, Pageable pageable) {
+        return customerRepository.findByAdChannel(channel, pageable)
+                .map(customerMapper::toResponseDTO);
 
     }
 
