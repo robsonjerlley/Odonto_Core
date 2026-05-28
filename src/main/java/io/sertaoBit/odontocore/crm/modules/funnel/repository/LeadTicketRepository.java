@@ -1,8 +1,9 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.repository;
 
-import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,21 +14,17 @@ import java.util.UUID;
 @Repository
 public interface LeadTicketRepository extends JpaRepository<LeadTicket, UUID> {
 
-    List<LeadTicket> findByCustomerId(UUID customerId);
+    Page<LeadTicket> findByCustomerId(UUID customerId, Pageable pageable);
 
-    List<LeadTicket> findByAssignedTo(UUID userId);
-
-    List<LeadTicket> findByCurrentSector(Sector sector);
-
-    List<LeadTicket> findByCurrentSectorAndAssignedTo(Sector sector, UUID userId);
+    Page<LeadTicket> findByAssignedTo(UUID userId, Pageable pageable);
 
     List<LeadTicket> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
 
-    List<LeadTicket> findByStatus(TicketStatus status);
+    Page<LeadTicket> findByStatus(TicketStatus status, Pageable pageable);
 
     List<LeadTicket> findByStatusAndPendingAtBefore(TicketStatus status, LocalDateTime date);
 
-   List<LeadTicket>  findByCustomerIdInAndStatusAndClosedAtBetween(
+    List<LeadTicket> findByCustomerIdInAndStatusAndClosedAtBetween(
             List<UUID> customerIds,
             TicketStatus status,
             LocalDateTime from,

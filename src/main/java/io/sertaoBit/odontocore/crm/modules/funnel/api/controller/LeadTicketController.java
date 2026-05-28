@@ -4,14 +4,15 @@ import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketChangeStatusRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
-
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -43,13 +44,6 @@ public class LeadTicketController {
     }
 
 
-    @GetMapping
-    public ResponseEntity<List<LeadTicketResponseDTO>> findAll() {
-
-        return ResponseEntity.ok(ticketService.findAll());
-    }
-
-
     @GetMapping("/{id}")
     public ResponseEntity<LeadTicketResponseDTO> findById(
             @PathVariable UUID id
@@ -57,28 +51,14 @@ public class LeadTicketController {
         return ResponseEntity.ok(ticketService.findById(id));
     }
 
-
-    @GetMapping("/findByCustomer/{customerId}")
-    public ResponseEntity<List<LeadTicketResponseDTO>> findByCustomer(
-            @PathVariable UUID customerId
+    @GetMapping()
+    public ResponseEntity<Page<LeadTicketResponseDTO>> search(
+            @RequestParam(required = false) UUID customerId,
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) UUID assignedTo,
+            @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(ticketService.findByCustomer(customerId));
-    }
-
-
-    @GetMapping("/ticketStatus/{status}")
-    public ResponseEntity<List<LeadTicketResponseDTO>> findByTicketStatus(
-            @PathVariable TicketStatus status
-    ) {
-        return ResponseEntity.ok(ticketService.findByStatus(status));
-    }
-
-
-    @GetMapping("/assignedToUser/{userId}")
-    public ResponseEntity<List<LeadTicketResponseDTO>> findByAssignedToUser(
-            @PathVariable UUID userId
-    ) {
-        return ResponseEntity.ok(ticketService.findByAssignedToUser(userId));
+        return ResponseEntity.ok(ticketService.search(customerId, status, assignedTo, pageable));
     }
 
 

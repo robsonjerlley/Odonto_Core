@@ -15,12 +15,12 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
-import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -141,53 +141,48 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<LeadTicketResponseDTO> findAll() {
-        return ticketRepository.findAll().stream()
-                .map(ticketMapper::toResponseDTO)
-                .toList();
+    public Page<LeadTicketResponseDTO> search(
+            UUID customerId, TicketStatus status, UUID userId, Pageable pageable
+    ) {
+        if (customerId != null) return findByCustomer(customerId, pageable);
+        if (status != null) return findByStatus(status, pageable);
+        if (userId != null) return findByAssignedToUser(userId, pageable);
+        return findAll(pageable);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<LeadTicketResponseDTO> findByCustomer(UUID customerId) {
+
+    private Page<LeadTicketResponseDTO> findAll(Pageable pageable) {
+        return ticketRepository.findAll(pageable)
+                .map(ticketMapper::toResponseDTO);
+
+    }
+
+
+    private Page<LeadTicketResponseDTO> findByCustomer(UUID customerId, Pageable pageable) {
         if (!customerRepository.existsById(customerId)) {
             throw new ResourceNotFoundException("Customer not found by id: " + customerId);
         }
 
-        return ticketRepository.findByCustomerId(customerId).stream()
-                .map(ticketMapper::toResponseDTO)
-                .toList();
+        return ticketRepository.findByCustomerId(customerId, pageable)
+                .map(ticketMapper::toResponseDTO);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<LeadTicketResponseDTO> findByStatus(TicketStatus status) {
-        return ticketRepository.findByStatus(status).stream()
-                .map(ticketMapper::toResponseDTO)
-                .toList();
+
+    private Page<LeadTicketResponseDTO> findByStatus(TicketStatus status, Pageable pageable) {
+        return ticketRepository.findByStatus(status, pageable)
+                .map(ticketMapper::toResponseDTO);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<LeadTicketResponseDTO> findByAssignedToUser(UUID userId) {
+
+    private Page<LeadTicketResponseDTO> findByAssignedToUser(UUID userId, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User not found by id: " + userId);
         }
 
-        return ticketRepository.findByAssignedTo(userId).stream()
-                .map(ticketMapper::toResponseDTO)
-                .toList();
+        return ticketRepository.findByAssignedTo(userId, pageable)
+                .map(ticketMapper::toResponseDTO);
     }
 
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<LeadTicketResponseDTO> findByPeriod(DataRangeDTO period) {
-        return ticketRepository.findByCreatedAtBetween(
-                period.from().atStartOfDay(),
-                period.to().atTime(23, 59, 59)
-        ).stream().map(ticketMapper::toResponseDTO).toList();
-    }
 
     @Override
     @Transactional
