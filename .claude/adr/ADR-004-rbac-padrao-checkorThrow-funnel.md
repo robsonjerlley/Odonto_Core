@@ -57,20 +57,7 @@ permissionService.checkOrThrow(
 
 ---
 
-### Padrão 2 — READ / UPDATE / DELETE de recurso existente
 
-```java
-User user = securityUtils.getCurrentUser();
-Entity entity = repository.findById(id)
-    .orElseThrow(() -> new ResourceNotFoundException("..."));
-
-permissionService.checkOrThrow(
-    user,
-    Resource.X,
-    Action.READ,                // ou UPDATE, DELETE
-    entity.getCurrentSector(),  // setor do recurso
-    entity.getCreatedBy()       // dono do recurso
-);
 ```
 
 O recurso é buscado **antes** do check de permissão. A ordem é intencional: o check precisa dos dados do recurso para resolver scope SECTOR e OWN.

@@ -1,9 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
-import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
-import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
-import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
+import io.sertaoBit.odontocore.crm.core.enums.*;
 import io.sertaoBit.odontocore.crm.exception.ResourceAlreadyExistsException;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
@@ -17,6 +15,8 @@ import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepositor
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
+import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +26,9 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.CUSTOMER;
+
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
@@ -34,26 +37,37 @@ public class CustomerServiceImpl implements CustomerService {
     private final ContactLogRepository contactLogRepository;
     private final CustomerMapper customerMapper;
     private final SecurityUtils securityUtils;
+    private final PermissionService  permissionService;
 
     public CustomerServiceImpl(
             CustomerRepository customerRepository,
             LeadTicketRepository leadTicketRepository,
             ContactLogRepository contactLogRepository,
             CustomerMapper customerMapper,
-            SecurityUtils securityUtils
+            SecurityUtils securityUtils,
+            PermissionService permissionService
     ) {
         this.customerRepository = customerRepository;
         this.leadTicketRepository = leadTicketRepository;
         this.contactLogRepository = contactLogRepository;
         this.customerMapper = customerMapper;
         this.securityUtils = securityUtils;
+        this.permissionService = permissionService;
     }
 
 
     @Override
     @Transactional
     public CustomerResponseDTO create(CustomerCreateRequestDTO dto) {
-        var currentUser = securityUtils.getCurrentUser();
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CUSTOMER,
+                CREATE,
+                user.getSector(),
+                user.getId()
+        );
+
 
         Customer customer = Customer.builder()
                 .name(dto.name())
@@ -65,7 +79,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .source(dto.source())
                 .adChannel(dto.adChannel())
                 .adCampaign(dto.adCampaign())
-                .createdBy(currentUser.getId())
+                .createdBy(user.getId())
                 .referredBy(dto.referredBy())
                 .build();
 
@@ -74,15 +88,15 @@ public class CustomerServiceImpl implements CustomerService {
         LeadTicket ticket = LeadTicket.builder()
                 .customerId(saved.getId())
                 .status(TicketStatus.NEW)
-                .currentSector(currentUser.getSector())
-                .createdBy(currentUser.getId())
+                .currentSector(user.getSector())
+                .createdBy(user.getId())
                 .build();
         leadTicketRepository.save(ticket);
 
         if (dto.initialNote() != null && !dto.initialNote().isBlank()) {
             ContactLog contactLog = ContactLog.builder()
                     .ticketId(ticket.getId())
-                    .userId(currentUser.getId())
+                    .userId(user.getId())
                     .channel(dto.channel() != null ? dto.channel() : ContactChannel.OTHER)
                     .note(dto.initialNote())
                     .occurredAt(LocalDateTime.now())
@@ -96,8 +110,18 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public CustomerResponseDTO update(UUID id, CustomerUpdateRequestDTO dto) {
+        User user = securityUtils.getCurrentUser();
+
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
+
+        permissionService.checkOrThrow(
+                user,
+                CUSTOMER,
+                UPDATE,
+                user.getSector(),
+                user.getCreatedBy()
+        );
 
         if (!Objects.equals(customer.getCpf(), dto.cpf())
                 && dto.cpf() != null
@@ -131,6 +155,15 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public CustomerResponseDTO findById(UUID id) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CUSTOMER,
+                READ,
+                user.getSector(),
+                user.getCreatedBy()
+        );
+
         return customerRepository.findById(id)
                 .map(customerMapper::toResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
@@ -145,6 +178,15 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public CustomerResponseDTO findByCpf(String cpf) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CUSTOMER,
+                READ,
+                user.getSector(),
+                user.getCreatedBy()
+        );
+
         return customerRepository.findByCpf(cpf)
                 .map(customerMapper::toResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found by CPF " + cpf));
@@ -167,9 +209,19 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void deleteById(UUID id) {
+        User user = securityUtils.getCurrentUser();
         if (!customerRepository.existsById(id)) {
             throw new ResourceNotFoundException("Customer not found " + id);
         }
+
+        permissionService.checkOrThrow(
+                user,
+                CUSTOMER,
+                DELETE,
+                user.getSector(),
+                user.getCreatedBy()
+        );
+
         customerRepository.deleteById(id);
     }
 }
