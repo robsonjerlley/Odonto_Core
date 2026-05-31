@@ -40,7 +40,7 @@ public class LeadTicketController {
             @PathVariable UUID id,
             @RequestBody @Validated LeadTicketChangeStatusRequestDTO dto
     ) {
-        return ResponseEntity.ok(ticketService.changeStatus(id, dto.status()));
+        return ResponseEntity.ok(ticketService.changeStatus(id, dto));
     }
 
 

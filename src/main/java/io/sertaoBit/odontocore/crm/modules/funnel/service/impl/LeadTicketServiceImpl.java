@@ -3,8 +3,10 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
+import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketChangeStatusRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
@@ -32,6 +34,8 @@ import java.util.UUID;
 import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.TICKET;
 import static io.sertaoBit.odontocore.crm.core.enums.Role.*;
+import static io.sertaoBit.odontocore.crm.core.enums.Sector.EVALUATOR;
+import static io.sertaoBit.odontocore.crm.core.enums.Sector.LEADS;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 
 @Service
@@ -113,7 +117,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     @Override
     @Transactional
-    public LeadTicketResponseDTO changeStatus(UUID id, TicketStatus status) {
+    public LeadTicketResponseDTO changeStatus(UUID id, LeadTicketChangeStatusRequestDTO dto) {
         User user = securityUtils.getCurrentUser();
 
         LeadTicket leadTicket = ticketRepository.findById(id)
@@ -128,7 +132,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         );
 
         if (user.getRole() == USER_ATTENDANT
-                && (status == LOSS || status == IN_CONTACT)
+                && (dto.status() == LOSS || dto.status() == IN_CONTACT)
         ) {
             throw new AccessDeniedException("Perfil de usuário não autorizdado para efetuar esta trazação.");
         }
@@ -137,11 +141,11 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         Set<TicketStatus> allowed = ALLOWED_TRANSITIONS.get(currentStatus);
 
 
-        if (allowed == null || !allowed.contains(status)) {
-            throw new IllegalStateException("Transition not allowed " + currentStatus + " -> " + status);
+        if (allowed == null || !allowed.contains(dto.status())) {
+            throw new IllegalStateException("Transition not allowed " + currentStatus + " -> " + dto.status());
         }
 
-        Set<Role> allowedRoles = TRANSITION_ROLES.get(status);
+        Set<Role> allowedRoles = TRANSITION_ROLES.get(dto.status());
         if (allowedRoles != null) {
             Role currentRole = user.getRole();
             if (!allowedRoles.contains(currentRole)) {
@@ -149,7 +153,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
             }
         }
 
-        if (status == SCHEDULED) {
+        if (dto.status() == SCHEDULED) {
             Customer customer = customerRepository.findById(leadTicket.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
             if (customer.getCpf() == null || customer.getCpf().isBlank()) {
@@ -158,22 +162,34 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         }
 
 
-        leadTicket.setStatus(status);
-
         LocalDateTime now = LocalDateTime.now();
-        if (status == WIN) leadTicket.setClosedAt(now);
-        if (status == PENDING) leadTicket.setPendingAt(now);
-        if (status == RECYCLED) leadTicket.setRecycledAt(now);
-        if (status == LOSS) leadTicket.setClosedAt(now);
+
+        String logNote;
+        if (currentStatus == WIN && dto.status() == POST_PROCEDURE) {
+            logNote = applyPostProcedure(leadTicket, now);
+        } else if (currentStatus == POST_PROCEDURE && dto.status() == SCHEDULED) {
+            logNote = applyScheduledReturn(leadTicket, dto.returnScheduledAt(), now);
+        } else if (currentStatus == POST_PROCEDURE && dto.status() == LOSS) {
+            logNote = applyLoss(dto.lossReason());
+        } else {
+            logNote = "Status changed: " + currentStatus + " → " + dto.status();
+        }
+
+        leadTicket.setStatus(dto.status());
+
+        if (dto.status() == WIN) leadTicket.setClosedAt(now);
+        if (dto.status() == PENDING) leadTicket.setPendingAt(now);
+        if (dto.status() == RECYCLED) leadTicket.setRecycledAt(now);
+        if (dto.status() == LOSS) leadTicket.setClosedAt(now);
 
 
         ContactLog log = ContactLog.builder()
                 .ticketId(id)
                 .userId(user.getId())
                 .channel(ContactChannel.OTHER)
-                .note("Status changed: " + currentStatus + " → " + status)
+                .note(logNote)
                 .statusBefore(currentStatus)
-                .statusAfter(status)
+                .statusAfter(dto.status())
                 .occurredAt(now)
                 .build();
         contactLogRepository.save(log);
@@ -271,5 +287,29 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
         ticketRepository.deleteById(id);
 
+    }
+
+
+
+    private String applyPostProcedure(LeadTicket ticket, LocalDateTime now) {
+        ticket.setProcedurePerformedAt(now);
+        ticket.setCurrentSector(LEADS);
+        return "Procedimento realizado. Início do acompanhamento pós-procedimento.";
+    }
+
+    private String applyScheduledReturn(LeadTicket ticket, LocalDateTime returnScheduledAt, LocalDateTime now) {
+        if (returnScheduledAt == null || returnScheduledAt.isBefore(now)) {
+            throw new IllegalStateException("returnScheduledAt é obrigatório e deve ser uma data futura.");
+        }
+        ticket.setCurrentSector(EVALUATOR);
+        ticket.setScheduledAt(returnScheduledAt);
+        return "Retorno agendado para " + returnScheduledAt + ".";
+    }
+
+    private String applyLoss(String lossReason) {
+        if (lossReason == null || lossReason.isBlank()) {
+            throw new IllegalStateException("lossReason é obrigatório para registrar uma perda.");
+        }
+        return lossReason;
     }
 }
