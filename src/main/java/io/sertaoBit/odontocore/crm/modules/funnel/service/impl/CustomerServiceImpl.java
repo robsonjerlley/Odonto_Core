@@ -120,7 +120,7 @@ public class CustomerServiceImpl implements CustomerService {
                 CUSTOMER,
                 UPDATE,
                 user.getSector(),
-                user.getCreatedBy()
+                customer.getCreatedBy()
         );
 
         if (!Objects.equals(customer.getCpf(), dto.cpf())
@@ -139,6 +139,16 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public Page<CustomerResponseDTO> search(String phone, String name, AdsChannel adChannel, Pageable pageable) {
+        User  user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CUSTOMER,
+                READ,
+                user.getSector(),
+                user.getId()
+
+        );
+
         if (phone != null) return findByPhone(phone, pageable);
         if (name != null) return findByName(name, pageable);
         if (adChannel != null) return findByAdChannel(adChannel, pageable);
@@ -156,17 +166,18 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public CustomerResponseDTO findById(UUID id) {
         User user = securityUtils.getCurrentUser();
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
         permissionService.checkOrThrow(
                 user,
                 CUSTOMER,
                 READ,
                 user.getSector(),
-                user.getCreatedBy()
+                customer.getCreatedBy()
         );
 
-        return customerRepository.findById(id)
-                .map(customerMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
+        return customerMapper.toResponseDTO(customer);
+
     }
 
     private Page<CustomerResponseDTO> findByName(String name, Pageable pageable) {
@@ -184,7 +195,7 @@ public class CustomerServiceImpl implements CustomerService {
                 CUSTOMER,
                 READ,
                 user.getSector(),
-                user.getCreatedBy()
+                user.getId()
         );
 
         return customerRepository.findByCpf(cpf)
@@ -210,16 +221,15 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public void deleteById(UUID id) {
         User user = securityUtils.getCurrentUser();
-        if (!customerRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Customer not found " + id);
-        }
 
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() ->  new ResourceNotFoundException(" Customer not found " + id));
         permissionService.checkOrThrow(
                 user,
                 CUSTOMER,
                 DELETE,
                 user.getSector(),
-                user.getCreatedBy()
+                customer.getCreatedBy()
         );
 
         customerRepository.deleteById(id);

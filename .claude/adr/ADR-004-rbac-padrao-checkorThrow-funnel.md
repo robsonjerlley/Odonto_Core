@@ -57,7 +57,23 @@ permissionService.checkOrThrow(
 
 ---
 
+### Padrão 2 — UPDATE / READ / DELETE (recurso já existe)
 
+**Quando usar**: o recurso já existe no banco e precisa ser acessado. A verificação de scope depende de dados do próprio recurso — não do usuário.
+
+```java
+User user = securityUtils.getCurrentUser();
+
+TipoRecurso resource = repository.findById(id)
+    .orElseThrow(() -> new ResourceNotFoundException("..."));
+
+permissionService.checkOrThrow(
+    user,
+    Resource.X,
+    Action.UPDATE,               // ou READ ou DELETE
+    resource.getCurrentSector(), // setor do recurso acessado
+    resource.getCreatedBy()      // dono do recurso acessado
+);
 ```
 
 O recurso é buscado **antes** do check de permissão. A ordem é intencional: o check precisa dos dados do recurso para resolver scope SECTOR e OWN.

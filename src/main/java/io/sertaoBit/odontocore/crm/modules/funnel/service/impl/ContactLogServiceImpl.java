@@ -2,7 +2,6 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.Action;
-import io.sertaoBit.odontocore.crm.core.enums.Resource;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
@@ -19,8 +18,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
 import java.util.UUID;
+
+import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.CONTACT_LOG;
 
 @Service
 public class ContactLogServiceImpl implements ContactLogService {
@@ -51,7 +52,7 @@ public class ContactLogServiceImpl implements ContactLogService {
         User user = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
                 user,
-                Resource.CONTACT_LOG,
+                CONTACT_LOG,
                 Action.CREATE,
                 user.getSector(),
                 user.getId()
@@ -78,15 +79,32 @@ public class ContactLogServiceImpl implements ContactLogService {
     @Override
     @Transactional(readOnly = true)
     public ContactLogResponseDTO findById(UUID id) {
-        Objects.requireNonNull(id);
-        return contactLogRepository.findById(id)
-                .map(contactLogMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Contact Log not found"));
+        User user = securityUtils.getCurrentUser();
+        ContactLog contactLog = contactLogRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact Log not found by id: " + id));
+        permissionService.checkOrThrow(
+                user,
+                CONTACT_LOG,
+                READ,
+                user.getSector(),
+                contactLog.getUserId()
+        );
+
+        return contactLogMapper.toResponseDTO(contactLog);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ContactLogResponseDTO> search(UUID ticketId, Pageable pageable) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CONTACT_LOG,
+                READ,
+                user.getSector(),
+                user.getId()
+        );
+
         if (ticketId != null) return findByTicketId(ticketId, pageable);
         return findAll(pageable);
     }

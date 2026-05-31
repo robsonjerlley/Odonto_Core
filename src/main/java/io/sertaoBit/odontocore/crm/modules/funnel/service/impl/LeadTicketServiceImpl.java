@@ -167,9 +167,18 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Override
     @Transactional(readOnly = true)
     public LeadTicketResponseDTO findById(UUID id) {
-        return ticketRepository.findById(id)
-                .map(ticketMapper::toResponseDTO)
+        User user = securityUtils.getCurrentUser();
+        LeadTicket ticket =ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found by id: " + id));
+        permissionService.checkOrThrow(
+                user,
+                TICKET,
+                READ,
+                ticket.getCurrentSector(),
+                ticket.getCreatedBy()
+        );
+
+        return ticketMapper.toResponseDTO(ticket);
     }
 
     @Override
@@ -177,6 +186,15 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     public Page<LeadTicketResponseDTO> search(
             UUID customerId, TicketStatus status, UUID userId, Pageable pageable
     ) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                TICKET,
+                READ,
+                user.getSector(),
+                user.getId()
+        );
+
         if (customerId != null) return findByCustomer(customerId, pageable);
         if (status != null) return findByStatus(status, pageable);
         if (userId != null) return findByAssignedToUser(userId, pageable);
@@ -221,17 +239,17 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Transactional
     public void deleteById(UUID id) {
         User user = securityUtils.getCurrentUser();
+
+        LeadTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found by id: " + id));
         permissionService.checkOrThrow(
                 user,
                 TICKET,
                 DELETE,
-                user.getSector(),
-                user.getId()
+                ticket.getCurrentSector(),
+                ticket.getCreatedBy()
         );
 
-        if (!ticketRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Ticket not found by id: " + id);
-        }
 
         ticketRepository.deleteById(id);
 
