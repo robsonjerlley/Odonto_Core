@@ -2,6 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
@@ -30,7 +31,7 @@ import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.TICKET;
-import static io.sertaoBit.odontocore.crm.core.enums.Role.USER_ATTENDANT;
+import static io.sertaoBit.odontocore.crm.core.enums.Role.*;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 
 @Service
@@ -43,7 +44,16 @@ public class LeadTicketServiceImpl implements LeadTicketService {
             IN_EVALUATION, Set.of(NEGOTIATION, LOSS),
             NEGOTIATION, Set.of(WIN, PENDING),
             PENDING, Set.of(RECYCLED),
-            RECYCLED, Set.of(NEW)
+            RECYCLED, Set.of(NEW),
+            WIN, Set.of(POST_PROCEDURE),
+            POST_PROCEDURE, Set.of(SCHEDULED, LOSS)
+    );
+
+
+    private static final Map<TicketStatus, Set<Role>> TRANSITION_ROLES = Map.of(
+            POST_PROCEDURE, Set.of(USER_ATTENDANT, USER_LEADS, ADM_LEADS, ADM_SYSTEM),
+            WIN, Set.of(USER_COMMERCIAL, ADM_COMMERCIAL, ADM_SYSTEM),
+            LOSS, Set.of(USER_LEADS, ADM_LEADS, ADM_SYSTEM)
     );
 
 
@@ -131,6 +141,14 @@ public class LeadTicketServiceImpl implements LeadTicketService {
             throw new IllegalStateException("Transition not allowed " + currentStatus + " -> " + status);
         }
 
+        Set<Role> allowedRoles = TRANSITION_ROLES.get(status);
+        if (allowedRoles != null) {
+            Role currentRole = user.getRole();
+            if (!allowedRoles.contains(currentRole)) {
+                throw new AccessDeniedException("Role " + currentRole + " não pode executar esta transição");
+            }
+        }
+
         if (status == SCHEDULED) {
             Customer customer = customerRepository.findById(leadTicket.getCustomerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
@@ -168,7 +186,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Transactional(readOnly = true)
     public LeadTicketResponseDTO findById(UUID id) {
         User user = securityUtils.getCurrentUser();
-        LeadTicket ticket =ticketRepository.findById(id)
+        LeadTicket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found by id: " + id));
         permissionService.checkOrThrow(
                 user,

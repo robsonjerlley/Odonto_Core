@@ -20,6 +20,8 @@ public record LeadTicketResponseDTO(
         UUID previousTicketId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        LocalDateTime recycledAt
+        LocalDateTime recycledAt,
+        LocalDateTime procedurePerformedAt,
+        LocalDateTime returnScheduledAt
 ) {
 }

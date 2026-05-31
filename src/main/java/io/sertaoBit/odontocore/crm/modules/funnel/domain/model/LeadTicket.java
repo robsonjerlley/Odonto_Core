@@ -44,5 +44,7 @@ public class LeadTicket {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
     private LocalDateTime recycledAt;
+    private LocalDateTime procedurePerformedAt;
+    private LocalDateTime returnScheduledAt;
 
 }

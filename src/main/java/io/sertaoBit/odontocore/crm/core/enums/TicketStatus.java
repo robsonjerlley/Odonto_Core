@@ -10,5 +10,6 @@ public enum TicketStatus {
     WIN,
     PENDING,
     RECYCLED,
-    LOSS
+    LOSS,
+    POST_PROCEDURE
 }
