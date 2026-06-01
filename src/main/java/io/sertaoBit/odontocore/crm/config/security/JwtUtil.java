@@ -1,6 +1,8 @@
 package io.sertaoBit.odontocore.crm.config.security;
 
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -63,5 +65,22 @@ public class JwtUtil {
     public boolean isValid(String token, UserDetails userDetails) {
         String username = extractUsername(token);
         return username.equals(userDetails.getUsername()) && !isExpired(token);
+    }
+
+    public String extractUserNameIgnoringExpiration(String token) throws JwtException {
+            try {
+            return Jwts.parser()
+                    .verifyWith(getSecretKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getSubject();
+        } catch (ExpiredJwtException ex) {
+                return ex.getClaims().getSubject();
+            }
+            catch (JwtException e)
+                {
+                throw new JwtException(e.getMessage());
+                }
     }
 }

@@ -3,7 +3,6 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
-import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketChangeStatusRequestDTO;
@@ -288,7 +287,6 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         ticketRepository.deleteById(id);
 
     }
-
 
 
     private String applyPostProcedure(LeadTicket ticket, LocalDateTime now) {
