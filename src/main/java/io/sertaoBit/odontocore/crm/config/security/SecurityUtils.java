@@ -15,6 +15,7 @@ public class SecurityUtils {
     private final UserRepository userRepository;
 
     public SecurityUtils(UserRepository userRepository) {
+
         this.userRepository = userRepository;
     }
 
@@ -22,7 +23,7 @@ public class SecurityUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 
-        if(authentication == null || !authentication.isAuthenticated()) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("Authentication object is null");
         }
 
@@ -36,6 +37,7 @@ public class SecurityUtils {
     }
 
     public UUID getCurrentUserId() {
+
         return getCurrentUser().getId();
     }
 }

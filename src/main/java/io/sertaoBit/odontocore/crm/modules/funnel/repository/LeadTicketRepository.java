@@ -24,6 +24,8 @@ public interface LeadTicketRepository extends JpaRepository<LeadTicket, UUID> {
 
     List<LeadTicket> findByStatusAndPendingAtBefore(TicketStatus status, LocalDateTime date);
 
+    List<LeadTicket> findByProcedurePerformedAtBetween(LocalDateTime from, LocalDateTime to);
+
     List<LeadTicket> findByCustomerIdInAndStatusAndClosedAtBetween(
             List<UUID> customerIds,
             TicketStatus status,

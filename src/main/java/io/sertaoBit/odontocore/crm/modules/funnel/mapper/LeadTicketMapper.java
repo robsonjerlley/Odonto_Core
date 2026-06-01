@@ -20,7 +20,9 @@ public interface LeadTicketMapper {
             @Mapping(target = "previousTicketId", ignore = true),
             @Mapping(target = "recycledAt", ignore = true),
             @Mapping(target = "status", ignore = true),
-            @Mapping(target = "updatedAt", ignore = true)
+            @Mapping(target = "updatedAt", ignore = true),
+            @Mapping(target = "procedurePerformedAt", ignore = true),
+            @Mapping(target = "returnScheduledAt", ignore = true)
     })
     LeadTicket toEntity(LeadTicketCreateRequestDTO dto);
 

@@ -69,6 +69,13 @@ public class AnalyticsController {
                 analyticsService.getCalculatedBonus(targetId, periodRef, securityUtils.getCurrentUserId()));
     }
 
+    @GetMapping("/post-procedure")
+    public ResponseEntity<PostProcedureResultDTO> getPostProcedure(
+            @ModelAttribute DataRangeDTO period
+    ) {
+        return ResponseEntity.ok(analyticsService.getPostProcedureMetrics(period, securityUtils.getCurrentUserId()));
+    }
+
     @GetMapping("/dashboard")
     public ResponseEntity<GlobalDashBoardResultDTO> getGlobalDashBoard(
             @ModelAttribute DataRangeDTO period) {

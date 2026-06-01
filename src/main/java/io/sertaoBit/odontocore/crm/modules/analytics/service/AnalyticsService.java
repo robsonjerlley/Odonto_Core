@@ -22,4 +22,6 @@ public interface AnalyticsService {
     BigDecimal getCalculatedBonus(UUID targetId, String periodRef , UUID userId);
 
     GlobalDashBoardResultDTO getGlobalDashBoard(DataRangeDTO period, UUID userId);
+
+    PostProcedureResultDTO getPostProcedureMetrics(DataRangeDTO period, UUID userId);
 }
