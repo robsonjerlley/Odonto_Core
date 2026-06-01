@@ -35,14 +35,15 @@ public class UserController {
                 .body(userService.create(requestDTO));
     }
 
-    @PatchMapping("/{username}/passwordHash")
+    @PatchMapping("/{username}/newPassword")
     public ResponseEntity<UserResponseDTO> updatePassword(
             @PathVariable String username,
             @RequestBody @Valid UserPasswordUpdateRequestDTO requestDTO
     ) {
 
-        return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPasswordHash()));
+        return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPassword()));
     }
+
 
     @GetMapping
     public ResponseEntity<Page<UserResponseDTO>> search(
@@ -51,6 +52,11 @@ public class UserController {
             @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseEntity.ok(userService.search(sector, role, pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> findById(@PathVariable  UUID id) {
+        return ResponseEntity.ok(userService.findById(id));
     }
 
     @GetMapping("/username/{username}")

@@ -71,7 +71,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDTO updatePassword(String username, String newpassword) {
-        Objects.requireNonNull(username, "username must not be null");
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
         user.setPasswordHash(passwordEncoder.encode(newpassword));
@@ -87,12 +86,19 @@ public class UserServiceImpl implements UserService {
         return findAll(pageable);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponseDTO findById(UUID id) {
+
+        return userRepository.findById(id)
+                .map(userMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+    }
+
 
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO findByUsername(String username) {
-        Objects.requireNonNull(username, "username must not be null");
-
         return userRepository.findByUsername(username)
                 .map(userMapper::toResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found!" + username));
@@ -100,8 +106,6 @@ public class UserServiceImpl implements UserService {
 
 
     private Page<UserResponseDTO> findBySector(Sector sector, Pageable pageable) {
-        Objects.requireNonNull(sector, "sector must not be null");
-
         return userRepository.findBySector(sector, pageable)
                 .map(userMapper::toResponseDTO);
 

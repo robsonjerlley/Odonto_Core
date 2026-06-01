@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/deal")
+@RequestMapping("/api/v1/deals")
 public class DealController {
 
     private final DealService dealService;
@@ -32,12 +32,6 @@ public class DealController {
         this.dealMapper = dealMapper;
     }
 
-    @GetMapping("/findByTicket/{ticketId}")
-    public ResponseEntity<DealResponseDTO> findByTicket(@PathVariable UUID ticketId) {
-        return dealService.findByTicket(ticketId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.noContent().build());
-    }
 
     @PostMapping("/{ticketId}")
     public ResponseEntity<DealResponseDTO> create(
@@ -65,6 +59,13 @@ public class DealController {
 
     }
 
+    @GetMapping("/ticketId/{ticketId}")
+    public ResponseEntity<DealResponseDTO> findByTicket(@PathVariable UUID ticketId) {
+        return dealService.findByTicket(ticketId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+
     @PatchMapping("/{id}/discount")
     public ResponseEntity<DealResponseDTO> applyDiscount(
             @PathVariable UUID id,
@@ -74,7 +75,7 @@ public class DealController {
         return ResponseEntity.ok(dealMapper.toResponseDTO(deal));
     }
 
-    @PatchMapping("/{id}/closeDeal")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<DealResponseDTO> closeDeal(
             @PathVariable UUID id,
             @RequestBody @Validated CloseDealRequestDTO dto

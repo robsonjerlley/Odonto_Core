@@ -20,6 +20,8 @@ public interface UserService {
 
     Page<UserResponseDTO> search(Sector sector, Role role, Pageable pageable);
 
+    UserResponseDTO findById(UUID id);
+
     UserResponseDTO findByUsername(String username);
 
     void delete(UUID id);
