@@ -20,7 +20,8 @@ public record CustomerResponseDTO(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         UUID createdBy,
-        UUID referredBy
+        UUID referredBy,
+        boolean anonymized
 
 ) {
 }

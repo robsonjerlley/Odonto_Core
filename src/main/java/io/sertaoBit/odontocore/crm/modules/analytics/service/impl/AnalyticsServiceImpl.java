@@ -18,7 +18,6 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
-import org.apache.el.lang.ELArithmetic;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -277,7 +276,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .divide(valueOf(totalAssigned), 2, RoundingMode.HALF_UP);
 
         String periodRef = period.from().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        BigDecimal calculatedBonus = getCalculatedBonus(targetUser.getId(), periodRef, userId);
+        BigDecimal calculatedBonus = getCalculatedBonus(targetUser.getId(), periodRef, userId).value();
 
         return new UserPerformanceResultDTO(
                 targetUser.getId(),
@@ -292,7 +291,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
     @Override
-    public BigDecimal getCalculatedBonus(UUID targetId, String periodRef, UUID userId) {
+    public BonusResultDTO getCalculatedBonus(UUID targetId, String periodRef, UUID userId) {
         var currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         permissionService.checkOrThrow(currentUser, ANALYTICS, Action.READ, null, null);
@@ -304,15 +303,17 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .findByRoleAndSectorAndPeriodRef(targetUser.getRole(), targetUser.getSector(), periodRef)
                 .orElse(null);
 
-        if (bonusConfig == null || !bonusConfig.isActive()) return ZERO;
+        if (bonusConfig == null || !bonusConfig.isActive()) return new BonusResultDTO(ZERO);
 
         var yearMonth = YearMonth.parse(periodRef);
         var period = new DataRangeDTO(yearMonth.atDay(1), yearMonth.atEndOfMonth());
         long metricValue = resolveMetric(targetUser, period);
 
-        return valueOf(metricValue)
+        var calculated = valueOf(metricValue)
                 .multiply(bonusConfig.getBonusPct())
                 .divide(valueOf(100), 2, RoundingMode.HALF_UP);
+
+        return new BonusResultDTO(calculated);
     }
 
     @Override

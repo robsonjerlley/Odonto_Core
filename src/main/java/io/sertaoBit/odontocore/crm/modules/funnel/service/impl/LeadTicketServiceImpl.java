@@ -268,27 +268,6 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     }
 
 
-    @Override
-    @Transactional
-    public void deleteById(UUID id) {
-        User user = securityUtils.getCurrentUser();
-
-        LeadTicket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found by id: " + id));
-        permissionService.checkOrThrow(
-                user,
-                TICKET,
-                DELETE,
-                ticket.getCurrentSector(),
-                ticket.getCreatedBy()
-        );
-
-
-        ticketRepository.deleteById(id);
-
-    }
-
-
     private String applyPostProcedure(LeadTicket ticket, LocalDateTime now) {
         ticket.setProcedurePerformedAt(now);
         ticket.setCurrentSector(LEADS);

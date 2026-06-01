@@ -51,6 +51,8 @@ public class Customer {
     @Column(nullable = false)
     private UUID createdBy;
     private UUID referredBy;
+    @Builder.Default
+    private boolean anonymized = false;
 
 
 }

@@ -1,7 +1,9 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
-import io.sertaoBit.odontocore.crm.core.enums.*;
+import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
+import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceAlreadyExistsException;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
@@ -37,7 +39,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final ContactLogRepository contactLogRepository;
     private final CustomerMapper customerMapper;
     private final SecurityUtils securityUtils;
-    private final PermissionService  permissionService;
+    private final PermissionService permissionService;
 
     public CustomerServiceImpl(
             CustomerRepository customerRepository,
@@ -139,7 +141,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional(readOnly = true)
     public Page<CustomerResponseDTO> search(String phone, String name, AdsChannel adChannel, Pageable pageable) {
-        User  user = securityUtils.getCurrentUser();
+        User user = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
                 user,
                 CUSTOMER,
@@ -216,14 +218,13 @@ public class CustomerServiceImpl implements CustomerService {
 
     }
 
-
     @Override
     @Transactional
-    public void deleteById(UUID id) {
+    public void anonymize(UUID id) {
         User user = securityUtils.getCurrentUser();
-
         Customer customer = customerRepository.findById(id)
-                .orElseThrow(() ->  new ResourceNotFoundException(" Customer not found " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found " + id));
+
         permissionService.checkOrThrow(
                 user,
                 CUSTOMER,
@@ -232,6 +233,17 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.getCreatedBy()
         );
 
-        customerRepository.deleteById(id);
+        customer.setName("CLIENTE ANONIMIZADO");
+        customer.setCpf(null);
+        customer.setPhone("NULL");
+        customer.setPhone2(null);
+        customer.setEmail(null);
+        customer.setInitialNote(null);
+        customer.setAddress(null);
+        customer.setReferredBy(null);
+        customer.setAnonymized(true);
+
+        customerRepository.save(customer);
     }
+
 }

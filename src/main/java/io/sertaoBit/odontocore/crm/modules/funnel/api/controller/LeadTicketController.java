@@ -61,12 +61,4 @@ public class LeadTicketController {
         return ResponseEntity.ok(ticketService.search(customerId, status, assignedTo, pageable));
     }
 
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable UUID id
-    ) {
-        ticketService.deleteById(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
 }

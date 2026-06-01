@@ -73,7 +73,7 @@ public class CustomerController {
     public ResponseEntity<Void> delete(
             @PathVariable UUID id
     ) {
-        customerService.deleteById(id);
+        customerService.anonymize(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

@@ -20,6 +20,5 @@ public interface LeadTicketService {
 
     Page<LeadTicketResponseDTO> search(UUID customerId, TicketStatus status, UUID userId, Pageable pageable);
 
-    void deleteById(UUID id);
 }
 

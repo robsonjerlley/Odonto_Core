@@ -66,7 +66,6 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(ADM_SYSTEM, null, TICKET, CREATE, GLOBAL));
         rules.add(rule(ADM_SYSTEM, null, TICKET, UPDATE, GLOBAL));
         rules.add(rule(ADM_SYSTEM, null, TICKET, READ, GLOBAL));
-        rules.add(rule(ADM_SYSTEM, null, TICKET, DELETE, GLOBAL));
         rules.add(rule(ADM_SYSTEM, null, TICKET, RECYCLE, GLOBAL));
 
         rules.add(rule(ADM_SYSTEM, null, CONTACT_LOG, CREATE, GLOBAL));

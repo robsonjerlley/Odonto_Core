@@ -331,7 +331,7 @@ class CustomerServiceTest {
         UUID customerId = UUID.randomUUID();
         when(customerRepository.existsById(customerId)).thenReturn(true);
 
-        customerService.deleteById(customerId);
+        customerService.anonymize(customerId);
 
         verify(customerRepository, times(1)).deleteById(customerId);
     }
@@ -343,7 +343,7 @@ class CustomerServiceTest {
         when(customerRepository.existsById(noExistingId)).thenReturn(false);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                customerService.deleteById(noExistingId));
+                customerService.anonymize(noExistingId));
 
         assertTrue(exception.getMessage().contains("Customer not found"));
         verify(customerRepository, never()).deleteById(any());

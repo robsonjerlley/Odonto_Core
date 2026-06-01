@@ -5,7 +5,6 @@ import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.*;
 import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +18,7 @@ public interface AnalyticsService {
 
     UserPerformanceResultDTO getUserPerformance(UUID targetUserId ,DataRangeDTO period, UUID userId);
 
-    BigDecimal getCalculatedBonus(UUID targetId, String periodRef , UUID userId);
+    BonusResultDTO getCalculatedBonus(UUID targetId, String periodRef , UUID userId);
 
     GlobalDashBoardResultDTO getGlobalDashBoard(DataRangeDTO period, UUID userId);
 

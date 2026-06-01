@@ -15,7 +15,8 @@ public interface CustomerMapper {
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "createdBy", ignore = true),
             @Mapping(target = "createdAt", ignore = true),
-            @Mapping(target = "address", ignore = true)
+            @Mapping(target = "address", ignore = true),
+            @Mapping(target = "anonymized", ignore = true)
     })
     Customer toEntity(CustomerCreateRequestDTO dto);
 

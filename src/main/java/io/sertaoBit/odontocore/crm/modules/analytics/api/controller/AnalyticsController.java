@@ -61,12 +61,12 @@ public class AnalyticsController {
                 analyticsService.getUserPerformance(targetUserId, period, securityUtils.getCurrentUserId()));
     }
 
-    @GetMapping("/bonus/{targetId}")
-    public ResponseEntity<BigDecimal> getCalculatedBonus(
-            @PathVariable UUID targetId,
+    @GetMapping("/bonus/{id}")
+    public ResponseEntity<BonusResultDTO> getCalculatedBonus(
+            @PathVariable UUID id,
             @RequestParam String periodRef) {
         return ResponseEntity.ok(
-                analyticsService.getCalculatedBonus(targetId, periodRef, securityUtils.getCurrentUserId()));
+                analyticsService.getCalculatedBonus(id, periodRef, securityUtils.getCurrentUserId()));
     }
 
     @GetMapping("/post-procedure")
