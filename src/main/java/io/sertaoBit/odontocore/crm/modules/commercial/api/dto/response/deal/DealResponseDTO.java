@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal;
 
+import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.shared.DealProcedureDTO;
 
@@ -18,7 +19,7 @@ public record DealResponseDTO(
         BigDecimal discountPct,
         UUID discountApprovedBy,
         BigDecimal finalValue,
-        String paymentMethod,
+        PaymentMethod paymentMethod,
         UUID closedBy,
         boolean archived,
         LocalDateTime createdAt,

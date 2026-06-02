@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
@@ -207,7 +208,7 @@ public class DealServiceImpl implements DealService {
 
     @Override
     @Transactional
-    public Deal closeDeal(UUID dealId, String paymentMethod) {
+    public Deal closeDeal(UUID dealId, PaymentMethod paymentMethod) {
         User user = securityUtils.getCurrentUser();
 
         Deal deal = dealRepository.findById(dealId)

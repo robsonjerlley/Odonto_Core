@@ -1,9 +1,10 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal;
 
-import jakarta.validation.constraints.NotBlank;
+import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
+import jakarta.validation.constraints.NotNull;
 
 public record CloseDealRequestDTO(
 
-        @NotBlank String paymentMethod
+        @NotNull PaymentMethod paymentMethod
 ) {
 }

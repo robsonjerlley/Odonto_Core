@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service;
 
+import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
@@ -21,7 +22,7 @@ public interface DealService {
 
     Deal applyDiscount(UUID dealId, ApplyDiscountRequestDTO dto);
 
-    Deal closeDeal(UUID dealId, String paymentMethod);
+    Deal closeDeal(UUID dealId, PaymentMethod paymentMethod);
 
     DealDetailResponseDTO getDealWithHistory(UUID dealId);
 }

@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.model;
 
+import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,7 +43,8 @@ public class Deal {
     private UUID discountApprovedBy;
     @Column(precision = 15, scale = 2)
     private BigDecimal finalValue;
-    private String paymentMethod;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
     private UUID closedBy;
     private LocalDateTime closedAt;
     private boolean archived;
