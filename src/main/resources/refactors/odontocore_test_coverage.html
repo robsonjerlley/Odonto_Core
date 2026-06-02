@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OdontoCore — Cobertura de Testes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--bg2:#161B27;--bg3:#1E2535;--bg4:#252D40;
+  --border:#2A3449;--border2:#374159;
+  --text:#C8D0E0;--text2:#7B8BA8;--text3:#4A566E;
+  --purple:#8B7CF6;--purple2:#6C5CE7;--purple-bg:#1A1730;
+  --teal:#4ECDC4;--teal2:#0F6E56;--teal-bg:#0D2422;
+  --amber:#F59E0B;--amber2:#BA7517;--amber-bg:#231A07;
+  --blue:#60A5FA;--blue2:#185FA5;--blue-bg:#0D1F35;
+  --coral:#F87171;--coral-bg:#2A1010;
+  --green:#6EE7B7;--green2:#3B6D11;--green-bg:#0B2418;
+  --red:#F87171;--red-bg:#2A1010;
+  --gray:#94A3B8;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh}
+
+.header{padding:20px 24px 0}
+.header h1{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.header .sub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:4px}
+.header .rev{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;
+  background:var(--green-bg);color:var(--green);border:1px solid var(--green2);margin-top:6px;font-family:'JetBrains Mono',monospace}
+
+.tabs{display:flex;gap:3px;flex-wrap:wrap;padding:14px 24px 0;position:sticky;top:0;
+  background:var(--bg);z-index:10;border-bottom:1px solid var(--border);padding-bottom:10px}
+.tab{padding:6px 13px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;
+  border:1px solid var(--border2);color:var(--text2);background:var(--bg2);
+  transition:all .15s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.tab:hover{border-color:var(--purple2);color:var(--purple)}
+.tab.on{border-color:var(--purple2);color:var(--purple);background:var(--purple-bg)}
+
+.pn{display:none;padding:20px 24px 40px}.pn.on{display:block}
+.section{margin-bottom:24px}
+.sec-label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace;
+  padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:1000px){.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+
+/* SUMMARY CARDS */
+.sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.sum-card .count{font-size:28px;font-weight:600;font-family:'JetBrains Mono',monospace}
+.sum-card .label{font-size:11px;color:var(--text2)}
+.sum-card.green .count{color:var(--green)}
+.sum-card.blue .count{color:var(--blue)}
+.sum-card.purple .count{color:var(--purple)}
+.sum-card.amber .count{color:var(--amber)}
+.sum-card.teal .count{color:var(--teal)}
+
+/* SERVICE BLOCK */
+.svc{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-family:'JetBrains Mono',monospace}
+.svc-head{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.svc-name{font-size:13px;font-weight:500}
+.svc-file{font-size:9px;color:var(--text3);margin-top:2px}
+.svc-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green2)}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue2)}
+.badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple2)}
+.badge-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber2)}
+.badge-teal{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal2)}
+
+.test-list{padding:4px 0}
+.test-row{display:flex;align-items:flex-start;gap:10px;padding:5px 14px;border-bottom:1px solid var(--border)}
+.test-row:last-child{border-bottom:none}
+.test-row:hover{background:var(--bg3)}
+.dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.dot-green{background:var(--green)}
+.dot-amber{background:var(--amber)}
+.test-name{font-size:11px;color:var(--text);flex:1}
+.test-desc{font-size:10px;color:var(--text2);margin-top:1px}
+.test-tag{font-size:9px;padding:1px 6px;border-radius:3px;margin-top:3px;display:inline-block;white-space:nowrap}
+.tag-adr{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber2)}
+.tag-usppr{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple2)}
+.tag-happy{background:var(--green-bg);color:var(--green);border:1px solid var(--green2)}
+.tag-error{background:var(--red-bg);color:var(--red);border:1px solid #6B2020}
+.tag-perm{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue2)}
+
+.adr-ref{margin-top:4px;padding:10px 16px;background:var(--amber-bg);border:1px solid var(--amber2);border-radius:8px}
+.adr-ref-title{font-size:10px;font-weight:600;color:var(--amber);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+.adr-item{font-size:10px;color:var(--text2);line-height:1.8;font-family:'JetBrains Mono',monospace}
+.adr-item .adr-num{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>OdontoCore CRM — Cobertura de Testes Unitários</h1>
+  <div class="sub">src/test/java — JUnit 5 + Mockito (STRICT_STUBS)</div>
+  <span class="rev">v1.0 · 2026-06-02 · 51 testes · 6 suítes</span>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="show('overview')">Visão Geral</div>
+  <div class="tab" onclick="show('funnel')">Módulo Funnel</div>
+  <div class="tab" onclick="show('commercial')">Módulo Commercial</div>
+  <div class="tab" onclick="show('analytics')">Módulo Analytics</div>
+  <div class="tab" onclick="show('adrs')">Decisões (ADRs)</div>
+</div>
+
+<!-- ═══════════════════════════ OVERVIEW ═══════════════════════════ -->
+<div id="overview" class="pn on">
+
+  <div class="section">
+    <div class="sec-label">Resumo geral</div>
+    <div class="grid g3">
+      <div class="sum-card green">
+        <div class="count">51</div>
+        <div class="label">Testes passando</div>
+      </div>
+      <div class="sum-card blue">
+        <div class="count">6</div>
+        <div class="label">Suítes de teste</div>
+      </div>
+      <div class="sum-card amber">
+        <div class="count">0</div>
+        <div class="label">Falhas (unit)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">Suítes por módulo</div>
+    <div class="grid g2">
+
+      <div class="svc">
+        <div class="svc-head">
+          <div>
+            <div class="svc-name">LeadTicketServiceTest</div>
+            <div class="svc-file">modules/funnel/service/</div>
+          </div>
+          <span class="svc-badge badge-purple">14 testes</span>
+        </div>
+        <div class="test-list">
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create</div><div class="test-desc">Cria ticket com setor do usuário logado</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_customerNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus</div><div class="test-desc">NEGOTIATION → WIN com USER_COMMERCIAL</div><span class="test-tag tag-happy">happy path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_ticketNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_invalidTransition</div><div class="test-desc">NEW → WIN não permitido</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_setsAuditDates</div><div class="test-desc">closedAt (WIN) e pendingAt (PENDING)</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_toPostProcedure_success</div><div class="test-desc">WIN → POST_PROCEDURE, seta procedurePerformedAt e setor LEADS</div><span class="test-tag tag-usppr">US-PPR</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_fromPostProcedure_scheduledReturn_success</div><div class="test-desc">POST_PROCEDURE → SCHEDULED com data futura válida</div><span class="test-tag tag-usppr">US-PPR</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_fromPostProcedure_scheduledReturn_throwsIfNoDate</div><div class="test-desc">Lança IllegalStateException sem returnScheduledAt</div><span class="test-tag tag-usppr">US-PPR</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_fromPostProcedure_loss_success</div><div class="test-desc">POST_PROCEDURE → LOSS com lossReason</div><span class="test-tag tag-usppr">US-PPR</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">changeStatus_fromPostProcedure_loss_throwsIfNoReason</div><div class="test-desc">Lança IllegalStateException sem lossReason</div><span class="test-tag tag-usppr">US-PPR</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">findById_notFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">search_byUnknownCustomer_throwsNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">search_byUnknownAssignee_throwsNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+        </div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-head">
+          <div>
+            <div class="svc-name">CustomerServiceTest</div>
+            <div class="svc-file">modules/funnel/service/</div>
+          </div>
+          <span class="svc-badge badge-teal">9 testes</span>
+        </div>
+        <div class="test-list">
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_deveAbrirLeadTicketComSetoDoUsuarioLogado</div><div class="test-desc">Abre LeadTicket com setor do usuário logado</div><span class="test-tag tag-happy">happy path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_setorDoTicketRefleteSetorDoUsuario</div><div class="test-desc">ATTENDANT abre ticket em ATTENDANT</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_retornaResponseDTOCorreto</div><div class="test-desc">Retorna CustomerResponseDTO com campos corretos</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testFindByIdNotFound</div><div class="test-desc">Lança RuntimeException com mensagem "Customer not found"</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testFindByCpfSuccess</div><div class="test-desc">Busca por CPF retorna CustomerResponseDTO</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testUpdateCustomerSuccess</div><div class="test-desc">Atualiza nome e salva</div><span class="test-tag tag-happy">happy path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testUpdateCustomerDuplicateCPF</div><div class="test-desc">Bloqueia CPF já existente em outro customer</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testDeleteCustomerSuccess</div><div class="test-desc">Anonimiza PII — não chama deleteById</div><span class="test-tag tag-adr">ADR-006</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testDeleteCustomerNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-adr">ADR-006</span></div></div>
+        </div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-head">
+          <div>
+            <div class="svc-name">ContactLogServiceTest</div>
+            <div class="svc-file">modules/funnel/service/</div>
+          </div>
+          <span class="svc-badge badge-blue">5 testes</span>
+        </div>
+        <div class="test-list">
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create</div><div class="test-desc">Cria ContactLog imutável com sucesso</div><span class="test-tag tag-adr">ADR-003</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_shouldThrow_WhenNotPermitted</div><div class="test-desc">Lança AccessDeniedException</div><span class="test-tag tag-perm">permissão</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">search_byTicketId_success</div><div class="test-desc">Retorna Page&lt;ContactLogResponseDTO&gt; pelo ticketId</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">findById</div><div class="test-desc">Retorna ContactLogResponseDTO pelo id</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">findById_shouldThrow_WhenNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+        </div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-head">
+          <div>
+            <div class="svc-name">ConfigServiceTest</div>
+            <div class="svc-file">modules/commercial/service/</div>
+          </div>
+          <span class="svc-badge badge-amber">9 testes</span>
+        </div>
+        <div class="test-list">
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">setRecycleConfig_success</div><div class="test-desc">Salva config global de reciclo (sem sector)</div><span class="test-tag tag-adr">ADR-007</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">setRecycleConfig_accessDenied</div><div class="test-desc">Lança AccessDeniedException</div><span class="test-tag tag-perm">permissão</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">registerAdsInvestment_success</div><div class="test-desc">Registra AdsInvestment com canal e período</div><span class="test-tag tag-happy">happy path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getRecycle_success</div><div class="test-desc">Retorna config ativa mais recente</div><span class="test-tag tag-adr">ADR-007</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getRecycle_accessDenied</div><div class="test-desc">Lança AccessDeniedException</div><span class="test-tag tag-perm">permissão</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getBonusConfigs_success</div><div class="test-desc">Retorna lista de BonusConfig por setor</div><span class="test-tag tag-adr">ADR-007</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getBonusConfigs_empty</div><div class="test-desc">Retorna lista vazia sem config para o setor</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getAdsInvestments_success</div><div class="test-desc">Retorna lista por canal ordenada por periodo</div><span class="test-tag tag-adr">ADR-007</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getAdsInvestments_empty</div><div class="test-desc">Retorna lista vazia sem investimentos</div></div></div>
+        </div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-head">
+          <div>
+            <div class="svc-name">DealServiceTest</div>
+            <div class="svc-file">modules/commercial/service/</div>
+          </div>
+          <span class="svc-badge badge-green">10 testes</span>
+        </div>
+        <div class="test-list">
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_success</div><div class="test-desc">Calcula totalValue e move ticket → NEGOTIATION</div><span class="test-tag tag-happy">happy path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_ticketNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_noPermission</div><div class="test-desc">Lança AccessDeniedException via checkOrThrow</div><span class="test-tag tag-perm">permissão</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_invalidStatus</div><div class="test-desc">Lança IllegalStateException (status != IN_EVALUATION)</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">applyDiscount_success</div><div class="test-desc">finalValue = totalValue * (1 - pct/100) HALF_UP</div><span class="test-tag tag-happy">happy path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">applyDiscount_dealArchived</div><div class="test-desc">Lança IllegalStateException (deal arquivado)</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">applyDiscount_negativePct</div><div class="test-desc">Lança IllegalStateException (pct < 0)</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">closeDeal_success</div><div class="test-desc">Fecha deal, seta closedAt e move ticket → WIN</div><span class="test-tag tag-happy">happy path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">closeDeal_alreadyClosed</div><div class="test-desc">Lança IllegalStateException (closedAt != null)</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">closeDeal_archived</div><div class="test-desc">Lança IllegalStateException (arquivado)</div><span class="test-tag tag-error">error path</span></div></div>
+        </div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-head">
+          <div>
+            <div class="svc-name">AnalyticsServiceTest</div>
+            <div class="svc-file">modules/analytics/service/</div>
+          </div>
+          <span class="svc-badge badge-blue">4 testes</span>
+        </div>
+        <div class="test-list">
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getAdsRoi_userNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getAdsRoi_zeroInvestment_roiIsZero</div><div class="test-desc">roiMultiplier = 0 quando investimento = 0</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getCalculatedBonus_noConfig_returnsZero</div><div class="test-desc">BonusResultDTO.value = 0 sem BonusConfig</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getConversionByStage_correctPercentages</div><div class="test-desc">Percentuais de funil calculados corretamente</div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ FUNNEL ═══════════════════════════ -->
+<div id="funnel" class="pn">
+
+  <div class="section">
+    <div class="sec-label">LeadTicketService — 14 testes</div>
+    <div class="svc">
+      <div class="svc-head">
+        <div>
+          <div class="svc-name">LeadTicketServiceTest</div>
+          <div class="svc-file">modules/funnel/service/LeadTicketServiceTest.java</div>
+        </div>
+        <span class="svc-badge badge-purple">14 testes</span>
+      </div>
+      <div class="test-list">
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create</div>
+          <div class="test-desc">Cria ticket com status NEW, setor do usuário e customerId corretos. Verifica ordem: customerRepository.save → leadTicketRepository.save.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_customerNotFound</div>
+          <div class="test-desc">Lança ResourceNotFoundException quando customerId não existe no repositório.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus</div>
+          <div class="test-desc">NEGOTIATION → WIN com role USER_COMMERCIAL. Verifica save do ticket, save do ContactLog e retorno do mapper.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_ticketNotFound</div>
+          <div class="test-desc">Lança ResourceNotFoundException quando ticketId não existe.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_invalidTransition</div>
+          <div class="test-desc">NEW → WIN não está em ALLOWED_TRANSITIONS. Lança IllegalStateException sem salvar.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_setsAuditDates</div>
+          <div class="test-desc">Verifica que closedAt é setado na transição WIN, e pendingAt na transição PENDING.</div>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_toPostProcedure_success</div>
+          <div class="test-desc">WIN → POST_PROCEDURE: seta procedurePerformedAt e muda currentSector para LEADS. Role ADM_LEADS.</div>
+          <span class="test-tag tag-usppr">US-PPR</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_fromPostProcedure_scheduledReturn_success</div>
+          <div class="test-desc">POST_PROCEDURE → SCHEDULED com returnScheduledAt futuro. Seta EVALUATOR e scheduledAt. Requer CPF válido no customer.</div>
+          <span class="test-tag tag-usppr">US-PPR</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_fromPostProcedure_scheduledReturn_throwsIfNoDate</div>
+          <div class="test-desc">POST_PROCEDURE → SCHEDULED sem returnScheduledAt. Lança IllegalStateException em applyScheduledReturn.</div>
+          <span class="test-tag tag-usppr">US-PPR</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_fromPostProcedure_loss_success</div>
+          <div class="test-desc">POST_PROCEDURE → LOSS com lossReason. Seta closedAt. Role ADM_LEADS (em TRANSITION_ROLES.LOSS).</div>
+          <span class="test-tag tag-usppr">US-PPR</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">changeStatus_fromPostProcedure_loss_throwsIfNoReason</div>
+          <div class="test-desc">POST_PROCEDURE → LOSS sem lossReason. Lança IllegalStateException em applyLoss.</div>
+          <span class="test-tag tag-usppr">US-PPR</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">findById_notFound</div>
+          <div class="test-desc">Lança ResourceNotFoundException quando ticketId não existe.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">search_byUnknownCustomer_throwsNotFound</div>
+          <div class="test-desc">search(customerId, null, null) com customer inexistente. Lança ResourceNotFoundException sem chamar findByCustomerId.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">search_byUnknownAssignee_throwsNotFound</div>
+          <div class="test-desc">search(null, null, userId) com user inexistente. Lança ResourceNotFoundException sem chamar findByAssignedTo.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">CustomerService — 9 testes</div>
+    <div class="svc">
+      <div class="svc-head">
+        <div>
+          <div class="svc-name">CustomerServiceTest</div>
+          <div class="svc-file">modules/funnel/service/CustomerServiceTest.java</div>
+        </div>
+        <span class="svc-badge badge-teal">9 testes</span>
+      </div>
+      <div class="test-list">
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_deveAbrirLeadTicketComSetoDoUsuarioLogado</div>
+          <div class="test-desc">Cria customer + abre LeadTicket automaticamente com setor do usuário logado. Verifica ArgumentCaptor no ticket.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_setorDoTicketRefleteSetorDoUsuario</div>
+          <div class="test-desc">Usuário com setor ATTENDANT → ticket.currentSector = ATTENDANT.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_retornaResponseDTOCorreto</div>
+          <div class="test-desc">Verifica name, cpf e createdBy no CustomerResponseDTO retornado.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">testFindByIdNotFound</div>
+          <div class="test-desc">Lança RuntimeException com mensagem "Customer not found".</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">testFindByCpfSuccess</div>
+          <div class="test-desc">findByCpf retorna CustomerResponseDTO com CPF correto.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">testUpdateCustomerSuccess</div>
+          <div class="test-desc">Atualiza name e chama customerRepository.save.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">testUpdateCustomerDuplicateCPF</div>
+          <div class="test-desc">Bloqueia atualização quando novo CPF já pertence a outro customer. Não salva.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">testDeleteCustomerSuccess</div>
+          <div class="test-desc">anonymize() preenche campos com "CLIENTE ANONIMIZADO", isAnonymized = true. Nunca chama deleteById.</div>
+          <span class="test-tag tag-adr">ADR-006</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">testDeleteCustomerNotFound</div>
+          <div class="test-desc">Lança ResourceNotFoundException. Nunca salva.</div>
+          <span class="test-tag tag-adr">ADR-006</span>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">ContactLogService — 5 testes</div>
+    <div class="svc">
+      <div class="svc-head">
+        <div>
+          <div class="svc-name">ContactLogServiceTest</div>
+          <div class="svc-file">modules/funnel/service/ContactLogServiceTest.java</div>
+        </div>
+        <span class="svc-badge badge-blue">5 testes</span>
+      </div>
+      <div class="test-list">
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create</div>
+          <div class="test-desc">Cria ContactLog com ticketId, userId, channel, note e statusBefore. ContactLog é imutável — sem update/delete.</div>
+          <span class="test-tag tag-adr">ADR-003</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_shouldThrow_WhenNotPermitted</div>
+          <div class="test-desc">checkOrThrow lança AccessDeniedException. Nunca salva.</div>
+          <span class="test-tag tag-perm">permissão</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">search_byTicketId_success</div>
+          <div class="test-desc">search(ticketId, Pageable) retorna Page com 1 elemento. Usa findByTicketId(UUID, Pageable).</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">findById</div>
+          <div class="test-desc">Retorna ContactLogResponseDTO. Verifica chamadas ao repository e mapper.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">findById_shouldThrow_WhenNotFound</div>
+          <div class="test-desc">Optional.empty → ResourceNotFoundException. Nunca chama toResponseDTO.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════ COMMERCIAL ═══════════════════════════ -->
+<div id="commercial" class="pn">
+
+  <div class="section">
+    <div class="sec-label">DealService — 10 testes</div>
+    <div class="svc">
+      <div class="svc-head">
+        <div>
+          <div class="svc-name">DealServiceTest</div>
+          <div class="svc-file">modules/commercial/service/DealServiceTest.java</div>
+        </div>
+        <span class="svc-badge badge-green">10 testes</span>
+      </div>
+      <div class="test-list">
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_success</div>
+          <div class="test-desc">totalValue = Σ (tableValue * quantity). Ticket → NEGOTIATION, currentSector → COMMERCIAL.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_ticketNotFound</div>
+          <div class="test-desc">Lança ResourceNotFoundException. Nunca salva o deal.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_noPermission</div>
+          <div class="test-desc">permissionService.checkOrThrow lança AccessDeniedException. Nunca salva.</div>
+          <span class="test-tag tag-perm">permissão</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">create_invalidStatus</div>
+          <div class="test-desc">ticket.status != IN_EVALUATION → IllegalStateException.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">applyDiscount_success</div>
+          <div class="test-desc">finalValue = 1000 * (1 - 10/100) = 900.00. Arredondamento HALF_UP.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">applyDiscount_dealArchived</div>
+          <div class="test-desc">deal.archived = true → IllegalStateException antes de calcular desconto.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">applyDiscount_negativePct</div>
+          <div class="test-desc">discountPct &lt; 0 → IllegalStateException.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">closeDeal_success</div>
+          <div class="test-desc">Seta deal.closedAt. Ticket → WIN com ticket.closedAt não nulo.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">closeDeal_alreadyClosed</div>
+          <div class="test-desc">deal.closedAt != null → IllegalStateException.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">closeDeal_archived</div>
+          <div class="test-desc">deal.archived = true → IllegalStateException.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">ConfigService — 9 testes</div>
+    <div class="svc">
+      <div class="svc-head">
+        <div>
+          <div class="svc-name">ConfigServiceTest</div>
+          <div class="svc-file">modules/commercial/service/ConfigServiceTest.java</div>
+        </div>
+        <span class="svc-badge badge-amber">9 testes</span>
+      </div>
+      <div class="test-list">
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">setRecycleConfig_success</div>
+          <div class="test-desc">Salva RecycleConfig global (sem sector). Apenas 1 save — não desativa config anterior.</div>
+          <span class="test-tag tag-adr">ADR-007</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">setRecycleConfig_accessDenied</div>
+          <div class="test-desc">checkOrThrow lança AccessDeniedException. Nunca salva.</div>
+          <span class="test-tag tag-perm">permissão</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">registerAdsInvestment_success</div>
+          <div class="test-desc">Salva AdsInvestment com canal META e amount correto.</div>
+          <span class="test-tag tag-happy">happy path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getRecycle_success</div>
+          <div class="test-desc">findFirstByActiveTrueOrderByCreatedAtDesc → RecycleConfigResponseDTO com afterDays e active corretos.</div>
+          <span class="test-tag tag-adr">ADR-007</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getRecycle_accessDenied</div>
+          <div class="test-desc">checkOrThrow lança AccessDeniedException. Nunca consulta o repositório.</div>
+          <span class="test-tag tag-perm">permissão</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getBonusConfigs_success</div>
+          <div class="test-desc">findBySector → stream → toResponseDTO → List&lt;BonusConfigResponseDTO&gt; com setor correto.</div>
+          <span class="test-tag tag-adr">ADR-007</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getBonusConfigs_empty</div>
+          <div class="test-desc">Setor sem config → lista vazia (não lança exceção).</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getAdsInvestments_success</div>
+          <div class="test-desc">findByChannelOrderByPeriodStartDesc → List&lt;AdsInvestmentResponseDTO&gt; com canal correto.</div>
+          <span class="test-tag tag-adr">ADR-007</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getAdsInvestments_empty</div>
+          <div class="test-desc">Canal sem investimentos → lista vazia (não lança exceção).</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════ ANALYTICS ═══════════════════════════ -->
+<div id="analytics" class="pn">
+
+  <div class="section">
+    <div class="sec-label">AnalyticsService — 4 testes</div>
+    <div class="svc">
+      <div class="svc-head">
+        <div>
+          <div class="svc-name">AnalyticsServiceTest</div>
+          <div class="svc-file">modules/analytics/service/AnalyticsServiceTest.java</div>
+        </div>
+        <span class="svc-badge badge-blue">4 testes</span>
+      </div>
+      <div class="test-list">
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getAdsRoi_userNotFound</div>
+          <div class="test-desc">userRepository.findById vazio → ResourceNotFoundException antes de calcular ROI.</div>
+          <span class="test-tag tag-error">error path</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getAdsRoi_zeroInvestment_roiIsZero</div>
+          <div class="test-desc">sumInvestmentByChannelAndPeriod = 0 → AdsRoiResultDTO.roiMultiplier = 0, totalRevenue = 0.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getCalculatedBonus_noConfig_returnsZero</div>
+          <div class="test-desc">Sem BonusConfig para o role/sector/period → BonusResultDTO.value = BigDecimal.ZERO.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getConversionByStage_correctPercentages</div>
+          <div class="test-desc">4 tickets (2 NEW, 1 NEGOTIATION, 1 WIN) → captureCount=4, scheduledCount=2, closedCount=1. leadsConversion=50%, evalConversion=100%, commercialConversion=50%.</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════ ADRs ═══════════════════════════ -->
+<div id="adrs" class="pn">
+
+  <div class="section">
+    <div class="sec-label">Decisões arquiteturais refletidas nos testes</div>
+
+    <div class="adr-ref">
+      <div class="adr-ref-title">ADRs com cobertura de teste</div>
+      <div class="adr-item"><span class="adr-num">ADR-003</span> — ContactLog imutável: testes de DELETE foram removidos. Suíte cobre apenas create, findById e search. Sem update/delete na interface.</div>
+      <div class="adr-item"><span class="adr-num">ADR-004</span> — checkOrThrow em métodos críticos: todos os testes de permissão usam doThrow + checkOrThrow, não canAccess(). DealServiceTest, ConfigServiceTest e ContactLogServiceTest cobrem o caminho de acesso negado.</div>
+      <div class="adr-item"><span class="adr-num">ADR-006</span> — Customer PII anonimizado: testDeleteCustomerSuccess verifica que anonymize() preenche "CLIENTE ANONIMIZADO" e isAnonymized=true, e que deleteById nunca é chamado.</div>
+      <div class="adr-item"><span class="adr-num">ADR-007</span> — RecycleConfig global (sector removido do DTO): setRecycleConfig_success usa RecycleConfigRequestDTO(afterDays) sem sector. Adicionados 6 testes GET para getRecycle, getBonusConfigs e getAdsInvestments.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-label">User Story PPR — cobertura</div>
+    <div class="svc">
+      <div class="svc-head">
+        <div>
+          <div class="svc-name">Fluxo POST_PROCEDURE (US-PPR)</div>
+          <div class="svc-file">LeadTicketServiceTest — 5 testes dedicados</div>
+        </div>
+        <span class="svc-badge badge-purple">5 testes</span>
+      </div>
+      <div class="test-list">
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">WIN → POST_PROCEDURE</div>
+          <div class="test-desc">applyPostProcedure: seta procedurePerformedAt, muda currentSector para LEADS. Role necessário: USER_ATTENDANT / USER_LEADS / ADM_LEADS / ADM_SYSTEM.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">POST_PROCEDURE → SCHEDULED (sucesso)</div>
+          <div class="test-desc">applyScheduledReturn: returnScheduledAt futuro + CPF válido no customer. Seta EVALUATOR e scheduledAt.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">POST_PROCEDURE → SCHEDULED (sem data)</div>
+          <div class="test-desc">returnScheduledAt = null → IllegalStateException em applyScheduledReturn.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">POST_PROCEDURE → LOSS (sucesso)</div>
+          <div class="test-desc">applyLoss com lossReason válido. Seta closedAt. Role: USER_LEADS / ADM_LEADS / ADM_SYSTEM.</div>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">POST_PROCEDURE → LOSS (sem motivo)</div>
+          <div class="test-desc">lossReason = null → IllegalStateException em applyLoss. Nunca salva.</div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.pn').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  event.target.classList.add('on');
+}
+</script>
+</body>
+</html>
