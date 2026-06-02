@@ -13,8 +13,7 @@ public record UserPerformanceResultDTO(
         Long totalConverted,
         BigDecimal conversionPct,
         BigDecimal avgTicketValue,
+        BigDecimal expectedCash,
         BigDecimal calculatedBonus
-
-
 ) {
 }

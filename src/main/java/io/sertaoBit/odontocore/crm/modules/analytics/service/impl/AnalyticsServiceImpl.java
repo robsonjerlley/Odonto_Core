@@ -245,6 +245,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         long totalAssigned;
         long totalConverted;
         BigDecimal avgTicketValue = ZERO;
+        BigDecimal expectedCash = ZERO;
 
         var sector = targetUser.getSector();
         if (sector == LEADS || sector == ATTENDANT) {
@@ -268,6 +269,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                         .map(d -> d.getFinalValue() != null ? d.getFinalValue() : ZERO)
                         .reduce(ZERO, BigDecimal::add)
                         .divide(valueOf(closedDeals.size()), 2, RoundingMode.HALF_UP);
+                expectedCash = closedDeals.stream()
+                        .filter(d -> d.getFinalValue() != null && d.getPaymentMethod() != null)
+                        .map(d -> d.getFinalValue().multiply(d.getPaymentMethod().getConversionFactor()))
+                        .reduce(ZERO, BigDecimal::add)
+                        .setScale(2, RoundingMode.HALF_UP);
             }
         }
 
@@ -286,6 +292,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 totalConverted,
                 conversionPct,
                 avgTicketValue,
+                expectedCash,
                 calculatedBonus
         );
     }
@@ -333,7 +340,15 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .map(u -> getUserPerformance(u.getId(), period, userId))
                 .toList();
 
-        return new GlobalDashBoardResultDTO(period, adsRoiList, stageConversion, sectorDropOff, topPerformers);
+        var from = period.from().atStartOfDay();
+        var to = period.to().atTime(23, 59, 59);
+        BigDecimal totalExpectedCash = dealRepository.findByClosedAtBetweenAndArchivedFalse(from, to).stream()
+                .filter(d -> d.getFinalValue() != null && d.getPaymentMethod() != null)
+                .map(d -> d.getFinalValue().multiply(d.getPaymentMethod().getConversionFactor()))
+                .reduce(ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        return new GlobalDashBoardResultDTO(period, adsRoiList, stageConversion, sectorDropOff, topPerformers, totalExpectedCash);
     }
 
     @Override

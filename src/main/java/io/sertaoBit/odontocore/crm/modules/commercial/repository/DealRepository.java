@@ -24,4 +24,6 @@ public interface DealRepository extends JpaRepository<Deal, UUID> {
 
     List<Deal> findByCreatedByAndCreatedAtBetween(UUID createdBy, LocalDateTime from, LocalDateTime to);
 
+    List<Deal> findByClosedAtBetweenAndArchivedFalse(LocalDateTime from, LocalDateTime to);
+
 }
