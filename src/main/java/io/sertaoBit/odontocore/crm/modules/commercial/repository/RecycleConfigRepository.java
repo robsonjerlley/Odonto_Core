@@ -15,4 +15,6 @@ public interface RecycleConfigRepository extends JpaRepository<RecycleConfig, UU
 
     Optional<RecycleConfig> findBySectorIsNullAndActiveTrue();
 
+    RecycleConfig findFirstByActiveTrueOrderByCreatedAtDesc();
+
 }

@@ -6,6 +6,8 @@ import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.adsInvestment.AdsInvestmentRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.recycleConfig.RecycleConfigRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.mapper.AdsInvestmentMapper;
+import io.sertaoBit.odontocore.crm.modules.commercial.mapper.BonusConfigMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.AdsInvestment;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.RecycleConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.AdsInvestmentRepository;
@@ -40,13 +42,17 @@ public class ConfigServiceTest {
     @Mock private BonusConfigRepository bonusRepository;
     @Mock private AdsInvestmentRepository adsInvestmentRepository;
     @Mock private PermissionService permissionService;
+    @Mock private BonusConfigMapper  bonusConfigMapper;
+    @Mock private AdsInvestmentMapper adsInvestmentMapper;
     @Mock private SecurityUtils securityUtils;
 
     @BeforeEach
     void setUp() {
         configService = new ConfigServiceImpl(
                 configRepository, bonusRepository,
-                adsInvestmentRepository, permissionService, securityUtils);
+                adsInvestmentRepository, permissionService, securityUtils,
+                bonusConfigMapper, adsInvestmentMapper
+        );
     }
 
     private User buildUser() {

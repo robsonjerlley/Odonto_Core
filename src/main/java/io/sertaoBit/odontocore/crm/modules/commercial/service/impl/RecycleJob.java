@@ -1,6 +1,5 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
-import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.RecycleConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;
@@ -17,6 +16,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+
+import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 
 @Component
 public class RecycleJob {
@@ -43,7 +44,7 @@ public class RecycleJob {
     @Scheduled(cron = "0 0 2 * * *")
     public void runNightly() {
         List<LeadTicket> leadTickets = leadTicketRepository.findByStatusAndPendingAtBefore(
-                TicketStatus.PENDING, LocalDateTime.now()
+                PENDING, LocalDateTime.now()
         );
 
         for (LeadTicket leadTicket : leadTickets) {
@@ -59,7 +60,7 @@ public class RecycleJob {
             var days = ChronoUnit.DAYS.between(leadTicket.getPendingAt(), LocalDateTime.now());
 
             if (days >= recycleConfig.get().getAfterDays()) {
-               self.processTicket(leadTicket);
+                self.processTicket(leadTicket);
             }
         }
 
@@ -75,13 +76,13 @@ public class RecycleJob {
             dealRepository.save(dealOpt.get());
         }
 
-        ticket.setStatus(TicketStatus.RECYCLED);
+        ticket.setStatus(RECYCLED);
         ticket.setRecycledAt(LocalDateTime.now());
         leadTicketRepository.save(ticket);
 
         LeadTicket leadTicket = new LeadTicket();
         leadTicket.setCustomerId(ticket.getCustomerId());
-        leadTicket.setStatus(TicketStatus.NEW);
+        leadTicket.setStatus(NEW);
         leadTicket.setPreviousTicketId(ticket.getId());
         leadTicketRepository.save(leadTicket);
 

@@ -29,4 +29,6 @@ public interface AdsInvestmentRepository extends JpaRepository<AdsInvestment, UU
     );
 
 
+    List<AdsInvestment> findByChannelOrderByPeriodStartDesc(AdsChannel channel);
+
 }

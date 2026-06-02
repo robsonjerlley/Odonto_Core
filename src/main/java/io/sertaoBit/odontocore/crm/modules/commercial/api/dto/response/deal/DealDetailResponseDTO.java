@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response;
+package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal;
 
 import java.util.List;
 

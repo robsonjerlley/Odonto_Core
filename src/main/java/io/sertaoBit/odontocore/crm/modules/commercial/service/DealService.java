@@ -3,8 +3,8 @@ package io.sertaoBit.odontocore.crm.modules.commercial.service;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealDetailResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.DealResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal.DealDetailResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 
 import java.util.Optional;

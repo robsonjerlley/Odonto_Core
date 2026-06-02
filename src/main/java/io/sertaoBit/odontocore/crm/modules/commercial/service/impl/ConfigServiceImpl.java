@@ -3,10 +3,15 @@ package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.Action;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
-import io.sertaoBit.odontocore.crm.core.enums.Resource;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.adsInvestment.AdsInvestmentRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.bonusConfig.BonusConfigRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.recycleConfig.RecycleConfigRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.adsInvestment.AdsInvestmentResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.bonusConfig.BonusConfigResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.recycleConfig.RecycleConfigResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.mapper.AdsInvestmentMapper;
+import io.sertaoBit.odontocore.crm.modules.commercial.mapper.BonusConfigMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.AdsInvestment;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.BonusConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.RecycleConfig;
@@ -14,12 +19,17 @@ import io.sertaoBit.odontocore.crm.modules.commercial.repository.AdsInvestmentRe
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.BonusConfigRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.RecycleConfigRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.ConfigService;
+import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
+
+import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.CONFIG;
 
 @Service
 public class ConfigServiceImpl implements ConfigService {
@@ -27,13 +37,25 @@ public class ConfigServiceImpl implements ConfigService {
     private final RecycleConfigRepository configRepository;
     private final BonusConfigRepository bonusRepository;
     private final AdsInvestmentRepository adsInvestmentRepository;
+    private final BonusConfigMapper bonusConfigMapper;
+    private final AdsInvestmentMapper adsInvestmentMapper;
     private final PermissionService permissionService;
     private final SecurityUtils securityUtils;
 
-    public ConfigServiceImpl(RecycleConfigRepository configRepository, BonusConfigRepository bonusRepository, AdsInvestmentRepository adsInvestmentRepository, PermissionService permissionService, SecurityUtils securityUtils) {
+    public ConfigServiceImpl(
+            RecycleConfigRepository configRepository,
+            BonusConfigRepository bonusRepository,
+            AdsInvestmentRepository adsInvestmentRepository,
+            BonusConfigMapper bonusConfigMapper,
+            AdsInvestmentMapper adsInvestmentMapper,
+            PermissionService permissionService,
+            SecurityUtils securityUtils
+    ) {
         this.configRepository = configRepository;
         this.bonusRepository = bonusRepository;
         this.adsInvestmentRepository = adsInvestmentRepository;
+        this.bonusConfigMapper = bonusConfigMapper;
+        this.adsInvestmentMapper = adsInvestmentMapper;
         this.permissionService = permissionService;
         this.securityUtils = securityUtils;
     }
@@ -45,19 +67,15 @@ public class ConfigServiceImpl implements ConfigService {
 
         var currentUser = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
-                currentUser, Resource.CONFIG,
-                Action.CONFIGURE, dto.sector(),
+                currentUser, CONFIG,
+                Action.CONFIGURE, null,
                 null
         );
 
         RecycleConfig recycleConfig = RecycleConfig.builder()
-                .sector(dto.sector())
                 .afterDays(dto.afterDays())
                 .configuredBy(currentUser.getId())
                 .build();
-
-        configRepository.findBySectorAndActiveTrue(dto.sector())
-                .ifPresent(old -> { old.setActive(false); configRepository.save(old); });
 
         return configRepository.save(recycleConfig);
     }
@@ -67,7 +85,7 @@ public class ConfigServiceImpl implements ConfigService {
     public BonusConfig setBonusConfig(BonusConfigRequestDTO dto) {
         var currentUser = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
-                currentUser, Resource.CONFIG,
+                currentUser, CONFIG,
                 Action.CONFIGURE, dto.sector(),
                 null
         );
@@ -90,7 +108,7 @@ public class ConfigServiceImpl implements ConfigService {
     public AdsInvestment registerAdsInvestment(AdsInvestmentRequestDTO dto) {
         var currentUser = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
-                currentUser, Resource.CONFIG,
+                currentUser, CONFIG,
                 Action.CONFIGURE, null,
                 null
         );
@@ -111,8 +129,66 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional(readOnly = true)
     public BigDecimal sumInvestmentByChannelAndPeriod(AdsChannel channel, DataRangeDTO period) {
 
-        return  adsInvestmentRepository.sumAmountByChannelAndPeriod(channel,period.from(),period.to());
+        return adsInvestmentRepository.sumAmountByChannelAndPeriod(channel, period.from(), period.to());
 
 
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RecycleConfigResponseDTO getRecycle() {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CONFIG,
+                READ,
+                null,
+                null
+        );
+
+        var recycle = configRepository.findFirstByActiveTrueOrderByCreatedAtDesc();
+
+        return new RecycleConfigResponseDTO(
+                recycle.getId(),
+                recycle.getAfterDays(),
+                recycle.isActive(),
+                recycle.getCreatedAt()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BonusConfigResponseDTO> getBonusConfigs(Sector sector) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CONFIG,
+                READ,
+                user.getSector(),
+                user.getId()
+        );
+
+
+        return bonusRepository.findBySector(sector).stream()
+                .map(bonusConfigMapper::toResponseDTO)
+                .toList();
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdsInvestmentResponseDTO> getAdsInvestments(AdsChannel channel) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                CONFIG,
+                READ,
+                null,
+                null
+        );
+
+        return adsInvestmentRepository.findByChannelOrderByPeriodStartDesc(channel).stream()
+                .map(adsInvestmentMapper::toResponseDTO)
+                .toList();
     }
 }

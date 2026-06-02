@@ -17,4 +17,6 @@ public interface BonusConfigRepository extends JpaRepository<BonusConfig, UUID> 
 
     List<BonusConfig> findByRoleAndSector(Role role, Sector sector);
 
+    List<BonusConfig> findBySector(Sector sector);
+
 }
