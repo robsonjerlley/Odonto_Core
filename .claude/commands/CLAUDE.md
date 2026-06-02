@@ -98,6 +98,7 @@ modules/
 | `CustomerSource` | ADS_PAID, ORGANIC, INDICATION |
 | `AdsChannel` | GOOGLE, META, INSTAGRAM, TIKTOK, OUTER |
 | `ContactChannel` | ORGANIC, REFERRAL, FACEBOOK, INSTAGRAM, WHATSAPP, PHONE_CALL, WEBSITE_FROM, OTHER |
+| `PaymentMethod` | PIX(1.00), CASH(1.00), DEBIT_CARD(0.98), CREDIT_CARD(0.97), INSTALLMENT(0.85), DENTAL_INSURANCE(0.90) — cada valor carrega `conversionFactor` (BigDecimal) para cálculo de `expectedCash` em analytics |
 | `Resource` | CUSTOMER, USER, TICKET, CONTACT_LOG, DEAL, ANALYTICS, CONFIG |
 | `Action` | CREATE, READ, UPDATE, CLOSE, RECYCLE, CONFIGURE, DELETE |
 | `PermissionScope` | GLOBAL, SECTOR, OWN |
@@ -184,7 +185,7 @@ Transição inválida → `IllegalStateException` → HTTP 422
 ## Módulo commercial
 
 ### Entidades (`crm_db`)
-- **Deal**: id, ticketId, createdBySector(sempre AVALIACAO), createdBy(UUID), procedures(JSON → List\<DealProcedure\>), totalValue, discountPct=0, discountApprovedBy?, finalValue, paymentMethod?, closedBy?, closedAt?, archived=false, createdAt, updatedAt
+- **Deal**: id, ticketId, createdBySector(sempre AVALIACAO), createdBy(UUID), procedures(JSON → List\<DealProcedure\>), totalValue, discountPct=0, discountApprovedBy?, finalValue, paymentMethod?(PaymentMethod enum), closedBy?, closedAt?, archived=false, createdAt, updatedAt
 - **DealProcedure** (record, JSON em Deal): name, code?, tableValue, quantity=1, note?
 - **DealHistory**: id, dealId, changedBy(UUID), changedBySector, fieldChanged, valueBefore(JSON), valueAfter(JSON), occurredAt — **imutável**
 - **AdsInvestment**: id, channel, campaign?, amount, periodStart, periodEnd, registeredBy(UUID), createdAt
