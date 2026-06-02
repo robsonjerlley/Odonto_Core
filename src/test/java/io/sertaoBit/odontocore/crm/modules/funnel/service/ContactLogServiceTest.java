@@ -1,7 +1,8 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
-
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
+import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
@@ -18,9 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +33,7 @@ import static io.sertaoBit.odontocore.crm.core.enums.ContactChannel.FACEBOOK;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.IN_CONTACT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,20 +42,11 @@ class ContactLogServiceTest {
 
     private ContactLogService contactLogService;
 
-    @Mock
-    private ContactLogRepository contactLogRepository;
-
-    @Mock
-    private ContactLogMapper contactLogMapper;
-
-    @Mock
-    private LeadTicketRepository leadTicketRepository;
-
-    @Mock
-    private PermissionService permissionService;
-
-    @Mock
-    private SecurityUtils securityUtils;
+    @Mock private ContactLogRepository contactLogRepository;
+    @Mock private ContactLogMapper contactLogMapper;
+    @Mock private LeadTicketRepository leadTicketRepository;
+    @Mock private PermissionService permissionService;
+    @Mock private SecurityUtils securityUtils;
 
     @BeforeEach
     void setUp() {
@@ -65,12 +59,13 @@ class ContactLogServiceTest {
         );
     }
 
+    // ========== CREATE ==========
+
     @Test
-    @DisplayName("Deve cria um contactLog com sucesso")
+    @DisplayName("Deve criar um contactLog com sucesso")
     void create() {
-        //Arrange
         UUID userId = UUID.randomUUID();
-        User user = User.builder().id(userId).build();
+        User user = User.builder().id(userId).sector(Sector.LEADS).build();
         when(securityUtils.getCurrentUser()).thenReturn(user);
 
         UUID ticketId = UUID.randomUUID();
@@ -127,18 +122,13 @@ class ContactLogServiceTest {
         verify(contactLogMapper, times(1)).toResponseDTO(contactLog);
     }
 
-
     @Test
     @DisplayName("Deve lançar AccessDeniedException quando o usuário não tem permissão")
     void create_shouldThrow_WhenNotPermitted() {
-        //Arrange
-        when(securityUtils.getCurrentUser()).thenReturn(new User()
-
-        );
+        when(securityUtils.getCurrentUser()).thenReturn(new User());
 
         doThrow(new AccessDeniedException("Access denied"))
-                .when(permissionService).checkOrThrow(any(),any(),any(),any(),any());
-
+                .when(permissionService).checkOrThrow(any(), any(), any(), any(), any());
 
         ContactLogCreateRequestDTO dto = new ContactLogCreateRequestDTO(
                 UUID.randomUUID(),
@@ -148,17 +138,18 @@ class ContactLogServiceTest {
 
         assertThrows(AccessDeniedException.class, () -> contactLogService.create(dto));
 
-        verify(contactLogRepository,never()).save(any());
-
+        verify(contactLogRepository, never()).save(any());
     }
 
+    // ========== SEARCH (ADR-003 — findByTicketId virou search com Pageable) ==========
 
     @Test
-    @DisplayName("Deve retornar uma lista de contactLogs pelo Id com sucesso")
-    void findByTicketId(){
-        //Arrange
+    @DisplayName("Deve retornar página de contactLogs pelo ticketId com sucesso")
+    void search_byTicketId_success() {
         UUID ticketId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
+        User user = User.builder().id(userId).sector(Sector.LEADS).build();
+        when(securityUtils.getCurrentUser()).thenReturn(user);
 
         ContactLog contactLog = ContactLog.builder()
                 .id(UUID.randomUUID())
@@ -183,28 +174,30 @@ class ContactLogServiceTest {
                 null
         );
 
-        when(contactLogRepository.findByTicketId(ticketId)).thenReturn(List.of(contactLog));
+        Page<ContactLog> page = new PageImpl<>(List.of(contactLog));
+        when(contactLogRepository.findByTicketId(eq(ticketId), any(Pageable.class))).thenReturn(page);
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(expectedDTO);
 
-
-        List<ContactLogResponseDTO> result = contactLogService.findByTicketId(ticketId);
+        Page<ContactLogResponseDTO> result = contactLogService.search(ticketId, Pageable.unpaged());
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(ticketId, result.get(0).ticketId());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(ticketId, result.getContent().get(0).ticketId());
 
-        verify(contactLogRepository, times(1)).findByTicketId(ticketId);
+        verify(contactLogRepository, times(1)).findByTicketId(eq(ticketId), any(Pageable.class));
         verify(contactLogMapper, times(1)).toResponseDTO(contactLog);
-
     }
 
+    // ========== FIND BY ID ==========
 
     @Test
     @DisplayName("Deve retornar contactLog pelo Id com sucesso")
-    void findById(){
-
+    void findById() {
         UUID ticketId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
+        User user = User.builder().id(userId).sector(Sector.LEADS).build();
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+
         ContactLog contactLog = ContactLog.builder()
                 .id(UUID.randomUUID())
                 .ticketId(ticketId)
@@ -227,22 +220,18 @@ class ContactLogServiceTest {
                 contactLog.getOccurredAt(),
                 null
         );
-
 
         when(contactLogRepository.findById(contactLog.getId())).thenReturn(Optional.of(contactLog));
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(expectedDTO);
 
-
-        ContactLogResponseDTO result =  contactLogService.findById(contactLog.getId());
+        ContactLogResponseDTO result = contactLogService.findById(contactLog.getId());
 
         assertNotNull(result);
         assertEquals(contactLog.getId(), result.id());
 
         verify(contactLogRepository, times(1)).findById(contactLog.getId());
         verify(contactLogMapper, times(1)).toResponseDTO(contactLog);
-
     }
-
 
     @Test
     @DisplayName("Deve lançar ResourceNotFoundException quando contactLog não encontrado por Id")
@@ -256,33 +245,4 @@ class ContactLogServiceTest {
         verify(contactLogRepository, times(1)).findById(id);
         verify(contactLogMapper, never()).toResponseDTO(any());
     }
-
-
-    @Test
-    @DisplayName("Deve deletar contactLog com sucesso")
-    void delete() {
-        UUID id = UUID.randomUUID();
-
-        when(contactLogRepository.existsById(id)).thenReturn(true);
-
-        contactLogService.delete(id);
-
-        verify(contactLogRepository, times(1)).existsById(id);
-        verify(contactLogRepository, times(1)).deleteById(id);
-    }
-
-
-    @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao deletar contactLog inexistente")
-    void delete_shouldThrow_WhenNotFound() {
-        UUID id = UUID.randomUUID();
-
-        when(contactLogRepository.existsById(id)).thenReturn(false);
-
-        assertThrows(ResourceNotFoundException.class, () -> contactLogService.delete(id));
-
-        verify(contactLogRepository, times(1)).existsById(id);
-        verify(contactLogRepository, never()).deleteById(any());
-    }
-
 }

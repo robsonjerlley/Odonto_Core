@@ -6,9 +6,13 @@ import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.adsInvestment.AdsInvestmentRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.recycleConfig.RecycleConfigRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.adsInvestment.AdsInvestmentResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.bonusConfig.BonusConfigResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.recycleConfig.RecycleConfigResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.mapper.AdsInvestmentMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.mapper.BonusConfigMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.AdsInvestment;
+import io.sertaoBit.odontocore.crm.modules.commercial.model.BonusConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.RecycleConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.AdsInvestmentRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.BonusConfigRepository;
@@ -26,7 +30,8 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,17 +46,17 @@ public class ConfigServiceTest {
     @Mock private RecycleConfigRepository configRepository;
     @Mock private BonusConfigRepository bonusRepository;
     @Mock private AdsInvestmentRepository adsInvestmentRepository;
-    @Mock private PermissionService permissionService;
-    @Mock private BonusConfigMapper  bonusConfigMapper;
+    @Mock private BonusConfigMapper bonusConfigMapper;
     @Mock private AdsInvestmentMapper adsInvestmentMapper;
+    @Mock private PermissionService permissionService;
     @Mock private SecurityUtils securityUtils;
 
     @BeforeEach
     void setUp() {
         configService = new ConfigServiceImpl(
                 configRepository, bonusRepository,
-                adsInvestmentRepository, permissionService, securityUtils,
-                bonusConfigMapper, adsInvestmentMapper
+                adsInvestmentRepository, bonusConfigMapper, adsInvestmentMapper,
+                permissionService, securityUtils
         );
     }
 
@@ -67,28 +72,18 @@ public class ConfigServiceTest {
                 .build();
     }
 
+    // ========== SET RECYCLE CONFIG ==========
+
     @Test
-    @DisplayName("Deve desativar config antiga e salvar nova ao configurar reciclo")
+    @DisplayName("Deve salvar nova config de reciclo global com sucesso")
     void setRecycleConfig_success() {
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-
-        RecycleConfig old = RecycleConfig.builder()
-                .id(UUID.randomUUID())
-                .sector(Sector.LEADS)
-                .afterDays(30)
-                .active(true)
-                .configuredBy(UUID.randomUUID())
-                .build();
-
-        when(configRepository.findBySectorAndActiveTrue(Sector.LEADS)).thenReturn(Optional.of(old));
         when(configRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        RecycleConfig result = configService.setRecycleConfig(
-                new RecycleConfigRequestDTO(Sector.LEADS, 15));
+        RecycleConfig result = configService.setRecycleConfig(new RecycleConfigRequestDTO(15));
 
-        assertFalse(old.isActive());
         assertEquals(15, result.getAfterDays());
-        verify(configRepository, times(2)).save(any());
+        verify(configRepository, times(1)).save(any());
     }
 
     @Test
@@ -99,10 +94,12 @@ public class ConfigServiceTest {
                 .when(permissionService).checkOrThrow(any(), any(), any(), any(), any());
 
         assertThrows(AccessDeniedException.class,
-                () -> configService.setRecycleConfig(new RecycleConfigRequestDTO(Sector.LEADS, 15)));
+                () -> configService.setRecycleConfig(new RecycleConfigRequestDTO(15)));
 
         verify(configRepository, never()).save(any());
     }
+
+    // ========== REGISTER ADS INVESTMENT ==========
 
     @Test
     @DisplayName("Deve registrar investimento em ADS com sucesso")
@@ -124,5 +121,132 @@ public class ConfigServiceTest {
         assertEquals(AdsChannel.META, result.getChannel());
         assertEquals(new BigDecimal("5000.00"), result.getAmount());
         verify(adsInvestmentRepository).save(any());
+    }
+
+    // ========== GET RECYCLE (ADR-007) ==========
+
+    @Test
+    @DisplayName("Deve retornar a config de reciclo ativa mais recente")
+    void getRecycle_success() {
+        when(securityUtils.getCurrentUser()).thenReturn(buildUser());
+
+        RecycleConfig config = RecycleConfig.builder()
+                .id(UUID.randomUUID())
+                .afterDays(30)
+                .active(true)
+                .configuredBy(UUID.randomUUID())
+                .build();
+
+        when(configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()).thenReturn(config);
+
+        RecycleConfigResponseDTO result = configService.getRecycle();
+
+        assertNotNull(result);
+        assertEquals(30, result.afterDays());
+        assertTrue(result.active());
+    }
+
+    @Test
+    @DisplayName("Deve lançar AccessDeniedException ao consultar reciclo sem permissão")
+    void getRecycle_accessDenied() {
+        when(securityUtils.getCurrentUser()).thenReturn(buildUser());
+        doThrow(new AccessDeniedException("Access denied"))
+                .when(permissionService).checkOrThrow(any(), any(), any(), any(), any());
+
+        assertThrows(AccessDeniedException.class, () -> configService.getRecycle());
+
+        verify(configRepository, never()).findFirstByActiveTrueOrderByCreatedAtDesc();
+    }
+
+    // ========== GET BONUS CONFIGS (ADR-007) ==========
+
+    @Test
+    @DisplayName("Deve retornar lista de BonusConfig filtrada por setor")
+    void getBonusConfigs_success() {
+        User user = buildUser();
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+
+        BonusConfig bonus = BonusConfig.builder()
+                .id(UUID.randomUUID())
+                .sector(Sector.COMMERCIAL)
+                .role(Role.USER_COMMERCIAL)
+                .metricKey("deals_closed")
+                .bonusPct(new BigDecimal("5.00"))
+                .targetValue(new BigDecimal("10"))
+                .periodRef("2026-05")
+                .active(true)
+                .build();
+
+        BonusConfigResponseDTO dto = new BonusConfigResponseDTO(
+                bonus.getId(), bonus.getSector(), bonus.getRole(),
+                bonus.getMetricKey(), bonus.getBonusPct(), bonus.getTargetValue(),
+                bonus.getPeriodRef(), bonus.isActive(), null
+        );
+
+        when(bonusRepository.findBySector(Sector.COMMERCIAL)).thenReturn(List.of(bonus));
+        when(bonusConfigMapper.toResponseDTO(bonus)).thenReturn(dto);
+
+        List<BonusConfigResponseDTO> result = configService.getBonusConfigs(Sector.COMMERCIAL);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(Sector.COMMERCIAL, result.get(0).sector());
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando não há BonusConfig para o setor")
+    void getBonusConfigs_empty() {
+        when(securityUtils.getCurrentUser()).thenReturn(buildUser());
+        when(bonusRepository.findBySector(Sector.COMMERCIAL)).thenReturn(List.of());
+
+        List<BonusConfigResponseDTO> result = configService.getBonusConfigs(Sector.COMMERCIAL);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    // ========== GET ADS INVESTMENTS (ADR-007) ==========
+
+    @Test
+    @DisplayName("Deve retornar lista de AdsInvestment filtrada por canal")
+    void getAdsInvestments_success() {
+        when(securityUtils.getCurrentUser()).thenReturn(buildUser());
+
+        AdsInvestment investment = AdsInvestment.builder()
+                .id(UUID.randomUUID())
+                .channel(AdsChannel.META)
+                .campaign("campanha-1")
+                .amount(new BigDecimal("3000.00"))
+                .periodStart(LocalDate.of(2026, 5, 1))
+                .periodEnd(LocalDate.of(2026, 5, 31))
+                .build();
+
+        AdsInvestmentResponseDTO dto = new AdsInvestmentResponseDTO(
+                investment.getId(), investment.getChannel(), investment.getCampaign(),
+                investment.getAmount(), investment.getPeriodStart(), investment.getPeriodEnd(), null
+        );
+
+        when(adsInvestmentRepository.findByChannelOrderByPeriodStartDesc(AdsChannel.META))
+                .thenReturn(List.of(investment));
+        when(adsInvestmentMapper.toResponseDTO(investment)).thenReturn(dto);
+
+        List<AdsInvestmentResponseDTO> result = configService.getAdsInvestments(AdsChannel.META);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(AdsChannel.META, result.get(0).channel());
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando não há investimentos para o canal")
+    void getAdsInvestments_empty() {
+        when(securityUtils.getCurrentUser()).thenReturn(buildUser());
+        when(adsInvestmentRepository.findByChannelOrderByPeriodStartDesc(AdsChannel.GOOGLE))
+                .thenReturn(List.of());
+
+        List<AdsInvestmentResponseDTO> result = configService.getAdsInvestments(AdsChannel.GOOGLE);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 }

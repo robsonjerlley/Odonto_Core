@@ -81,7 +81,6 @@ public class DealServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(securityUtils.getCurrentUser()).thenReturn(user);
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(dealRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -112,7 +111,8 @@ public class DealServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(false);
+        doThrow(new AccessDeniedException("Access denied"))
+                .when(permissionService).checkOrThrow(any(), any(), any(), any(), any());
 
         assertThrows(AccessDeniedException.class,
                 () -> dealService.create(ticketId, new DealCreateRequestDTO(List.of())));
@@ -128,7 +128,6 @@ public class DealServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
 
         assertThrows(IllegalStateException.class,
                 () -> dealService.create(ticketId, new DealCreateRequestDTO(List.of())));
@@ -146,7 +145,6 @@ public class DealServiceTest {
 
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
         when(dealRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Deal result = dealService.applyDiscount(dealId, new ApplyDiscountRequestDTO(new BigDecimal("10")));
@@ -162,7 +160,6 @@ public class DealServiceTest {
 
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
 
         assertThrows(IllegalStateException.class,
                 () -> dealService.applyDiscount(dealId, new ApplyDiscountRequestDTO(new BigDecimal("10"))));
@@ -176,7 +173,6 @@ public class DealServiceTest {
 
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
 
         assertThrows(IllegalStateException.class,
                 () -> dealService.applyDiscount(dealId, new ApplyDiscountRequestDTO(new BigDecimal("-1"))));
@@ -198,7 +194,6 @@ public class DealServiceTest {
 
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(dealRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -222,7 +217,6 @@ public class DealServiceTest {
 
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> dealService.closeDeal(dealId, "PIX"));
     }
@@ -235,7 +229,6 @@ public class DealServiceTest {
 
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
-        when(permissionService.canAccess(any(), any(), any(), any(), any())).thenReturn(true);
 
         assertThrows(IllegalStateException.class, () -> dealService.closeDeal(dealId, "PIX"));
     }

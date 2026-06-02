@@ -4,6 +4,7 @@ import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
+import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
@@ -76,13 +77,12 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Deve criar customer e abrir LeadTicket automaticamente")
     void create_deveAbrirLeadTicketComSetoDoUsuarioLogado() {
-        // Arrange
         User currentUser = buildUser(Sector.LEADS);
         when(securityUtils.getCurrentUser()).thenReturn(currentUser);
 
         CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
                 "Jão da Silva", "123456789", "83999999",
-                "mail", ADS_PAID, INSTAGRAM, "Um novo sorriso",null, null
+                null, "mail", null, ADS_PAID, INSTAGRAM, "Um novo sorriso", null, null
         );
 
         Customer savedCustomer = Customer.builder()
@@ -103,22 +103,19 @@ class CustomerServiceTest {
         when(customerMapper.toResponseDTO(savedCustomer)).thenReturn(
                 new CustomerResponseDTO(
                         savedCustomer.getId(), savedCustomer.getName(), savedCustomer.getCpf(),
-                        savedCustomer.getPhone(), savedCustomer.getEmail(), savedCustomer.getSource(),
-                        savedCustomer.getAdChannel(), savedCustomer.getAdCampaign(),
+                        savedCustomer.getPhone(), null, savedCustomer.getEmail(), null,
+                        savedCustomer.getSource(), savedCustomer.getAdChannel(), savedCustomer.getAdCampaign(),
                         savedCustomer.getCreatedAt(), savedCustomer.getUpdatedAt(),
-                        savedCustomer.getCreatedBy(), null
+                        savedCustomer.getCreatedBy(), null, false
                 )
         );
 
-        // Act
         CustomerResponseDTO result = customerService.create(dto);
 
-        // Assert — customer
         assertNotNull(result);
         assertEquals(dto.name(), result.name());
         assertEquals(currentUser.getId(), result.createdBy());
 
-        // Assert — ticket aberto automaticamente
         ArgumentCaptor<LeadTicket> ticketCaptor = ArgumentCaptor.forClass(LeadTicket.class);
         verify(leadTicketRepository, times(1)).save(ticketCaptor.capture());
 
@@ -128,7 +125,6 @@ class CustomerServiceTest {
         assertEquals(Sector.LEADS, ticket.getCurrentSector());
         assertEquals(currentUser.getId(), ticket.getCreatedBy());
 
-        // Assert — sequência correta: customer antes, ticket depois
         var orderVerifier = inOrder(customerRepository, leadTicketRepository);
         orderVerifier.verify(customerRepository).save(any(Customer.class));
         orderVerifier.verify(leadTicketRepository).save(any(LeadTicket.class));
@@ -137,13 +133,12 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Deve usar o setor do usuário logado no ticket — ATTENDANT abre em ATTENDANT")
     void create_setorDoTicketRefleteSetorDoUsuario() {
-        // Arrange
         User attendant = buildUser(Sector.ATTENDANT);
         when(securityUtils.getCurrentUser()).thenReturn(attendant);
 
         CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
                 "Maria Souza", "987654321", "83988888",
-                null, ADS_PAID, null, null, null
+                null, null, null, ADS_PAID, null, null, null, null
         );
 
         Customer savedCustomer = Customer.builder()
@@ -156,13 +151,11 @@ class CustomerServiceTest {
         when(customerMapper.toResponseDTO(savedCustomer)).thenReturn(
                 new CustomerResponseDTO(savedCustomer.getId(), savedCustomer.getName(),
                         null, null, null, null, null, null, null, null,
-                        savedCustomer.getCreatedBy(), null)
+                        null, null, savedCustomer.getCreatedBy(), null, false)
         );
 
-        // Act
         customerService.create(dto);
 
-        // Assert
         ArgumentCaptor<LeadTicket> captor = ArgumentCaptor.forClass(LeadTicket.class);
         verify(leadTicketRepository).save(captor.capture());
         assertEquals(Sector.ATTENDANT, captor.getValue().getCurrentSector());
@@ -171,13 +164,12 @@ class CustomerServiceTest {
     @Test
     @DisplayName("Deve criar customer com sucesso e retornar DTO correto")
     void create_retornaResponseDTOCorreto() {
-        // Arrange
         User currentUser = buildUser(Sector.LEADS);
         when(securityUtils.getCurrentUser()).thenReturn(currentUser);
 
         CustomerCreateRequestDTO dto = new CustomerCreateRequestDTO(
                 "Jão da Silva", "123456789", "83999999",
-                "mail", ADS_PAID, INSTAGRAM, "Um novo sorriso", null
+                null, "mail", null, ADS_PAID, INSTAGRAM, "Um novo sorriso", null, null
         );
 
         Customer customer = Customer.builder()
@@ -198,17 +190,15 @@ class CustomerServiceTest {
 
         CustomerResponseDTO expectedDTO = new CustomerResponseDTO(
                 customer.getId(), customer.getName(), customer.getCpf(),
-                customer.getPhone(), customer.getEmail(), customer.getSource(),
-                customer.getAdChannel(), customer.getAdCampaign(),
+                customer.getPhone(), null, customer.getEmail(), null,
+                customer.getSource(), customer.getAdChannel(), customer.getAdCampaign(),
                 customer.getCreatedAt(), customer.getUpdatedAt(),
-                customer.getCreatedBy(), null
+                customer.getCreatedBy(), null, false
         );
         when(customerMapper.toResponseDTO(customer)).thenReturn(expectedDTO);
 
-        // Act
         CustomerResponseDTO result = customerService.create(dto);
 
-        // Assert
         assertNotNull(result);
         assertEquals(dto.name(), result.name());
         assertEquals(dto.cpf(), result.cpf());
@@ -238,6 +228,8 @@ class CustomerServiceTest {
     void testFindByCpfSuccess() {
         UUID customerId = UUID.randomUUID();
         String cpf = "123.456.789-00";
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
 
         Customer customer = new Customer();
         customer.setId(customerId);
@@ -245,7 +237,8 @@ class CustomerServiceTest {
 
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
                 customerId, null, cpf, null, null, null, null,
-                null, null, null, null, null
+                null, null, null, null, null,
+                null, null, false
         );
 
         when(customerRepository.findByCpf(cpf)).thenReturn(Optional.of(customer));
@@ -265,20 +258,24 @@ class CustomerServiceTest {
     void testUpdateCustomerSuccess() {
         String cpf = "123.456.789-00";
         UUID customerId = UUID.randomUUID();
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
 
         Customer existingCustomer = new Customer();
         existingCustomer.setId(customerId);
         existingCustomer.setName("João Siva");
         existingCustomer.setCpf(cpf);
         existingCustomer.setPhone("8399875878");
+        existingCustomer.setCreatedBy(currentUser.getId());
 
         CustomerUpdateRequestDTO dto = new CustomerUpdateRequestDTO(
-                customerId, "João da Silva", cpf, "8399875878", null
+                customerId, "João da Silva", cpf, "8399875878", null, null
         );
 
         CustomerResponseDTO responseDTO = new CustomerResponseDTO(
                 dto.id(), dto.name(), dto.cpf(), dto.phone(),
-                null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null,
+                null, null, false
         );
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
@@ -298,19 +295,22 @@ class CustomerServiceTest {
         UUID customerId = UUID.randomUUID();
         String oldCpf = "123.456.789-00";
         String newCpf = "987.654.321-00";
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
 
         Customer existingCustomer = new Customer();
         existingCustomer.setId(customerId);
         existingCustomer.setCpf(oldCpf);
         existingCustomer.setName("Jõao da Silva");
         existingCustomer.setPhone("8399875878");
+        existingCustomer.setCreatedBy(currentUser.getId());
 
         Customer otherCustomer = new Customer();
         otherCustomer.setId(UUID.randomUUID());
         otherCustomer.setCpf(newCpf);
 
         CustomerUpdateRequestDTO dto = new CustomerUpdateRequestDTO(
-                customerId, "João da Silva", newCpf, "987.654.321-00", null
+                customerId, "João da Silva", newCpf, "987.654.321-00", null, null
         );
 
         when(customerRepository.findById(customerId)).thenReturn(Optional.of(existingCustomer));
@@ -323,29 +323,45 @@ class CustomerServiceTest {
         verify(customerRepository, never()).save(any());
     }
 
-    // ========== DELETE TESTS ==========
+    // ========== ANONYMIZE TESTS (ADR-006 — PII anonimizado, não deletado) ==========
 
     @Test
-    @DisplayName("Deve deletar customerId com sucesso")
+    @DisplayName("Deve anonimizar customer com sucesso, sem deletar o registro")
     void testDeleteCustomerSuccess() {
         UUID customerId = UUID.randomUUID();
-        when(customerRepository.existsById(customerId)).thenReturn(true);
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+
+        Customer customer = new Customer();
+        customer.setId(customerId);
+        customer.setName("João Silva");
+        customer.setCpf("123.456.789-00");
+        customer.setCreatedBy(currentUser.getId());
+
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
+        when(customerRepository.save(any(Customer.class))).thenReturn(customer);
 
         customerService.anonymize(customerId);
 
-        verify(customerRepository, times(1)).deleteById(customerId);
+        assertEquals("CLIENTE ANONIMIZADO", customer.getName());
+        assertNull(customer.getCpf());
+        assertTrue(customer.isAnonymized());
+        verify(customerRepository).save(customer);
+        verify(customerRepository, never()).deleteById(any());
     }
 
     @Test
-    @DisplayName("Deve lançar erro ao deletar customerId inexistente")
+    @DisplayName("Deve lançar ResourceNotFoundException ao anonimizar customer inexistente")
     void testDeleteCustomerNotFound() {
         UUID noExistingId = UUID.randomUUID();
-        when(customerRepository.existsById(noExistingId)).thenReturn(false);
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+        when(customerRepository.findById(noExistingId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                customerService.anonymize(noExistingId));
+        assertThrows(ResourceNotFoundException.class,
+                () -> customerService.anonymize(noExistingId));
 
-        assertTrue(exception.getMessage().contains("Customer not found"));
+        verify(customerRepository, never()).save(any());
         verify(customerRepository, never()).deleteById(any());
     }
 }

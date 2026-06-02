@@ -6,6 +6,7 @@ import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.AdsRoiResultDTO;
+import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.BonusResultDTO;
 import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.StageConversionResultDTO;
 import io.sertaoBit.odontocore.crm.modules.analytics.service.impl.AnalyticsServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.BonusConfigRepository;
@@ -116,9 +117,9 @@ public class AnalyticsServiceTest {
         when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any()))
                 .thenReturn(Optional.empty());
 
-        BigDecimal result = analyticsService.getCalculatedBonus(targetId, "2026-05", userId);
+        BonusResultDTO result = analyticsService.getCalculatedBonus(targetId, "2026-05", userId);
 
-        assertEquals(BigDecimal.ZERO, result);
+        assertEquals(BigDecimal.ZERO, result.value());
     }
 
     @Test
