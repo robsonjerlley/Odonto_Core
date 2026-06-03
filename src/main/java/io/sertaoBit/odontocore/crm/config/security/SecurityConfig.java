@@ -45,10 +45,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(
+        // setAllowedOriginPatterns aceita origem exata e curinga (ex: https://*.up.railway.app).
+        // trim + remocao de barra final evitam que espaco ou "/" acidental quebrem o match.
+        config.setAllowedOriginPatterns(
                 Arrays.stream(allowedOrigins.split(","))
                         .map(String::trim)
                         .filter(origin -> !origin.isEmpty())
+                        .map(origin -> origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin)
                         .toList()
         );
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
