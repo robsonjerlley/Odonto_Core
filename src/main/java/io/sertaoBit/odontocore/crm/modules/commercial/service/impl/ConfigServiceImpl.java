@@ -22,13 +22,14 @@ import io.sertaoBit.odontocore.crm.modules.commercial.service.ConfigService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
+import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
+import static io.sertaoBit.odontocore.crm.core.enums.Action.CONFIGURE;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.CONFIG;
 
 @Service
@@ -141,12 +142,13 @@ public class ConfigServiceImpl implements ConfigService {
         permissionService.checkOrThrow(
                 user,
                 CONFIG,
-                READ,
+                CONFIGURE,
                 null,
                 null
         );
 
-        var recycle = configRepository.findFirstByActiveTrueOrderByCreatedAtDesc();
+        RecycleConfig recycle = configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()
+                .orElseThrow(() -> new ResourceNotFoundException("No active recycle configuration found"));
 
         return new RecycleConfigResponseDTO(
                 recycle.getId(),
@@ -163,7 +165,7 @@ public class ConfigServiceImpl implements ConfigService {
         permissionService.checkOrThrow(
                 user,
                 CONFIG,
-                READ,
+                CONFIGURE,
                 user.getSector(),
                 user.getId()
         );
@@ -182,7 +184,7 @@ public class ConfigServiceImpl implements ConfigService {
         permissionService.checkOrThrow(
                 user,
                 CONFIG,
-                READ,
+                CONFIGURE,
                 null,
                 null
         );

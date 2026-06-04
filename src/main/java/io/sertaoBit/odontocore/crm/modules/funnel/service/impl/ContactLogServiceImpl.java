@@ -68,7 +68,8 @@ public class ContactLogServiceImpl implements ContactLogService {
                 .userId(userId)
                 .channel(dto.channel())
                 .note(dto.note())
-                .statusBefore(ticket.getStatus())
+                .statusBefore(null)
+                .statusAfter(null)
                 .occurredAt(dto.occurredAt())
                 .build();
 

@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -137,7 +138,7 @@ public class ConfigServiceTest {
                 .configuredBy(UUID.randomUUID())
                 .build();
 
-        when(configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()).thenReturn(config);
+        when(configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()).thenReturn(Optional.of(config));
 
         RecycleConfigResponseDTO result = configService.getRecycle();
 

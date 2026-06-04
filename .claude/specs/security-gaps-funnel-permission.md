@@ -1,6 +1,8 @@
 # Security Gaps — Módulo funnel: ausência de RBAC nos services
 
 **Data:** 2026-05-28  
+**Resolvido em:** 2026-06-04  
+**Status:** ✅ TODOS OS GAPS CRÍTICOS E IMPORTANTES RESOLVIDOS (Fase 3 aberta — ver Definition of Done)  
 **Origem:** revisão cruzada entre PermissionSeeder e services do módulo funnel  
 **Impacto:** CustomerServiceImpl, LeadTicketServiceImpl, ContactLogServiceImpl  
 **Decisões tomadas:** ADR-003 (ContactLog imutável), ADR-004 (padrão checkOrThrow)  
@@ -95,19 +97,21 @@ A camada 1 garante que nenhum endpoint é acessível sem autenticação. As cama
 
 ## Definition of Done
 
-**Fase 1 — Críticos (implementar primeiro):**
-- [ ] `ContactLogController` / `ContactLogService` / `ContactLogServiceImpl` — remover `delete()` e `@DeleteMapping("/{id}")` *(ver ADR-003)*
-- [ ] `ContactLogServiceImpl.create()` — corrigir `targetOwnerId`: trocar `null` por `user.getId()`
-- [ ] `LeadTicketServiceImpl` — injetar `PermissionService`; `checkOrThrow` em `create` e `changeStatus`; validação de transição explícita para USER_ATTENDANT
-- [ ] `CustomerServiceImpl` — injetar `PermissionService`; `checkOrThrow` em `deleteById`
-- [ ] `LeadTicketServiceImpl` — `checkOrThrow` em `deleteById`
+> **Status geral: CONCLUÍDO** — Todos os gaps críticos e importantes foram resolvidos (verificado em 2026-06-04).
+
+**Fase 1 — Críticos:**
+- [x] `ContactLogController` / `ContactLogService` / `ContactLogServiceImpl` — `delete()` e `@DeleteMapping("/{id}")` removidos *(ADR-003)*
+- [x] `ContactLogServiceImpl.create()` — `targetOwnerId` corrigido para `user.getId()`; `statusBefore`/`statusAfter` corrigidos para `null` em logs manuais
+- [x] `LeadTicketServiceImpl` — `PermissionService` injetado; `checkOrThrow` em `create` e `changeStatus`; validação explícita de USER_ATTENDANT para LOSS/IN_CONTACT
+- [x] `CustomerServiceImpl` — `PermissionService` injetado; `checkOrThrow` em `anonymize` (deleteById)
+- [x] `LeadTicketServiceImpl` — sem `deleteById` exposto (endpoint não existe)
 
 **Fase 2 — Importantes:**
-- [ ] `CustomerServiceImpl` — `checkOrThrow` em `create`, `update`, `findById`, `findByCpf`, `search`
-- [ ] `ContactLogServiceImpl` — `checkOrThrow` em `findById` e `search`
-- [ ] `LeadTicketServiceImpl` — `checkOrThrow` em `findById` e `search`
+- [x] `CustomerServiceImpl` — `checkOrThrow` em `create`, `update`, `findById`, `findByCpf`, `search`
+- [x] `ContactLogServiceImpl` — `checkOrThrow` em `findById` e `search`
+- [x] `LeadTicketServiceImpl` — `checkOrThrow` em `findById` e `search`
 
-**Fase 3 — Débito técnico futuro:**
+**Fase 3 — Débito técnico futuro (aberto):**
 - [ ] Scope-aware query filtering: `search()` deve filtrar no SQL por `createdBy`/`currentSector` conforme o scope do perfil
 
 **Testes:**

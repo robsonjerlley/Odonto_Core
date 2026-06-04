@@ -1248,6 +1248,11 @@ Todos os endpoints requerem `CONFIG:CONFIGURE` (apenas ADM_SYSTEM).
 
 > Retorna a config **global** ativa mais recente. `sector` é omitido (ADR-007).
 
+| Erro | Causa |
+|------|-------|
+| 404 | Nenhuma `RecycleConfig` ativa cadastrada — chamar `POST /config/recycle` primeiro |
+| 403 | sem permissão (`CONFIG:CONFIGURE` — apenas `ADM_SYSTEM`) |
+
 ---
 
 #### POST /api/v1/config/bonus
@@ -1564,7 +1569,13 @@ Para reconstruir o histórico completo de um cliente: navegar pela cadeia de `pr
 
 Toda transição de status gera automaticamente um `ContactLog` com `channel = OTHER`, `statusBefore` e `statusAfter` preenchidos. Isso **mistura** logs de relacionamento (captação) com logs técnicos de transição de estado na mesma tabela.
 
-**Consequência:** métricas de captação baseadas em `ContactLog` incluem ruído de logs de transição automáticos. Para análise pura de captação, o frontend deve filtrar ContactLogs com `statusBefore IS NULL` (logs manuais).
+**Consequência:** métricas de captação baseadas em `ContactLog` incluem ruído de logs de transição automáticos. Para análise pura de captação, o frontend deve filtrar ContactLogs com `statusBefore === null && statusAfter === null` (logs manuais).
+
+> **Discriminador atual (implícito):**
+> - Log manual → `statusBefore = null`, `statusAfter = null`, `channel` = qualquer valor
+> - Log automático → `statusBefore != null`, `statusAfter != null`, `channel = OTHER`
+>
+> ⚠️ **Evolução futura planejada:** campo `logType: 'MANUAL' | 'SYSTEM'` tornará essa distinção explícita — ver Seção 15.
 
 ---
 
@@ -2294,6 +2305,18 @@ export function roleCanTransitionTo(role: Role, to: TicketStatus): boolean {
 | TicketStatus | Sem `POST_PROCEDURE` | `POST_PROCEDURE` existe e está nas ALLOWED_TRANSITIONS |
 | PaymentMethod | Sem conversionFactor | Cada valor carrega `conversionFactor` para cálculo de `expectedCash` — ADR-008 |
 
+### Correções aplicadas pós-revisão de integração (2026-06-04)
+
+As divergências abaixo foram identificadas na revisão do contrato e **já corrigidas no backend**:
+
+| # | Arquivo | Problema | Correção aplicada |
+|---|---------|----------|-------------------|
+| C1 | `ContactLogServiceImpl.create()` | `statusBefore` era setado com `ticket.getStatus()` em logs manuais, violando o contrato | `statusBefore(null)` e `statusAfter(null)` explícitos no builder |
+| C2 | `ConfigServiceImpl.getRecycle/getBonusConfigs/getAdsInvestments()` | Usava `Action.READ` mas o seeder só semente `CONFIG:CONFIGURE` → 403 para todos | Trocado para `Action.CONFIGURE` nos 3 métodos GET |
+| C3 | `ConfigServiceImpl.getRecycle()` + `RecycleConfigRepository` | `findFirstByActiveTrueOrderByCreatedAtDesc()` retornava `RecycleConfig` nullable → NPE em banco vazio | Repositório alterado para `Optional<RecycleConfig>`; service usa `.orElseThrow(ResourceNotFoundException)` → 404 mapeado |
+
+---
+
 ### O que está PLANEJADO mas não implementado
 
 | Feature | Descrição |
@@ -2303,3 +2326,4 @@ export function roleCanTransitionTo(role: Role, to: TicketStatus): boolean {
 | Timezone explícito | Backend não configura `spring.jackson.time-zone` — risco de bug |
 | Módulo de agendamentos | Previsto para fases futuras |
 | Módulo financeiro | Previsto para fases futuras |
+| `ContactLog.logType` discriminador explícito | Campo `logType: MANUAL \| SYSTEM` para distinguir logs sem depender de null-check em `statusBefore/statusAfter`. Requer migration de schema. Decisão: ADR-008 (proposto). Enquanto não implementado, usar `statusBefore === null && statusAfter === null` como discriminador de log manual — ver Seção 12. |
