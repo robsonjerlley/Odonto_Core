@@ -133,8 +133,8 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_EVALUATOR, EVALUATOR, DEAL, READ, OWN));
         rules.add(rule(USER_EVALUATOR, EVALUATOR, DEAL, UPDATE, OWN));
 
-        rules.add(rule(USER_EVALUATOR, EVALUATOR, TICKET, READ, OWN));
-        rules.add(rule(USER_EVALUATOR, EVALUATOR, TICKET, UPDATE, OWN));
+        rules.add(rule(USER_EVALUATOR, EVALUATOR, TICKET, READ, SECTOR));
+        rules.add(rule(USER_EVALUATOR, EVALUATOR, TICKET, UPDATE, SECTOR));
 
         rules.add(rule(USER_EVALUATOR, EVALUATOR, CONTACT_LOG, READ, GLOBAL));
 

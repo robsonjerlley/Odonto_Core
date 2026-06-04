@@ -181,6 +181,16 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         if (dto.status() == RECYCLED) leadTicket.setRecycledAt(now);
         if (dto.status() == LOSS) leadTicket.setClosedAt(now);
 
+        // Agendamento inicial (IN_CONTACT → SCHEDULED): transfere o ticket para o setor
+        // de avaliação e persiste a data. POST_PROCEDURE → SCHEDULED já foi tratado
+        // pelo applyScheduledReturn acima — este bloco cobre apenas os demais origens.
+        if (dto.status() == SCHEDULED && currentStatus != POST_PROCEDURE) {
+            leadTicket.setCurrentSector(EVALUATOR);
+            if (dto.returnScheduledAt() != null) {
+                leadTicket.setScheduledAt(dto.returnScheduledAt());
+            }
+        }
+
 
         ContactLog log = ContactLog.builder()
                 .ticketId(id)
