@@ -118,6 +118,8 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_ATTENDANT, ATTENDANT, ANALYTICS, READ, OWN));
 
         //ADM_EVALUATOR
+        rules.add(rule(ADM_EVALUATOR, EVALUATOR, CUSTOMER, READ, SECTOR));
+
         rules.add(rule(ADM_EVALUATOR, EVALUATOR, DEAL, CREATE, SECTOR));
         rules.add(rule(ADM_EVALUATOR, EVALUATOR, DEAL, READ, SECTOR));
         rules.add(rule(ADM_EVALUATOR, EVALUATOR, DEAL, UPDATE, SECTOR));
@@ -129,6 +131,8 @@ public class PermissionSeeder implements ApplicationRunner {
 
 
         //USER_EVALUATOR
+        rules.add(rule(USER_EVALUATOR, EVALUATOR, CUSTOMER, READ, GLOBAL));
+
         rules.add(rule(USER_EVALUATOR, EVALUATOR, DEAL, CREATE, OWN));
         rules.add(rule(USER_EVALUATOR, EVALUATOR, DEAL, READ, OWN));
         rules.add(rule(USER_EVALUATOR, EVALUATOR, DEAL, UPDATE, OWN));
