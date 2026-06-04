@@ -18,7 +18,9 @@
       "Bash(mvn compile *)",
       "Bash(Get-ChildItem -Path \"B:\\\\projects\\\\odontocore.crm\\\\odontocore.crm\" -Recurse -Filter \"Customer.java\")",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Sort)"
+      "Bash(Sort)",
+      "Bash(git *)",
+      "Bash(mvn test *)"
     ]
   }
 }
