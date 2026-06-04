@@ -41,7 +41,7 @@ public class RecycleJob {
     }
 
 
-    @Scheduled(cron = "0 0 2 * * *")
+    @Scheduled(cron = "0 0 2 * * *", zone = "America/Sao_Paulo")
     public void runNightly() {
         List<LeadTicket> leadTickets = leadTicketRepository.findByStatusAndPendingAtBefore(
                 PENDING, LocalDateTime.now()

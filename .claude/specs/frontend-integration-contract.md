@@ -103,21 +103,14 @@ Prefixo de todas as rotas: `/api/v1`
 - Rotas públicas (`permitAll`): `/api/v1/authentication/login`, `/api/v1/authentication/refresh`
 - Token ausente ou inválido → **HTTP 401 sem corpo** (Spring retorna `HttpStatus.UNAUTHORIZED` puro via `HttpStatusEntryPoint`)
 
-### Timezone — CRÍTICO
+### Timezone — RESOLVIDO (ADR-009, 2026-06-04)
 
-O backend **não configura explicitamente o fuso horário**. `LocalDateTime.now()` usa o timezone padrão da JVM (Railway/Docker geralmente roda em UTC).
+O fuso da JVM agora é **fixado em `America/Sao_Paulo`** no boot (`Application.main`, configurável via env `APP_TIMEZONE`), mais `spring.jackson.time-zone` e `zone` explícito no cron do `RecycleJob`. Com isso `LocalDateTime.now()`, `@CreationTimestamp`/`@UpdateTimestamp` e o scheduler operam em horário de Brasília.
 
 **Impacto para o frontend:**
-- Todos os campos `LocalDateTime` chegam **sem offset** (ex: `"2026-06-03T14:30:00"`) — o frontend não sabe se é UTC ou America/Sao_Paulo
-- **Recomendação até correção no backend:** tratar todos os `LocalDateTime` como **UTC** e converter para `America/Sao_Paulo` (UTC-3) na exibição
-- Ao enviar `LocalDateTime` no request body, enviar sem timezone (o backend aceita ISO-8601 local sem offset)
-
-Exemplo de conversão segura no frontend:
-```ts
-// receber: "2026-06-03T14:30:00"
-const utc = new Date(value + 'Z'); // força UTC
-const brasilia = utc.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-```
+- Campos `LocalDateTime` chegam sem offset (ex: `"2026-06-04T14:30:00"`) e representam **horário de Brasília**.
+- **Exibir como horário local naïve** — **não** aplicar conversão UTC→local. O frontend já envia em Brasília (`nowBrasiliaISO`), então ida e volta são simétricas.
+- ⚠️ A recomendação anterior (tratar `LocalDateTime` como UTC) está **revogada** pela ADR-009 — aplicá-la agora reintroduziria erro de 3h.
 
 ### Serialização de tipos
 
@@ -2323,7 +2316,7 @@ As divergências abaixo foram identificadas na revisão do contrato e **já corr
 |---------|-----------|
 | Status `NO_SHOW` | Não existe na máquina de estados |
 | Refresh token com revogação (Dual Token) | ADR-005 prevê evolução futura |
-| Timezone explícito | Backend não configura `spring.jackson.time-zone` — risco de bug |
+| ~~Timezone explícito~~ | ✅ **RESOLVIDO (ADR-009)** — fuso da JVM fixado em America/Sao_Paulo; ver §1 |
 | Módulo de agendamentos | Previsto para fases futuras |
 | Módulo financeiro | Previsto para fases futuras |
 | `ContactLog.logType` discriminador explícito | Campo `logType: MANUAL \| SYSTEM` para distinguir logs sem depender de null-check em `statusBefore/statusAfter`. Requer migration de schema. Decisão: ADR-008 (proposto). Enquanto não implementado, usar `statusBefore === null && statusAfter === null` como discriminador de log manual — ver Seção 12. |
