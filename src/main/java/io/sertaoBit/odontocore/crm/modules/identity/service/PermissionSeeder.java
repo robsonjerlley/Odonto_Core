@@ -91,6 +91,7 @@ public class PermissionSeeder implements ApplicationRunner {
 
         rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, CREATE, SECTOR));
         rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, READ, SECTOR));
+        
 
         //USER_LEADS
         rules.add(rule(USER_LEADS, LEADS, CUSTOMER, CREATE, OWN));
