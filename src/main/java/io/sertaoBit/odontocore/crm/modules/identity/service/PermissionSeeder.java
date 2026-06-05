@@ -82,12 +82,12 @@ public class PermissionSeeder implements ApplicationRunner {
 
         //ADM_LEADS
         rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, CREATE, SECTOR));
-        rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, READ, SECTOR));
+        rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, READ, INTAKE));
         rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, UPDATE, SECTOR));
 
         rules.add(rule(ADM_LEADS, LEADS, TICKET, CREATE, SECTOR));
-        rules.add(rule(ADM_LEADS, LEADS, TICKET, READ, SECTOR));
-        rules.add(rule(ADM_LEADS, LEADS, TICKET, UPDATE, SECTOR));
+        rules.add(rule(ADM_LEADS, LEADS, TICKET, READ, INTAKE));
+        rules.add(rule(ADM_LEADS, LEADS, TICKET, UPDATE, INTAKE));
 
         rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, CREATE, SECTOR));
         rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, READ, SECTOR));
@@ -95,7 +95,7 @@ public class PermissionSeeder implements ApplicationRunner {
 
         //USER_LEADS
         rules.add(rule(USER_LEADS, LEADS, CUSTOMER, CREATE, OWN));
-        rules.add(rule(USER_LEADS, LEADS, CUSTOMER, READ, OWN));
+        rules.add(rule(USER_LEADS, LEADS, CUSTOMER, READ, INTAKE));
         rules.add(rule(USER_LEADS, LEADS, CUSTOMER, UPDATE, OWN));
 
         rules.add(rule(USER_LEADS, LEADS, TICKET, CREATE, OWN));
@@ -107,11 +107,11 @@ public class PermissionSeeder implements ApplicationRunner {
 
         //USER_ATTENDANT
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, CREATE, OWN));
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, READ, OWN));
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, UPDATE, OWN));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, READ, INTAKE));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, UPDATE, INTAKE));
 
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, READ, OWN));
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, UPDATE, OWN));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, READ, INTAKE));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, UPDATE, INTAKE));
 
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, CREATE, OWN));
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, READ, OWN));

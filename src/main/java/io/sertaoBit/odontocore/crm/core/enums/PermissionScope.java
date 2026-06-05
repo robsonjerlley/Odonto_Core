@@ -4,4 +4,5 @@ public enum PermissionScope {
     GLOBAL,
     SECTOR,
     OWN,
+    INTAKE,
 }
