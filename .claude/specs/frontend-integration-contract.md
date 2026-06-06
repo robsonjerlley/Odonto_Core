@@ -863,14 +863,21 @@ Cria o cliente, abre um `LeadTicket(NEW)` automaticamente no setor do usuário l
 
 **Permissão:** `CUSTOMER:READ`
 
-| Param | Tipo | Obrigatório | Prioridade |
-|-------|------|-------------|------------|
-| `phone` | `string` | não | 1º (busca exata) |
-| `name` | `string` | não | 2º (contains, case-insensitive) |
-| `adChannel` | `AdsChannel` | não | 3º (exato) |
+| Param | Tipo | Obrigatório | Match |
+|-------|------|-------------|-------|
+| `phone` | `string` | não | exato |
+| `name` | `string` | não | contains, case-insensitive |
+| `adChannel` | `AdsChannel` | não | exato |
 | `page`, `size`, `sort` | Pageable | não | — |
 
-> Apenas um filtro é aplicado por vez, pela ordem de prioridade acima.
+> **Filtros são cumulativos (AND)** — ADR-013. Quando mais de um param é enviado, todos são
+> aplicados simultaneamente (`phone` E `name` E `adChannel`). A semântica anterior de "um filtro por
+> prioridade" foi revogada.
+>
+> **Visibilidade por scope** (aplicada no SQL, transparente ao consumidor): o resultado já vem
+> filtrado pelo escopo RBAC do usuário — `GLOBAL` vê tudo; `OWN` vê só os clientes que criou;
+> `SECTOR`/`INTAKE` vê clientes que possuem ao menos um ticket no(s) setor(es) do escopo. O frontend
+> não controla isso — apenas recebe a página já recortada.
 
 **Response 200:** `Page<CustomerResponseDTO>`
 
@@ -999,12 +1006,19 @@ Avança ou recua o ticket na máquina de estados.
 
 **Permissão:** `TICKET:READ`
 
-| Param | Tipo | Prioridade |
-|-------|------|------------|
-| `customerId` | UUID | 1º |
-| `status` | TicketStatus | 2º |
-| `assignedTo` | UUID | 3º |
-| `page`, `size`, `sort` | Pageable | — |
+| Param | Tipo | Obrigatório | Match |
+|-------|------|-------------|-------|
+| `customerId` | UUID | não | exato |
+| `status` | TicketStatus | não | exato |
+| `assignedTo` | UUID | não | exato |
+| `page`, `size`, `sort` | Pageable | não | — |
+
+> **Filtros são cumulativos (AND)** — ADR-013. `?status=SCHEDULED&assignedTo=X` retorna tickets
+> `SCHEDULED` **E** atribuídos a X. A semântica anterior de "um filtro por prioridade" foi revogada.
+>
+> **Visibilidade por scope** (no SQL): `GLOBAL` vê todos os tickets; `SECTOR` vê os do próprio setor
+> (`currentSector`); `INTAKE` vê os dos setores de captação (`LEADS`, `ATTENDANT`); `OWN` vê só os que
+> o usuário criou. A página chega já recortada pelo escopo do papel.
 
 **Response 200:** `Page<LeadTicketResponseDTO>`
 
@@ -1060,8 +1074,13 @@ Avança ou recua o ticket na máquina de estados.
 
 | Param | Tipo | Obrigatório |
 |-------|------|-------------|
-| `ticketId` | UUID | não (sem ele retorna todos) |
+| `ticketId` | UUID | não (sem ele retorna conforme scope) |
 | `page`, `size`, `sort` | Pageable | não |
+
+> **Visibilidade por scope** (no SQL) — ADR-013: `GLOBAL` vê todos os logs; `OWN` vê só os que o
+> usuário registrou (`userId`); `SECTOR`/`INTAKE` vê logs cujos tickets estão no(s) setor(es) do
+> escopo (via `EXISTS` no LeadTicket). Sem `ticketId`, o resultado é a lista recortada pelo escopo —
+> não necessariamente "todos".
 
 **Response 200:** `Page<ContactLogResponseDTO>`
 
@@ -2279,8 +2298,10 @@ export function roleCanTransitionTo(role: Role, to: TicketStatus): boolean {
 | # | Local | O que diz a ADR/spec | O que diz o código | Impacto para o frontend |
 |---|-------|---------------------|-------------------|------------------------|
 | 1 | `CustomerServiceImpl.anonymize()` | ADR-006: `phone → null` | Código: `customer.setPhone("NULL")` — string literal "NULL" | Frontend deve tratar `phone === "NULL"` como ausente, não apenas `null` |
-| 2 | `RecycleJob.processTicket()` | Ticket filho deve ter `currentSector` e `createdBy` | Código não define esses campos — ficam `null` | Tickets reciclados terão `currentSector = null` — tratar UI defensivamente |
-| 3 | `DealHistoryServiceImpl.record()` | `DealHistory` tem `changedBy` e `changedBySector` | O builder no service não os seta | Histórico pode ter `changedBy = null` — não confiar nesses campos por enquanto |
+| 2 | `RecycleJob.processTicket()` | Ticket filho deve ter `currentSector` e `createdBy` | 🔴 Não define esses campos, que são `NOT NULL` → `save` lança `DataIntegrityViolationException` → **a reciclagem falha** (não é "campo null", o registro não grava) | Reciclagem inoperante até correção — ver `avaliacao-backend-2026-06-06.md` (C5) |
+| 3 | `DealHistoryServiceImpl.record()` | `DealHistory.changedBy` e `changedBySector` são `NOT NULL` | 🔴 O builder não os seta → toda gravação de histórico viola constraint → **HTTP 500** em `update`/`applyDiscount`/`closeDeal` do deal | Operações de deal retornam 500 até correção — ver avaliação (C4). É a causa real do bug #15 |
+| 4 | `LeadTicketServiceImpl.search()` | Contrato §7.4: filtros `customerId`/`status`/`assignedTo` aplicáveis | 🟡 Filtros **ignorados** — só o scope é aplicado (regressão da Fase 3) | `GET /tickets?status=...` retorna a lista inteira do scope. Alvo: ADR-013 (filtros cumulativos AND). Ver avaliação (M1) |
+| 5 | `Customer`/`ContactLog` `search()` | ADR-013: SECTOR/INTAKE via `EXISTS`; OWN via `createdBy`/`userId` | 🟡 Auto-check trivial + `findAll` → SECTOR/INTAKE/OWN não recortam | Usuários OWN/SECTOR veem registros que não deveriam. Alvo: ADR-013. Ver avaliação (M2) |
 
 ### O que estava desatualizado na documentação anterior
 
