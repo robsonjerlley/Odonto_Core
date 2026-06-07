@@ -1,5 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
+import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.RecycleConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;
@@ -17,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Sector.LEADS;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 
 @Component
@@ -83,6 +85,8 @@ public class RecycleJob {
         LeadTicket leadTicket = new LeadTicket();
         leadTicket.setCustomerId(ticket.getCustomerId());
         leadTicket.setStatus(NEW);
+        leadTicket.setCurrentSector(LEADS);
+        leadTicket.setCreatedBy(ticket.getCreatedBy());
         leadTicket.setPreviousTicketId(ticket.getId());
         leadTicketRepository.save(leadTicket);
 
