@@ -9,6 +9,7 @@ import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserRespons
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.mapper.UserMapper;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
+import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import io.sertaoBit.odontocore.crm.modules.identity.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,8 +17,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
 import java.util.UUID;
+
+import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.USER;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -27,28 +30,34 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final SecurityUtils securityUtils;
+    private final PermissionService permissionService;
 
     public UserServiceImpl(
             PasswordEncoder passwordEncoder,
             UserRepository userRepository,
             UserMapper userMapper,
-            SecurityUtils securityUtils
+            SecurityUtils securityUtils, PermissionService permissionService
     ) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.securityUtils = securityUtils;
+        this.permissionService = permissionService;
     }
 
-
-    private Page<UserResponseDTO> findAll(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(userMapper::toResponseDTO);
-    }
 
     @Override
     @Transactional
     public UserResponseDTO create(UserCreateRequestDTO dto) {
+        var userChek = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                userChek,
+                USER,
+                CREATE,
+                null,
+                null
+        );
+
         User newUser = userMapper.toEntity(dto);
         newUser.setActive(true);
         newUser.setCreatedBy(securityUtils.getCurrentUserId());
@@ -60,6 +69,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDTO register(UserCreateRequestDTO dto) {
+        var userChek = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                userChek,
+                USER,
+                CREATE,
+                null,
+                null
+        );
+
         User newUser = userMapper.toEntity(dto);
         newUser.setActive(true);
         newUser.setRole(Role.USER_ATTENDANT);
@@ -70,10 +88,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDTO updatePassword(String username, String newpassword) {
+    public UserResponseDTO updatePassword(String username, String newPassword) throws IllegalArgumentException {
+        var userChek = securityUtils.getCurrentUser();
+
+        permissionService.checkOrThrow(
+                userChek,
+                USER,
+                UPDATE,
+                null,
+                null
+        );
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
-        user.setPasswordHash(passwordEncoder.encode(newpassword));
+
+        if (!passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            user.setPasswordHash(passwordEncoder.encode(newPassword));
+        } else {
+            throw new IllegalArgumentException("Nova senha não deve ser igual a senha atual.");
+        }
 
         return userMapper.toResponseDTO(userRepository.save(user));
     }
@@ -81,6 +113,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> search(Sector sector, Role role, Pageable pageable) {
+        var user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                USER,
+                READ,
+                null,
+                null
+        );
+
         if (sector != null && role != null) return findAllBySectorAndRole(sector, role, pageable);
         if (sector != null) return findBySector(sector, pageable);
         return findAll(pageable);
@@ -89,6 +130,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO findById(UUID id) {
+        var user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                USER,
+                READ,
+                null,
+                null
+        );
 
         return userRepository.findById(id)
                 .map(userMapper::toResponseDTO)
@@ -99,11 +148,26 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO findByUsername(String username) {
+        var user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                USER,
+                READ,
+                null,
+                null
+        );
+
         return userRepository.findByUsername(username)
                 .map(userMapper::toResponseDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found!" + username));
     }
 
+
+    private Page<UserResponseDTO> findAll(Pageable pageable) {
+
+        return userRepository.findAll(pageable)
+                .map(userMapper::toResponseDTO);
+    }
 
     private Page<UserResponseDTO> findBySector(Sector sector, Pageable pageable) {
         return userRepository.findBySector(sector, pageable)
@@ -113,9 +177,6 @@ public class UserServiceImpl implements UserService {
 
 
     private Page<UserResponseDTO> findAllBySectorAndRole(Sector sector, Role role, Pageable pageable) {
-        Objects.requireNonNull(sector, "sector must not be null");
-        Objects.requireNonNull(role, "role must not be null");
-
         return userRepository.findAllBySectorAndRole(sector, role, pageable)
                 .map(userMapper::toResponseDTO);
     }
@@ -124,8 +185,17 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void delete(UUID id) {
+        var user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                USER,
+                DELETE,
+                null,
+                null
+        );
+
         if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User not found!");
+            throw new ResourceNotFoundException("User not found!" + id);
         }
         userRepository.deleteById(id);
     }

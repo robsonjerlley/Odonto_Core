@@ -41,7 +41,10 @@ public class UserController {
             @RequestBody @Valid UserPasswordUpdateRequestDTO requestDTO
     ) {
 
-        return ResponseEntity.ok(userService.updatePassword(username, requestDTO.newPassword()));
+        return ResponseEntity.ok(
+                userService.updatePassword(username
+                        , requestDTO.newPassword())
+        );
     }
 
 
@@ -55,7 +58,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> findById(@PathVariable  UUID id) {
+    public ResponseEntity<UserResponseDTO> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.findById(id));
     }
 
