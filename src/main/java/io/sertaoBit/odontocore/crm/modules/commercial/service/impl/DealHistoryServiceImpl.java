@@ -1,13 +1,13 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
 
-import tools.jackson.databind.ObjectMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.DealHistory;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealHistoryRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.DealHistoryService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +29,8 @@ public class DealHistoryServiceImpl implements DealHistoryService {
     public void record(UUID dealId, User user, Object before, Object after) {
         DealHistory history = DealHistory.builder()
                 .dealId(dealId)
+                .changedBy(user.getId())
+                .changedBySector(user.getSector())
                 .valueBefore(objectMapper.writeValueAsString(before))
                 .valueAfter(objectMapper.writeValueAsString(after))
                 .occurredAt(LocalDateTime.now())
@@ -42,3 +44,4 @@ public class DealHistoryServiceImpl implements DealHistoryService {
         return dealHistoryRepository.findByDealIdOrderByOccurredAt(dealId);
     }
 }
+
