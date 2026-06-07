@@ -1,10 +1,14 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.0  
-**Data:** 2026-06-03  
+**Versão:** 1.1  
+**Data:** 2026-06-07  
 **Branch:** main  
-**Commit de referência:** 03cea5a  
+**Commit de referência:** 7f707aa  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, seeder)
+
+> **Changelog 1.1 (2026-06-07):** filtros de listagem agora **cumulativos (AND)** e scope aplicado no
+> SQL via JPA Specifications (ADR-013). `PermissionScope.INTAKE` adicionado em §5. M1/M2 resolvidos
+> (§15). **Mudança de semântica de contrato — ver §15 "Correções pós-Fase 3 RBAC".**
 
 ---
 
@@ -466,7 +470,16 @@ Todos os enums são enviados e recebidos como **string com o nome exato do valor
 
 ### PermissionScope
 
-`GLOBAL`, `SECTOR`, `OWN`
+`GLOBAL`, `SECTOR`, `INTAKE`, `OWN`
+
+| Valor | Significado na listagem (`search()`) |
+|-------|--------------------------------------|
+| `GLOBAL` | Sem recorte — vê todos os registros |
+| `SECTOR` | Vê registros do próprio setor (`currentSector`; em Customer/ContactLog via `EXISTS` no ticket) |
+| `INTAKE` | Vê registros dos setores de captação (`LEADS`, `ATTENDANT`) — acesso cross-sector da entrada (ADR-011) |
+| `OWN` | Vê apenas os registros que o próprio usuário criou (`createdBy`; ContactLog usa `userId`) |
+
+> O scope é resolvido no servidor (`PermissionService.getScope`) e aplicado no SQL via JPA Specifications (ADR-013). O frontend não controla nem envia o scope — apenas recebe a página já recortada.
 
 ---
 
@@ -2300,8 +2313,8 @@ export function roleCanTransitionTo(role: Role, to: TicketStatus): boolean {
 | 1 | `CustomerServiceImpl.anonymize()` | ADR-006: `phone → null` | Código: `customer.setPhone("NULL")` — string literal "NULL" | Frontend deve tratar `phone === "NULL"` como ausente, não apenas `null` |
 | 2 | `RecycleJob.processTicket()` | Ticket filho deve ter `currentSector` e `createdBy` | 🔴 Não define esses campos, que são `NOT NULL` → `save` lança `DataIntegrityViolationException` → **a reciclagem falha** (não é "campo null", o registro não grava) | Reciclagem inoperante até correção — ver `avaliacao-backend-2026-06-06.md` (C5) |
 | 3 | `DealHistoryServiceImpl.record()` | `DealHistory.changedBy` e `changedBySector` são `NOT NULL` | 🔴 O builder não os seta → toda gravação de histórico viola constraint → **HTTP 500** em `update`/`applyDiscount`/`closeDeal` do deal | Operações de deal retornam 500 até correção — ver avaliação (C4). É a causa real do bug #15 |
-| 4 | `LeadTicketServiceImpl.search()` | Contrato §7.4: filtros `customerId`/`status`/`assignedTo` aplicáveis | 🟡 Filtros **ignorados** — só o scope é aplicado (regressão da Fase 3) | `GET /tickets?status=...` retorna a lista inteira do scope. Alvo: ADR-013 (filtros cumulativos AND). Ver avaliação (M1) |
-| 5 | `Customer`/`ContactLog` `search()` | ADR-013: SECTOR/INTAKE via `EXISTS`; OWN via `createdBy`/`userId` | 🟡 Auto-check trivial + `findAll` → SECTOR/INTAKE/OWN não recortam | Usuários OWN/SECTOR veem registros que não deveriam. Alvo: ADR-013. Ver avaliação (M2) |
+| 4 | `LeadTicketServiceImpl.search()` | Contrato §7.4: filtros `customerId`/`status`/`assignedTo` aplicáveis | ✅ **RESOLVIDO** (2026-06-07, commit `7f707aa`) — filtros cumulativos AND via JPA Specifications (ADR-013) | `GET /tickets?status=X&assignedTo=Y` retorna `X` **E** `Y`, dentro do scope. Ver "Correções pós-Fase 3" abaixo |
+| 5 | `Customer`/`ContactLog` `search()` | ADR-013: SECTOR/INTAKE via `EXISTS`; OWN via `createdBy`/`userId` | ✅ **RESOLVIDO** (2026-06-07, commit `7f707aa`) — scope aplicado no SQL via Specifications (`EXISTS` para SECTOR/INTAKE) | OWN/SECTOR/INTAKE agora recortam corretamente. Ver "Correções pós-Fase 3" abaixo |
 
 ### O que estava desatualizado na documentação anterior
 
@@ -2328,6 +2341,21 @@ As divergências abaixo foram identificadas na revisão do contrato e **já corr
 | C1 | `ContactLogServiceImpl.create()` | `statusBefore` era setado com `ticket.getStatus()` em logs manuais, violando o contrato | `statusBefore(null)` e `statusAfter(null)` explícitos no builder |
 | C2 | `ConfigServiceImpl.getRecycle/getBonusConfigs/getAdsInvestments()` | Usava `Action.READ` mas o seeder só semente `CONFIG:CONFIGURE` → 403 para todos | Trocado para `Action.CONFIGURE` nos 3 métodos GET |
 | C3 | `ConfigServiceImpl.getRecycle()` + `RecycleConfigRepository` | `findFirstByActiveTrueOrderByCreatedAtDesc()` retornava `RecycleConfig` nullable → NPE em banco vazio | Repositório alterado para `Optional<RecycleConfig>`; service usa `.orElseThrow(ResourceNotFoundException)` → 404 mapeado |
+
+### Correções pós-Fase 3 RBAC — JPA Specifications (2026-06-07, commit `7f707aa`, ADR-013)
+
+| # | Arquivo | Problema | Correção aplicada |
+|---|---------|----------|-------------------|
+| F1 (M1) | `LeadTicketServiceImpl.search()` | Só o scope era aplicado; `customerId`/`status`/`assignedTo` ignorados | `search()` compõe `Specification.where(byScope).and(filtros)`; repo estende `JpaSpecificationExecutor` |
+| F2 (M2) | `CustomerServiceImpl`/`ContactLogServiceImpl` `search()` | Auto-check trivial + `findAll` → OWN/SECTOR/INTAKE não recortavam | Scope aplicado no SQL; SECTOR/INTAKE via subquery `EXISTS` sobre `LeadTicket` (correlação por `customerId`/`ticketId`) |
+| L1 | `LeadTicketServiceImpl` | 4 métodos privados órfãos + dependência `userRepository` não usada | Removidos |
+
+> ⚠️ **MUDANÇA DE SEMÂNTICA — ação necessária no frontend.** Antes da ADR-013 os filtros de
+> listagem eram tratados como **mutuamente exclusivos por prioridade** (um filtro por request). Agora
+> são **cumulativos (AND)**: `?status=SCHEDULED&assignedTo=X` retorna apenas tickets que satisfazem
+> **ambos**. Telas que enviavam múltiplos params esperando o comportamento antigo (prioridade) precisam
+> ser revisadas — caso contrário podem retornar menos resultados do que o usuário espera. Afeta
+> `GET /customers` (§7.3), `GET /tickets` (§7.4) e a visibilidade por scope de `GET /contact-logs` (§7.5).
 
 ---
 
