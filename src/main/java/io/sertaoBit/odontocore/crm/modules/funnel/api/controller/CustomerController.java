@@ -47,11 +47,11 @@ public class CustomerController {
     public ResponseEntity<Page<CustomerResponseDTO>> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String phone,
-            @RequestParam(required = false) AdsChannel adChannel,
+            @RequestParam(required = false) AdsChannel adsChannel,
             @PageableDefault(size = 20) Pageable pageable
     ) {
 
-        return ResponseEntity.ok(customerService.search(phone, name, adChannel, pageable));
+        return ResponseEntity.ok(customerService.search(phone, name, adsChannel, pageable));
     }
 
     @GetMapping("/{id}")

@@ -48,6 +48,7 @@ class CustomerServiceTest {
     @Mock private SecurityUtils securityUtils;
     @Mock private PermissionService permissionService;
 
+
     @BeforeEach
     void setUp() {
         customerService = new CustomerServiceImpl(
@@ -57,6 +58,7 @@ class CustomerServiceTest {
                 customerMapper,
                 securityUtils,
                 permissionService
+
         );
     }
 
@@ -92,7 +94,7 @@ class CustomerServiceTest {
                 .phone(dto.phone())
                 .email(dto.email())
                 .source(dto.source())
-                .adChannel(dto.adChannel())
+                .adsChannel(dto.adsChannel())
                 .adCampaign(dto.adCampaign())
                 .createdBy(currentUser.getId())
                 .createdAt(LocalDateTime.now())
@@ -104,7 +106,7 @@ class CustomerServiceTest {
                 new CustomerResponseDTO(
                         savedCustomer.getId(), savedCustomer.getName(), savedCustomer.getCpf(),
                         savedCustomer.getPhone(), null, savedCustomer.getEmail(), null,
-                        savedCustomer.getSource(), savedCustomer.getAdChannel(), savedCustomer.getAdCampaign(),
+                        savedCustomer.getSource(), savedCustomer.getAdsChannel(), savedCustomer.getAdCampaign(),
                         savedCustomer.getCreatedAt(), savedCustomer.getUpdatedAt(),
                         savedCustomer.getCreatedBy(), null, false
                 )
@@ -179,7 +181,7 @@ class CustomerServiceTest {
                 .phone(dto.phone())
                 .email(dto.email())
                 .source(dto.source())
-                .adChannel(dto.adChannel())
+                .adsChannel(dto.adsChannel())
                 .adCampaign(dto.adCampaign())
                 .createdBy(currentUser.getId())
                 .createdAt(LocalDateTime.now())
@@ -191,7 +193,7 @@ class CustomerServiceTest {
         CustomerResponseDTO expectedDTO = new CustomerResponseDTO(
                 customer.getId(), customer.getName(), customer.getCpf(),
                 customer.getPhone(), null, customer.getEmail(), null,
-                customer.getSource(), customer.getAdChannel(), customer.getAdCampaign(),
+                customer.getSource(), customer.getAdsChannel(), customer.getAdCampaign(),
                 customer.getCreatedAt(), customer.getUpdatedAt(),
                 customer.getCreatedBy(), null, false
         );

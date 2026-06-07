@@ -16,7 +16,7 @@ public interface CustomerService {
 
     CustomerResponseDTO update(UUID id, CustomerUpdateRequestDTO dto);
 
-    Page<CustomerResponseDTO> search(String phone, String name, AdsChannel adChannel, Pageable pageable);
+    Page<CustomerResponseDTO> search(String phone, String name, AdsChannel asdChannel, Pageable pageable);
 
     CustomerResponseDTO findById(UUID id);
 

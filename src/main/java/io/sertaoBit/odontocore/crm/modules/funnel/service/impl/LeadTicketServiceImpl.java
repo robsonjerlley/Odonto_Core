@@ -2,6 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
@@ -15,18 +16,20 @@ import io.sertaoBit.odontocore.crm.modules.funnel.mapper.LeadTicketMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketSpecifications;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
-import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,9 +39,11 @@ import static io.sertaoBit.odontocore.crm.core.enums.Role.*;
 import static io.sertaoBit.odontocore.crm.core.enums.Sector.EVALUATOR;
 import static io.sertaoBit.odontocore.crm.core.enums.Sector.LEADS;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
+import static io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketSpecifications.byScope;
 
 @Service
 public class LeadTicketServiceImpl implements LeadTicketService {
+
 
     private static final Map<TicketStatus, Set<TicketStatus>> ALLOWED_TRANSITIONS = Map.of(
             NEW, Set.of(IN_CONTACT),
@@ -62,7 +67,6 @@ public class LeadTicketServiceImpl implements LeadTicketService {
 
     private final LeadTicketRepository ticketRepository;
     private final CustomerRepository customerRepository;
-    private final UserRepository userRepository;
     private final SecurityUtils securityUtils;
     private final ContactLogRepository contactLogRepository;
     private final LeadTicketMapper ticketMapper;
@@ -72,16 +76,19 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     public LeadTicketServiceImpl(
             LeadTicketRepository ticketRepository,
             CustomerRepository customerRepository,
-            UserRepository userRepository,
-            LeadTicketMapper ticketMapper, SecurityUtils securityUtils, ContactLogRepository contactLogRepository, PermissionService permissionService
+            LeadTicketMapper ticketMapper,
+            SecurityUtils securityUtils,
+            ContactLogRepository contactLogRepository,
+            PermissionService permissionService
+
     ) {
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;
-        this.userRepository = userRepository;
         this.ticketMapper = ticketMapper;
         this.securityUtils = securityUtils;
         this.contactLogRepository = contactLogRepository;
         this.permissionService = permissionService;
+
     }
 
 
@@ -181,9 +188,10 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         if (dto.status() == RECYCLED) leadTicket.setRecycledAt(now);
         if (dto.status() == LOSS) leadTicket.setClosedAt(now);
 
-        // Agendamento inicial (IN_CONTACT → SCHEDULED): transfere o ticket para o setor
-        // de avaliação e persiste a data. POST_PROCEDURE → SCHEDULED já foi tratado
-        // pelo applyScheduledReturn acima — este bloco cobre apenas os demais origens.
+        /* Agendamento inicial (IN_CONTACT → SCHEDULED): transfere o ticket para o setor
+         * de avaliação e persiste a data. POST_PROCEDURE → SCHEDULED já foi tratado
+         * pelo applyScheduledReturn acima — este bloco cobre apenas os demais origens.
+         */
         if (dto.status() == SCHEDULED && currentStatus != POST_PROCEDURE) {
             leadTicket.setCurrentSector(EVALUATOR);
             if (dto.returnScheduledAt() != null) {
@@ -227,53 +235,22 @@ public class LeadTicketServiceImpl implements LeadTicketService {
     @Override
     @Transactional(readOnly = true)
     public Page<LeadTicketResponseDTO> search(
-            UUID customerId, TicketStatus status, UUID userId, Pageable pageable
+            UUID customerId, TicketStatus status, UUID assignedTo, Pageable pageable
     ) {
         User user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
+        PermissionScope scope = permissionService.getScope(
                 user,
                 TICKET,
-                READ,
-                user.getSector(),
-                user.getId()
-        );
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
-        if (customerId != null) return findByCustomer(customerId, pageable);
-        if (status != null) return findByStatus(status, pageable);
-        if (userId != null) return findByAssignedToUser(userId, pageable);
-        return findAll(pageable);
-    }
+        Specification<LeadTicket> spec = Specification
+                .where(Objects.requireNonNull(byScope(scope, user)))
+                .and(LeadTicketSpecifications.hasCustomerId(customerId))
+                .and(LeadTicketSpecifications.hasStatus(status))
+                .and(LeadTicketSpecifications.assignedTo(assignedTo));
 
-
-    private Page<LeadTicketResponseDTO> findAll(Pageable pageable) {
-        return ticketRepository.findAll(pageable)
-                .map(ticketMapper::toResponseDTO);
-
-    }
-
-
-    private Page<LeadTicketResponseDTO> findByCustomer(UUID customerId, Pageable pageable) {
-        if (!customerRepository.existsById(customerId)) {
-            throw new ResourceNotFoundException("Customer not found by id: " + customerId);
-        }
-
-        return ticketRepository.findByCustomerId(customerId, pageable)
-                .map(ticketMapper::toResponseDTO);
-    }
-
-
-    private Page<LeadTicketResponseDTO> findByStatus(TicketStatus status, Pageable pageable) {
-        return ticketRepository.findByStatus(status, pageable)
-                .map(ticketMapper::toResponseDTO);
-    }
-
-
-    private Page<LeadTicketResponseDTO> findByAssignedToUser(UUID userId, Pageable pageable) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResourceNotFoundException("User not found by id: " + userId);
-        }
-
-        return ticketRepository.findByAssignedTo(userId, pageable)
+        return ticketRepository.findAll(spec, pageable)
                 .map(ticketMapper::toResponseDTO);
     }
 

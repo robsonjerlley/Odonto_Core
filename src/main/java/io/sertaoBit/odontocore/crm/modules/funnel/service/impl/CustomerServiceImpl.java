@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.ContactChannel;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import io.sertaoBit.odontocore.crm.exception.ResourceAlreadyExistsException;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
@@ -15,12 +16,15 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerSpecifications;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +34,7 @@ import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.CUSTOMER;
+import static io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerSpecifications.byScope;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -40,6 +45,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerMapper customerMapper;
     private final SecurityUtils securityUtils;
     private final PermissionService permissionService;
+
 
     public CustomerServiceImpl(
             CustomerRepository customerRepository,
@@ -55,6 +61,7 @@ public class CustomerServiceImpl implements CustomerService {
         this.customerMapper = customerMapper;
         this.securityUtils = securityUtils;
         this.permissionService = permissionService;
+
     }
 
 
@@ -79,7 +86,7 @@ public class CustomerServiceImpl implements CustomerService {
                 .email(dto.email())
                 .initialNote(dto.initialNote())
                 .source(dto.source())
-                .adChannel(dto.adChannel())
+                .adsChannel(dto.adsChannel())
                 .adCampaign(dto.adCampaign())
                 .createdBy(user.getId())
                 .referredBy(dto.referredBy())
@@ -140,29 +147,25 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CustomerResponseDTO> search(String phone, String name, AdsChannel adChannel, Pageable pageable) {
+    public Page<CustomerResponseDTO> search(String phone, String name, AdsChannel asdChannel, Pageable pageable) {
         User user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
+
+        PermissionScope scope = permissionService.getScope(
                 user,
                 CUSTOMER,
-                READ,
-                user.getSector(),
-                user.getId()
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
-        );
+        Specification<Customer> spec = Specification
+                .where(byScope(scope, user))
+                .and(CustomerSpecifications.hasPhoneNumber(phone))
+                .and(CustomerSpecifications.hasName(name))
+                .and(CustomerSpecifications.hasAdsChannel(asdChannel));
 
-        if (phone != null) return findByPhone(phone, pageable);
-        if (name != null) return findByName(name, pageable);
-        if (adChannel != null) return findByAdChannel(adChannel, pageable);
-        return findAll(pageable);
-    }
-
-
-    private Page<CustomerResponseDTO> findAll(Pageable pageable) {
-        return customerRepository.findAll(pageable)
+        return customerRepository.findAll(spec, pageable)
                 .map(customerMapper::toResponseDTO);
-
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -182,11 +185,6 @@ public class CustomerServiceImpl implements CustomerService {
 
     }
 
-    private Page<CustomerResponseDTO> findByName(String name, Pageable pageable) {
-        return customerRepository.findByNameContainingIgnoreCase(name, pageable)
-                .map(customerMapper::toResponseDTO);
-
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -205,18 +203,6 @@ public class CustomerServiceImpl implements CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found by CPF " + cpf));
     }
 
-
-    private Page<CustomerResponseDTO> findByPhone(String phone, Pageable pageable) {
-        return customerRepository.findByPhone(phone, pageable)
-                .map(customerMapper::toResponseDTO);
-
-    }
-
-    private Page<CustomerResponseDTO> findByAdChannel(AdsChannel channel, Pageable pageable) {
-        return customerRepository.findByAdChannel(channel, pageable)
-                .map(customerMapper::toResponseDTO);
-
-    }
 
     @Override
     @Transactional

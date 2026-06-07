@@ -15,7 +15,7 @@ public record CustomerResponseDTO(
         String email,
         String initialNote,
         CustomerSource source,
-        AdsChannel adChannel,
+        AdsChannel adsChannel,
         String adCampaign,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,

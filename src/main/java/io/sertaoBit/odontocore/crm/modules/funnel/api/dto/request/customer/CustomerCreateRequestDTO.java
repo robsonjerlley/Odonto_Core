@@ -18,7 +18,7 @@ public record CustomerCreateRequestDTO(
         String email,
         String initialNote,
         @NotNull CustomerSource source,
-        AdsChannel adChannel,
+        AdsChannel adsChannel,
         String adCampaign,
         UUID referredBy,
         ContactChannel channel

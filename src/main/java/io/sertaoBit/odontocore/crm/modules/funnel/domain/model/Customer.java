@@ -40,7 +40,7 @@ public class Customer {
     @Column(nullable = false)
     private CustomerSource source;
     @Enumerated(EnumType.STRING)
-    private AdsChannel adChannel;
+    private AdsChannel adsChannel;
     private String adCampaign;
     @CreationTimestamp
     @Column(nullable = false)

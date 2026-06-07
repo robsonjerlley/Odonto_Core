@@ -41,16 +41,7 @@ permissionService.checkOrThrow(user, resource, action,
 Substitui o Padrão 3 da ADR-004. `getScope()` serve como check E retorna o escopo para o filtro — uma única query à tabela `permission_rules`:
 
 ```java
-PermissionScope scope = permissionService.getScope(user, resource, Action.READ)
-    .orElseThrow(() -> new AccessDeniedException("Access denied"));
 
-return switch (scope) {
-    case GLOBAL  -> repository.findAll(pageable);
-    case SECTOR  -> repository.findByCurrentSector(user.getSector(), pageable);
-    case INTAKE  -> repository.findByCurrentSectorIn(INTAKE_SECTORS, pageable);
-    case OWN     -> repository.findByCreatedBy(user.getId(), pageable);
-};
-```
 
 `Optional.empty()` de `getScope()` significa ausência de permissão — o `orElseThrow()` faz o trabalho do 403 sem chamada extra.
 

@@ -55,7 +55,6 @@ public class LeadTicketServiceTest {
         leadTicketService = new LeadTicketServiceImpl(
                 ticketRepository,
                 customerRepository,
-                userRepository,
                 ticketMapper,
                 securityUtils,
                 contactLogRepository,

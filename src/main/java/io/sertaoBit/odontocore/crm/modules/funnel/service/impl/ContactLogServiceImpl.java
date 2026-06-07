@@ -2,6 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.Action;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
@@ -9,19 +10,24 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.ContactLog;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.ContactLogMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
+import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogSpecifications;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ContactLogService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.CONTACT_LOG;
+import static io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogSpecifications.byScope;
 
 @Service
 public class ContactLogServiceImpl implements ContactLogService {
@@ -64,7 +70,7 @@ public class ContactLogServiceImpl implements ContactLogService {
         var userId = user.getId();
 
         ContactLog contactLog = ContactLog.builder()
-                .ticketId(dto.ticketId())
+                .ticketId(ticket.getId())
                 .userId(userId)
                 .channel(dto.channel())
                 .note(dto.note())
@@ -98,28 +104,17 @@ public class ContactLogServiceImpl implements ContactLogService {
     @Transactional(readOnly = true)
     public Page<ContactLogResponseDTO> search(UUID ticketId, Pageable pageable) {
         User user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
+        PermissionScope scope = permissionService.getScope(
                 user,
                 CONTACT_LOG,
-                READ,
-                user.getSector(),
-                user.getId()
-        );
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
-        if (ticketId != null) return findByTicketId(ticketId, pageable);
-        return findAll(pageable);
-    }
+        Specification<ContactLog> spec = Specification
+                .where(Objects.requireNonNull(byScope(scope, user)))
+                .and(ContactLogSpecifications.byTicketId(ticketId));
 
-
-    private Page<ContactLogResponseDTO> findAll(Pageable pageable) {
-        return contactLogRepository.findAll(pageable)
+        return contactLogRepository.findAll(spec, pageable)
                 .map(contactLogMapper::toResponseDTO);
     }
-
-
-    private Page<ContactLogResponseDTO> findByTicketId(UUID ticketId, Pageable pageable) {
-        return contactLogRepository.findByTicketId(ticketId, pageable)
-                .map(contactLogMapper::toResponseDTO);
-    }
-
 }
