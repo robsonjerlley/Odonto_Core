@@ -1,6 +1,5 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
-import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.RecycleConfig;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;

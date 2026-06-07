@@ -14,8 +14,6 @@ public interface UserService {
 
     UserResponseDTO create(UserCreateRequestDTO requestDTO);
 
-    UserResponseDTO register(UserCreateRequestDTO requestDTO);
-
     UserResponseDTO updatePassword(String username, String newPassword);
 
     Page<UserResponseDTO> search(Sector sector, Role role, Pageable pageable);

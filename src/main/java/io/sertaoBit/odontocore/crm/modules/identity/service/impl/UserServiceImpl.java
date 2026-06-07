@@ -65,27 +65,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponseDTO(userRepository.save(newUser));
     }
 
-
-    @Override
-    @Transactional
-    public UserResponseDTO register(UserCreateRequestDTO dto) {
-        var userChek = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
-                userChek,
-                USER,
-                CREATE,
-                null,
-                null
-        );
-
-        User newUser = userMapper.toEntity(dto);
-        newUser.setActive(true);
-        newUser.setRole(Role.USER_ATTENDANT);
-        newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
-        return userMapper.toResponseDTO(userRepository.save(newUser));
-    }
-
-
     @Override
     @Transactional
     public UserResponseDTO updatePassword(String username, String newPassword) throws IllegalArgumentException {
