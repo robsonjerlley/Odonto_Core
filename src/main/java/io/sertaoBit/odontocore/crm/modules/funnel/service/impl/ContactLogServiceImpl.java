@@ -111,7 +111,7 @@ public class ContactLogServiceImpl implements ContactLogService {
         ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
         Specification<ContactLog> spec = Specification
-                .where(Objects.requireNonNull(byScope(scope, user)))
+                .where((byScope(scope, user)))
                 .and(ContactLogSpecifications.byTicketId(ticketId));
 
         return contactLogRepository.findAll(spec, pageable)

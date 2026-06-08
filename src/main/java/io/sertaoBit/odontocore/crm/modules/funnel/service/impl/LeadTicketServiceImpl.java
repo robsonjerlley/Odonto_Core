@@ -245,7 +245,7 @@ public class LeadTicketServiceImpl implements LeadTicketService {
         ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
         Specification<LeadTicket> spec = Specification
-                .where(Objects.requireNonNull(byScope(scope, user)))
+                .where((byScope(scope, user)))
                 .and(LeadTicketSpecifications.hasCustomerId(customerId))
                 .and(LeadTicketSpecifications.hasStatus(status))
                 .and(LeadTicketSpecifications.assignedTo(assignedTo));

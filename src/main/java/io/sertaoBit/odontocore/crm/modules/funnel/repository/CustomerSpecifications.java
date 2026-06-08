@@ -22,7 +22,7 @@ public final class CustomerSpecifications {
     }
 
     public static Specification<Customer> hasPhoneNumber(String phone) {
-        if (phone == null || phone.isBlank()) {}
+        if (phone == null || phone.isBlank()) return null;
         return (root, query, cb
         ) -> cb.equal(root.get("phone"), phone);
     }
