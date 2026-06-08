@@ -152,17 +152,19 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, TICKET, UPDATE, SECTOR));
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, TICKET, CLOSE, SECTOR));
 
+        rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, CONTACT_LOG, READ, SECTOR));
 
         //USER_COMMERCIAL
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, READ, OWN));
-        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, UPDATE, OWN));
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, UPDATE, SECTOR));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, CLOSE, OWN));
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, READ, OWN));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, UPDATE, OWN));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, CLOSE, OWN));
 
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CONTACT_LOG, READ, GLOBAL));
 
         permissionRuleRepository.deleteAll();

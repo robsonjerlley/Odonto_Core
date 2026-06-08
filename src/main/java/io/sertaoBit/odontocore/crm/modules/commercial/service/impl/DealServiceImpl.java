@@ -173,7 +173,7 @@ public class DealServiceImpl implements DealService {
         permissionService.checkOrThrow(
                 user,
                 DEAL,
-                CONFIGURE,
+                UPDATE,
                 user.getSector(),
                 deal.getCreatedBy()
         );
@@ -187,8 +187,8 @@ public class DealServiceImpl implements DealService {
             throw new IllegalStateException("Percentual não deve ter valores negativos ou superiores a 100");
         }
 
+
         var discountBefore = deal.getDiscountPct();
-        var finalValueBefore = deal.getFinalValue();
 
         deal.setDiscountPct(dto.discountPct());
         deal.setDiscountApprovedBy(user.getId());

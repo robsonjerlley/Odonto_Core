@@ -142,6 +142,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setCpf(dto.cpf());
         customer.setEmail(dto.email());
         customer.setPhone(dto.phone());
+        customer.setPhone2(dto.phone2());
         return customerMapper.toResponseDTO(customerRepository.save(customer));
     }
 

@@ -1,10 +1,16 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.1  
-**Data:** 2026-06-07  
+**Versão:** 1.2  
+**Data:** 2026-06-08  
 **Branch:** main  
-**Commit de referência:** 7f707aa  
+**Commit de referência:** (Split 2)  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, seeder)
+
+> **Changelog 1.2 (2026-06-08):** correções de RBAC e dados — `CUSTOMER:READ` adicionado para
+> `ADM_COMMERCIAL` e `USER_COMMERCIAL` (SECTOR); `DEAL:UPDATE` de `USER_COMMERCIAL` corrigido para
+> scope `SECTOR`; `applyDiscount` corrigido de `CONFIGURE` para `UPDATE`; `getUserPerformance` com
+> scope OWN corrigido; `phone2` agora atualizado via `PATCH /customers`. C4/C5 marcados resolvidos.
+> Ver §15 "Correções backend 2026-06-08".
 
 > **Changelog 1.1 (2026-06-07):** filtros de listagem agora **cumulativos (AND)** e scope aplicado no
 > SQL via JPA Specifications (ADR-013). `PermissionScope.INTAKE` adicionado em §5. M1/M2 resolvidos
@@ -1377,9 +1383,12 @@ Todos os endpoints requerem `CONFIG:CONFIGURE` (apenas ADM_SYSTEM).
 | USER_EVALUATOR | CONTACT_LOG | READ | GLOBAL |
 | ADM_COMMERCIAL | DEAL | READ, UPDATE, CLOSE | SECTOR |
 | ADM_COMMERCIAL | TICKET | READ, UPDATE, CLOSE | SECTOR |
+| ADM_COMMERCIAL | CUSTOMER | READ | SECTOR |
 | ADM_COMMERCIAL | CONTACT_LOG | READ | SECTOR |
-| USER_COMMERCIAL | DEAL | READ, UPDATE, CLOSE | OWN |
+| USER_COMMERCIAL | DEAL | READ, CLOSE | OWN |
+| USER_COMMERCIAL | DEAL | UPDATE | SECTOR |
 | USER_COMMERCIAL | TICKET | READ, UPDATE, CLOSE | OWN |
+| USER_COMMERCIAL | CUSTOMER | READ | SECTOR |
 | USER_COMMERCIAL | CONTACT_LOG | READ | GLOBAL |
 
 ### Lógica de resolveScope
@@ -1459,10 +1468,11 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 ### ADM_COMMERCIAL / USER_COMMERCIAL
 
 - **Edita:** deals (update, close)
-- **Lê:** deals, tickets, contact_log (GLOBAL)
+- **Lê:** deals, tickets, clientes do setor (SECTOR); contact_log (GLOBAL para USER_COMMERCIAL, SECTOR para ADM_COMMERCIAL)
 - **Não cria:** deals, tickets
-- **Telas visíveis:** Negociações, Deals
+- **Telas visíveis:** Negociações, Deals, Clientes (somente leitura do setor)
 - **Rota inicial:** `/negociacoes`
+- **Atenção:** `DEAL:UPDATE` de `USER_COMMERCIAL` tem scope `SECTOR` (pode atualizar deals do setor); `DEAL:READ` e `DEAL:CLOSE` têm scope `OWN`
 
 ---
 
@@ -2255,11 +2265,13 @@ export const ROLE_CAPABILITIES: Record<Role, ResourceAction[]> = {
   ADM_COMMERCIAL: [
     'DEAL:READ','DEAL:UPDATE','DEAL:CLOSE',
     'TICKET:READ','TICKET:UPDATE','TICKET:CLOSE',
+    'CUSTOMER:READ',
     'CONTACT_LOG:READ',
   ],
   USER_COMMERCIAL: [
     'DEAL:READ','DEAL:UPDATE','DEAL:CLOSE',
     'TICKET:READ','TICKET:UPDATE','TICKET:CLOSE',
+    'CUSTOMER:READ',
     'CONTACT_LOG:READ',
   ],
 };
@@ -2311,8 +2323,8 @@ export function roleCanTransitionTo(role: Role, to: TicketStatus): boolean {
 | # | Local | O que diz a ADR/spec | O que diz o código | Impacto para o frontend |
 |---|-------|---------------------|-------------------|------------------------|
 | 1 | `CustomerServiceImpl.anonymize()` | ADR-006: `phone → null` | Código: `customer.setPhone("NULL")` — string literal "NULL" | Frontend deve tratar `phone === "NULL"` como ausente, não apenas `null` |
-| 2 | `RecycleJob.processTicket()` | Ticket filho deve ter `currentSector` e `createdBy` | 🔴 Não define esses campos, que são `NOT NULL` → `save` lança `DataIntegrityViolationException` → **a reciclagem falha** (não é "campo null", o registro não grava) | Reciclagem inoperante até correção — ver `avaliacao-backend-2026-06-06.md` (C5) |
-| 3 | `DealHistoryServiceImpl.record()` | `DealHistory.changedBy` e `changedBySector` são `NOT NULL` | 🔴 O builder não os seta → toda gravação de histórico viola constraint → **HTTP 500** em `update`/`applyDiscount`/`closeDeal` do deal | Operações de deal retornam 500 até correção — ver avaliação (C4). É a causa real do bug #15 |
+| 2 | `RecycleJob.processTicket()` | Ticket filho deve ter `currentSector` e `createdBy` | ✅ **RESOLVIDO** (2026-06-07, commit `7b1ec44`) — `currentSector=LEADS` e `createdBy=ticket.getCreatedBy()` agora setados no ticket-filho | Reciclagem operante |
+| 3 | `DealHistoryServiceImpl.record()` | `DealHistory.changedBy` e `changedBySector` são `NOT NULL` | ✅ **RESOLVIDO** (2026-06-07, commit `3ce04b4`) — `record()` agora preenche `changedBy`/`changedBySector` a partir do `User` recebido | Operações de deal funcionam sem 500 |
 | 4 | `LeadTicketServiceImpl.search()` | Contrato §7.4: filtros `customerId`/`status`/`assignedTo` aplicáveis | ✅ **RESOLVIDO** (2026-06-07, commit `7f707aa`) — filtros cumulativos AND via JPA Specifications (ADR-013) | `GET /tickets?status=X&assignedTo=Y` retorna `X` **E** `Y`, dentro do scope. Ver "Correções pós-Fase 3" abaixo |
 | 5 | `Customer`/`ContactLog` `search()` | ADR-013: SECTOR/INTAKE via `EXISTS`; OWN via `createdBy`/`userId` | ✅ **RESOLVIDO** (2026-06-07, commit `7f707aa`) — scope aplicado no SQL via Specifications (`EXISTS` para SECTOR/INTAKE) | OWN/SECTOR/INTAKE agora recortam corretamente. Ver "Correções pós-Fase 3" abaixo |
 
@@ -2359,6 +2371,18 @@ As divergências abaixo foram identificadas na revisão do contrato e **já corr
 
 ---
 
+### Correções backend 2026-06-08
+
+| # | Arquivo | Problema | Correção aplicada |
+|---|---------|----------|-------------------|
+| B1 (A1) | `PermissionSeeder` | `CUSTOMER:READ` ausente para `ADM_COMMERCIAL` e `USER_COMMERCIAL` → 403 em toda leitura de cliente por esses papéis | Regras `CUSTOMER:READ:SECTOR` adicionadas para ambos |
+| B2 (A2) | `DealServiceImpl.applyDiscount()` | `checkOrThrow` usava `Action.CONFIGURE` → 403 para qualquer tentativa de aplicar desconto | Corrigido para `Action.UPDATE` |
+| B3 (A3) | `PermissionSeeder` | `USER_COMMERCIAL, DEAL:UPDATE` com scope `OWN` → vendedor não conseguia atualizar deals criados por outros membros do setor | Scope corrigido para `SECTOR` |
+| B4 (A4) | `AnalyticsServiceImpl.getUserPerformance()` | `checkOrThrow(... null, null)` — scope `OWN` checava `user.id == null` → sempre falso → `USER_ATTENDANT` recebia 403 ao consultar sua própria performance | Corrigido para `checkOrThrow(... null, userId)` |
+| B5 (M4) | `CustomerServiceImpl.update()` | `phone2` não era persistido no `PATCH /customers/{id}` | `customer.setPhone2(dto.phone2())` adicionado |
+
+---
+
 ### O que está PLANEJADO mas não implementado
 
 | Feature | Descrição |
@@ -2368,4 +2392,5 @@ As divergências abaixo foram identificadas na revisão do contrato e **já corr
 | ~~Timezone explícito~~ | ✅ **RESOLVIDO (ADR-009)** — fuso da JVM fixado em America/Sao_Paulo; ver §1 |
 | Módulo de agendamentos | Previsto para fases futuras |
 | Módulo financeiro | Previsto para fases futuras |
+| Validação de desconto com aprovação (`DiscountApprovalRequiredException`) | Classe e handler existem mas a condição nunca é disparada. Regra de limite de desconto será implementada no módulo financeiro — por ora qualquer usuário com `DEAL:UPDATE` aplica livremente; `discountApprovedBy` registra quem aplicou |
 | `ContactLog.logType` discriminador explícito | Campo `logType: MANUAL \| SYSTEM` para distinguir logs sem depender de null-check em `statusBefore/statusAfter`. Requer migration de schema. Decisão: ADR-008 (proposto). Enquanto não implementado, usar `statusBefore === null && statusAfter === null` como discriminador de log manual — ver Seção 12. |

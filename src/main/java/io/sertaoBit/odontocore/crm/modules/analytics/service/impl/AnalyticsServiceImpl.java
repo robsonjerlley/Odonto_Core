@@ -234,7 +234,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     public UserPerformanceResultDTO getUserPerformance(UUID targetUserId, DataRangeDTO period, UUID userId) {
         var currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        permissionService.checkOrThrow(currentUser, ANALYTICS, Action.READ, null, null);
+        permissionService.checkOrThrow(currentUser, ANALYTICS, Action.READ, null, userId);
 
         var targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target user not found"));
