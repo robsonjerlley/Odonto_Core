@@ -98,6 +98,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/deals/**").authenticated()
                         .requestMatchers("/api/v1/config/**").authenticated()
                         .requestMatchers("/api/v1/authentication/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();

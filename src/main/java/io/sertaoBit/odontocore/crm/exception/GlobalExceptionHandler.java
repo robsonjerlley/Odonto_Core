@@ -2,31 +2,20 @@ package io.sertaoBit.odontocore.crm.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.validation.FieldError;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @RestControllerAdvice
 @NullMarked
 public class GlobalExceptionHandler {
-
-    record ErrorResponse(int status, String error, String message, LocalDateTime timestamp) {
-        static ErrorResponse of(HttpStatus httpStatus, String message) {
-            return new ErrorResponse(httpStatus.value(), httpStatus.getReasonPhrase(), message, LocalDateTime.now());
-        }
-    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
@@ -54,8 +43,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
-        return ResponseEntity.status(UNPROCESSABLE_ENTITY)
-                .body(ErrorResponse.of(UNPROCESSABLE_ENTITY, ex.getMessage()));
+        return ResponseEntity.status(UNPROCESSABLE_CONTENT)
+                .body(ErrorResponse.of(UNPROCESSABLE_CONTENT, ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -63,7 +52,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(BAD_REQUEST)
                 .body(ErrorResponse.of(BAD_REQUEST,
                         ex.getBindingResult().getFieldErrors().stream()
-                                .map(e -> e.getField() + " : "+ e.getDefaultMessage())
+                                .map(e -> e.getField() + " : " + e.getDefaultMessage())
                                 .collect(Collectors.joining(" , "))));
     }
 
@@ -74,9 +63,17 @@ public class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handlerBadCredential(BadCredentialsException ex) {
+        return ResponseEntity.status(UNAUTHORIZED)
+                .body(ErrorResponse.of(UNAUTHORIZED, ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of(INTERNAL_SERVER_ERROR, "Erro interno do servidor"));
     }
+
+
 }
