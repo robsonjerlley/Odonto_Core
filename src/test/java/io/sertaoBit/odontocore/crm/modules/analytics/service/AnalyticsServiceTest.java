@@ -102,7 +102,7 @@ public class AnalyticsServiceTest {
         User user = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(customerRepository.findByAdChannel(AdsChannel.META)).thenReturn(List.of());
+        when(customerRepository.findByAdsChannel(AdsChannel.META)).thenReturn(List.of());
         when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any()))
                 .thenReturn(List.of());
         when(dealRepository.findByTicketIdIn(any())).thenReturn(List.of());
@@ -269,7 +269,7 @@ public class AnalyticsServiceTest {
         Deal d2 = buildClosedDeal(UUID.randomUUID(), new BigDecimal("5000.00"), PaymentMethod.DENTAL_INSURANCE);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(customerRepository.findByAdChannel(any())).thenReturn(List.of());
+        when(customerRepository.findByAdsChannel(any())).thenReturn(List.of());
         when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any()))
                 .thenReturn(List.of());
         when(dealRepository.findByTicketIdIn(any())).thenReturn(List.of());
@@ -290,7 +290,7 @@ public class AnalyticsServiceTest {
         User user = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(customerRepository.findByAdChannel(any())).thenReturn(List.of());
+        when(customerRepository.findByAdsChannel(any())).thenReturn(List.of());
         when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any()))
                 .thenReturn(List.of());
         when(dealRepository.findByTicketIdIn(any())).thenReturn(List.of());

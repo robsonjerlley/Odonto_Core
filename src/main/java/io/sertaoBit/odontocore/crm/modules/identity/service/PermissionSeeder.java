@@ -161,7 +161,7 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, CLOSE, OWN));
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, READ, OWN));
-        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, UPDATE, OWN));
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, UPDATE, OWN ));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, CLOSE, OWN));
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));
