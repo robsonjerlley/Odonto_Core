@@ -76,7 +76,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 null, null
         );
 
-        List<Customer> customers = customerRepository.findByAdChannel(channel);
+        List<Customer> customers = customerRepository.findByAdsChannel(channel);
         List<UUID> customersId = customers.stream().map(Customer::getId).toList();
 
         List<LeadTicket> tickets = leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(

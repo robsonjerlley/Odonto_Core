@@ -16,6 +16,6 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID>, JpaSp
 
     Optional<Customer> findByCpf(String cpf);
 
-    List<Customer> findByAdChannel(AdsChannel adsChannel);
+    List<Customer> findByAdsChannel(AdsChannel adsChannel);
 
 }
