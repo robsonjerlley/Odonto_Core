@@ -69,7 +69,7 @@ public final class CustomerSpecifications {
 
     public static Specification<Customer> byScope(PermissionScope scope, User user) {
         return switch (scope) {
-            case GLOBAL -> null;
+            case GLOBAL -> ((root, query, cb) -> cb.conjunction() );
             case OWN -> createdBy(user.getId());
             case SECTOR -> hasTicketInSector(user.getSector());
             case INTAKE -> hasTicketInSectors(List.of(LEADS, ATTENDANT));

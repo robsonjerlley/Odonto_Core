@@ -57,7 +57,7 @@ public final class LeadTicketSpecifications {
 
     public static Specification<LeadTicket> byScope(PermissionScope scope, User user) {
         return switch (scope) {
-            case GLOBAL -> null;
+            case GLOBAL -> ((root, query, cb) -> cb.conjunction() );
             case SECTOR -> currentSector(user.getSector());
             case INTAKE -> currentSectorIn(List.of(LEADS, ATTENDANT));
             case OWN -> createdBy(user.getId());

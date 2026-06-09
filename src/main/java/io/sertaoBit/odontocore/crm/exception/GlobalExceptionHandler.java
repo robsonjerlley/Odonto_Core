@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(INTERNAL_SERVER_ERROR, "Erro interno do servidor"));
+                .body(ErrorResponse.of(INTERNAL_SERVER_ERROR, ex.getMessage()));
     }
 
 
