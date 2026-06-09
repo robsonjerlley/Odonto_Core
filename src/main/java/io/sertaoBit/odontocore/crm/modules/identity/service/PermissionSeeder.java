@@ -83,14 +83,16 @@ public class PermissionSeeder implements ApplicationRunner {
         //ADM_LEADS
         rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, CREATE, SECTOR));
         rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, READ, INTAKE));
-        rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, UPDATE, SECTOR));
+        rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, UPDATE, INTAKE));
 
         rules.add(rule(ADM_LEADS, LEADS, TICKET, CREATE, SECTOR));
         rules.add(rule(ADM_LEADS, LEADS, TICKET, READ, INTAKE));
         rules.add(rule(ADM_LEADS, LEADS, TICKET, UPDATE, INTAKE));
 
         rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, CREATE, SECTOR));
-        rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, READ, SECTOR));
+        rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, READ, INTAKE));
+
+        rules.add(rule(ADM_LEADS, LEADS, ANALYTICS, READ, SECTOR));
         
 
         //USER_LEADS
@@ -99,11 +101,13 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_LEADS, LEADS, CUSTOMER, UPDATE, OWN));
 
         rules.add(rule(USER_LEADS, LEADS, TICKET, CREATE, OWN));
-        rules.add(rule(USER_LEADS, LEADS, TICKET, READ, OWN));
-        rules.add(rule(USER_LEADS, LEADS, TICKET, UPDATE, OWN));
+        rules.add(rule(USER_LEADS, LEADS, TICKET, READ, INTAKE));
+        rules.add(rule(USER_LEADS, LEADS, TICKET, UPDATE, SECTOR));
 
         rules.add(rule(USER_LEADS, LEADS, CONTACT_LOG, CREATE, OWN));
-        rules.add(rule(USER_LEADS, LEADS, CONTACT_LOG, READ, OWN));
+        rules.add(rule(USER_LEADS, LEADS, CONTACT_LOG, READ, SECTOR));
+
+        rules.add(rule(USER_LEADS, LEADS, ANALYTICS, READ, OWN));
 
         //USER_ATTENDANT
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, CREATE, OWN));
@@ -114,7 +118,7 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, UPDATE, INTAKE));
 
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, CREATE, OWN));
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, READ, OWN));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, READ, INTAKE));
 
         rules.add(rule(USER_ATTENDANT, ATTENDANT, ANALYTICS, READ, OWN));
 
@@ -128,7 +132,9 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(ADM_EVALUATOR, EVALUATOR, TICKET, READ, SECTOR));
         rules.add(rule(ADM_EVALUATOR, EVALUATOR, TICKET, UPDATE, SECTOR));
 
-        rules.add(rule(ADM_EVALUATOR, EVALUATOR, CONTACT_LOG, READ, SECTOR));
+        rules.add(rule(ADM_EVALUATOR, EVALUATOR, CONTACT_LOG, READ, GLOBAL));
+
+        rules.add(rule(ADM_EVALUATOR, EVALUATOR, ANALYTICS, READ, SECTOR));
 
 
         //USER_EVALUATOR
@@ -143,6 +149,9 @@ public class PermissionSeeder implements ApplicationRunner {
 
         rules.add(rule(USER_EVALUATOR, EVALUATOR, CONTACT_LOG, READ, GLOBAL));
 
+        rules.add(rule(USER_EVALUATOR, EVALUATOR, ANALYTICS, READ, OWN));
+
+
         //ADM_COMMERCIAL
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, DEAL, READ, SECTOR));
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, DEAL, UPDATE, SECTOR));
@@ -155,6 +164,8 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, CONTACT_LOG, READ, SECTOR));
 
+        rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, ANALYTICS, READ, SECTOR));
+
         //USER_COMMERCIAL
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, READ, OWN));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, UPDATE, SECTOR));
@@ -166,6 +177,8 @@ public class PermissionSeeder implements ApplicationRunner {
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CONTACT_LOG, READ, GLOBAL));
+
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, ANALYTICS, READ, OWN));
 
         permissionRuleRepository.deleteAll();
         permissionRuleRepository.saveAll(rules);
