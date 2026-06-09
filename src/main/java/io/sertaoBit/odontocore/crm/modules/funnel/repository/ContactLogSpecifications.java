@@ -21,7 +21,7 @@ public final class ContactLogSpecifications {
     }
 
     public static Specification<ContactLog> byTicketId(UUID ticketId) {
-        if (ticketId == null) return null;
+        if (ticketId == null)  return  (root, query, cb) -> cb.conjunction();
 
         return (root, query, cb
         ) -> cb.equal(root.get("ticketId"), ticketId);
@@ -29,7 +29,7 @@ public final class ContactLogSpecifications {
     }
 
     public static Specification<ContactLog> hasTicketInSectors(List<Sector> sectors) {
-        if (sectors == null || sectors.isEmpty()) return null;
+        if (sectors == null || sectors.isEmpty()) return  (root, query, cb) -> cb.conjunction();
 
         return (root, query, cb
         ) -> {
@@ -46,11 +46,12 @@ public final class ContactLogSpecifications {
     }
 
     public static Specification<ContactLog> hasTicketInSector(Sector sector) {
-        return sector == null ? null : hasTicketInSectors(List.of(sector));
+        if (sector == null) return (root, query, cb) -> cb.conjunction();
+        return hasTicketInSectors(List.of(sector));
     }
 
     public static Specification<ContactLog> createdBy(UUID userId) {
-        if (userId == null) return null;
+        if (userId == null)  return  (root, query, cb) -> cb.conjunction();
 
         return (root, query, cb
         ) -> cb.equal(root.get("userId"), userId);

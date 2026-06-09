@@ -22,26 +22,26 @@ public final class CustomerSpecifications {
     }
 
     public static Specification<Customer> hasPhoneNumber(String phone) {
-        if (phone == null || phone.isBlank()) return null;
+        if (phone == null || phone.isBlank()) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("phone"), phone);
     }
 
     public static Specification<Customer> hasName(String name) {
-        if (name == null || name.isBlank()) return null;
+        if (name == null || name.isBlank()) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("name"), name);
     }
 
     public static Specification<Customer> hasAdsChannel(AdsChannel adsChannel) {
-        if (adsChannel == null) return null;
+        if (adsChannel == null) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("adsChannel"), adsChannel);
     }
 
 
     public static Specification<Customer> hasTicketInSectors(List<Sector> sectors) {
-        if (sectors == null || sectors.isEmpty()) return null;
+        if (sectors == null || sectors.isEmpty()) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> {
             Subquery<UUID> sub = query.subquery(UUID.class);
@@ -56,12 +56,12 @@ public final class CustomerSpecifications {
     }
 
     public static Specification<Customer> hasTicketInSector(Sector sector) {
-        return sector == null ? null : hasTicketInSectors(List.of(sector));
-
+        if (sector == null) return (root, query, cb) -> cb.conjunction();
+        return hasTicketInSectors(List.of(sector));
     }
 
     public static Specification<Customer> createdBy(UUID userId) {
-        if (userId == null) return null;
+        if (userId == null) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("createdBy"), userId);
     }
@@ -69,7 +69,7 @@ public final class CustomerSpecifications {
 
     public static Specification<Customer> byScope(PermissionScope scope, User user) {
         return switch (scope) {
-            case GLOBAL -> ((root, query, cb) -> cb.conjunction() );
+            case GLOBAL -> ((root, query, cb) -> cb.conjunction());
             case OWN -> createdBy(user.getId());
             case SECTOR -> hasTicketInSector(user.getSector());
             case INTAKE -> hasTicketInSectors(List.of(LEADS, ATTENDANT));

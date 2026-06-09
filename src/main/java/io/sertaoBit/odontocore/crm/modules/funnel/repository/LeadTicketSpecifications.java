@@ -19,45 +19,45 @@ public final class LeadTicketSpecifications {
     }
 
     public static Specification<LeadTicket> hasStatus(TicketStatus status) {
-        if (status == null) return null;
+        if (status == null) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("status"), status);
     }
 
     public static Specification<LeadTicket> hasCustomerId(UUID customerId) {
-        if (customerId == null) return null;
+        if (customerId == null) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("customerId"), customerId);
     }
 
 
     public static Specification<LeadTicket> assignedTo(UUID assignedTo) {
-        if (assignedTo == null) return null;
+        if (assignedTo == null) return (root, query, cb) -> cb.conjunction();
         return ((root, query, cb
         ) -> cb.equal(root.get("assignedTo"), assignedTo));
     }
 
     public static Specification<LeadTicket> createdBy(UUID userId) {
-        if (userId == null) return null;
+        if (userId == null) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("createdBy"), userId);
     }
 
     public static Specification<LeadTicket> currentSector(Sector sector) {
-        if (sector == null) return null;
+        if (sector == null) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> cb.equal(root.get("currentSector"), sector);
     }
 
     public static Specification<LeadTicket> currentSectorIn(List<Sector> sectors) {
-        if (sectors == null) return null;
+        if (sectors == null) return (root, query, cb) -> cb.conjunction();
         return (root, query, cb
         ) -> root.get("currentSector").in(sectors);
     }
 
     public static Specification<LeadTicket> byScope(PermissionScope scope, User user) {
         return switch (scope) {
-            case GLOBAL -> ((root, query, cb) -> cb.conjunction() );
+            case GLOBAL -> ((root, query, cb) -> cb.conjunction());
             case SECTOR -> currentSector(user.getSector());
             case INTAKE -> currentSectorIn(List.of(LEADS, ATTENDANT));
             case OWN -> createdBy(user.getId());
