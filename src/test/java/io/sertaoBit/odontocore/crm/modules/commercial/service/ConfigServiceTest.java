@@ -30,7 +30,6 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -66,7 +65,7 @@ public class ConfigServiceTest {
                 .id(UUID.randomUUID())
                 .name("Manager")
                 .username("manager@test.com")
-                .passwordHash("hash")
+                .password("hash")
                 .sector(Sector.LEADS)
                 .role(Role.ADM_LEADS)
                 .active(true)

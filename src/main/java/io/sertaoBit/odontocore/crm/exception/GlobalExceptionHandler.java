@@ -2,6 +2,7 @@ package io.sertaoBit.odontocore.crm.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -49,6 +50,14 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(UNPROCESSABLE_CONTENT, ex.getMessage()));
     }
 
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+       log.error("A DESGRAÇA DO ERRO ESTÁ AQUI: ", ex);
+       return ResponseEntity.status(BAD_REQUEST)
+                .body(ErrorResponse.of(BAD_REQUEST, ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleNotValid(MethodArgumentNotValidException ex) {
         return ResponseEntity.status(BAD_REQUEST)
@@ -73,9 +82,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
-        log.error("AQUI ESTA A DESGRAÇA DO ERRO: " ,ex);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(INTERNAL_SERVER_ERROR, ex.getMessage()));
+                .body(ErrorResponse.of(INTERNAL_SERVER_ERROR, "Erro Interno do Servidor"));
     }
 
 

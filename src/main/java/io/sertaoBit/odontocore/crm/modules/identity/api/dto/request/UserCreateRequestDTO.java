@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 public record UserCreateRequestDTO(
         @NotBlank @NotNull String name,
         @NotBlank(message = "Campo nome não deve estar em branco ") String username,
-        @NotBlank @Size(min = 8, message = "A senha deve conter o mínimo de 8 caracteres.") String passwordHash,
+        @NotBlank @Size(min = 8, message = "A senha deve conter o mínimo de 8 caracteres.") String password,
         @NotNull Sector sector,
         @NotNull Role role
 ) {

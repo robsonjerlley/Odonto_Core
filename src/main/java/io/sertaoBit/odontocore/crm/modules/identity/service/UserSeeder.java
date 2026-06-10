@@ -43,7 +43,7 @@ public class UserSeeder implements ApplicationRunner {
         User admin = User.builder()
                 .name(adminName)
                 .username(adminUsername)
-                .passwordHash(passwordEncoder.encode(adminPassword))
+                .password(passwordEncoder.encode(adminPassword))
                 .sector(Sector.ADM)
                 .role(Role.ADM_SYSTEM)
                 .active(true)

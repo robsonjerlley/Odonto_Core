@@ -67,7 +67,7 @@ class CustomerServiceTest {
                 .id(UUID.randomUUID())
                 .name("Atendente Teste")
                 .username("atendente@teste.com")
-                .passwordHash("hash")
+                .password("hash")
                 .sector(sector)
                 .role(Role.USER_LEADS)
                 .active(true)

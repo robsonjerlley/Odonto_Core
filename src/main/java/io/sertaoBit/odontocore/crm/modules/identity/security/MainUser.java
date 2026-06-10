@@ -63,7 +63,7 @@ public class MainUser implements UserDetails {
         return new MainUser(
                 u.getId(),
                 u.getUsername(),
-                u.getPasswordHash(),
+                u.getPassword(),
                 u.getRole(),
                 u.getSector(),
                 u.isActive()

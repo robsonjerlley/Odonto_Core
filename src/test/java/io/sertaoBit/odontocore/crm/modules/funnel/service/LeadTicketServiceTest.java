@@ -66,7 +66,7 @@ public class LeadTicketServiceTest {
                 .id(UUID.randomUUID())
                 .name("Test User")
                 .username("test@test.com")
-                .passwordHash("hash")
+                .password("hash")
                 .sector(Sector.COMMERCIAL)
                 .role(role)
                 .active(true)

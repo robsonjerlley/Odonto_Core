@@ -64,7 +64,7 @@ public class AnalyticsServiceTest {
                 .id(id)
                 .name("Test")
                 .username("test@test.com")
-                .passwordHash("hash")
+                .password("hash")
                 .sector(sector)
                 .role(role)
                 .active(true)

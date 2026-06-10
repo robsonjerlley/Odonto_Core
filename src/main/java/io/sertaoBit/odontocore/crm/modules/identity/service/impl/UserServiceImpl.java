@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
         User newUser = userMapper.toEntity(dto);
         newUser.setActive(true);
         newUser.setCreatedBy(securityUtils.getCurrentUserId());
-        newUser.setPasswordHash(passwordEncoder.encode(newUser.getPasswordHash()));
+        newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         return userMapper.toResponseDTO(userRepository.save(newUser));
     }
 
@@ -80,8 +80,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
 
-        if (!passwordEncoder.matches(newPassword, user.getPasswordHash())) {
-            user.setPasswordHash(passwordEncoder.encode(newPassword));
+        if (!passwordEncoder.matches(newPassword, user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(newPassword));
         } else {
             throw new IllegalArgumentException("Nova senha não deve ser igual a senha atual.");
         }

@@ -60,7 +60,7 @@ public class DealServiceTest {
                 .id(UUID.randomUUID())
                 .name("Test")
                 .username("test@test.com")
-                .passwordHash("hash")
+                .password("hash")
                 .sector(Sector.EVALUATOR)
                 .role(Role.USER_EVALUATOR)
                 .active(true)
