@@ -22,7 +22,8 @@
       "Bash(git *)",
       "Bash(mvn test *)",
       "Bash(Get-ChildItem -Recurse -Path \"B:\\\\projects\\\\odontocore.crm.frontend\\\\src\" -Include \"*.ts\",\"*.tsx\")",
-      "Bash(Select-Object -First 40 FullName)"
+      "Bash(Select-Object -First 40 FullName)",
+      "Bash(dir *)"
     ]
   }
 }

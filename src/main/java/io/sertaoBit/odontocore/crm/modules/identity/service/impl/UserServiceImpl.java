@@ -109,36 +109,18 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO findById(UUID id) {
-        var user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
-                user,
-                USER,
-                READ,
-                null,
-                null
-        );
-
         return userRepository.findById(id)
                 .map(userMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by id: " + id));
     }
 
 
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO findByUsername(String username) {
-        var user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
-                user,
-                USER,
-                READ,
-                null,
-                null
-        );
-
         return userRepository.findByUsername(username)
                 .map(userMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found!" + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by username: " + username));
     }
 
 
