@@ -54,8 +54,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
        log.error("A DESGRAÇA DO ERRO ESTÁ AQUI: ", ex);
-       return ResponseEntity.status(BAD_REQUEST)
-                .body(ErrorResponse.of(BAD_REQUEST, ex.getMessage()));
+       return ResponseEntity.status(UNPROCESSABLE_CONTENT)
+                .body(ErrorResponse.of(UNPROCESSABLE_CONTENT, ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
