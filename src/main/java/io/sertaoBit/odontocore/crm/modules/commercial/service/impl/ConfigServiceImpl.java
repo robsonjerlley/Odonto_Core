@@ -69,7 +69,7 @@ public class ConfigServiceImpl implements ConfigService {
         var currentUser = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
                 currentUser, CONFIG,
-                Action.CONFIGURE, null,
+                CONFIGURE, null,
                 null
         );
 
@@ -87,7 +87,7 @@ public class ConfigServiceImpl implements ConfigService {
         var currentUser = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
                 currentUser, CONFIG,
-                Action.CONFIGURE, dto.sector(),
+                CONFIGURE, dto.sector(),
                 null
         );
 
@@ -110,7 +110,7 @@ public class ConfigServiceImpl implements ConfigService {
         var currentUser = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
                 currentUser, CONFIG,
-                Action.CONFIGURE, null,
+                CONFIGURE, null,
                 null
         );
 

@@ -1,16 +1,16 @@
 package io.sertaoBit.odontocore.crm.modules.analytics.api.controller;
 
-import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
-import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
-import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.*;
+import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.GlobalDashBoardResultDTO;
+import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.SectorDropOffResultDTO;
+import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.StageConversionResultDTO;
+import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.UserPerformanceResultDTO;
 import io.sertaoBit.odontocore.crm.modules.analytics.service.AnalyticsService;
 import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,22 +19,22 @@ import java.util.UUID;
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
-    private final SecurityUtils securityUtils;
 
-    public AnalyticsController(AnalyticsService analyticsService1, SecurityUtils securityUtils) {
+    public AnalyticsController(AnalyticsService analyticsService1) {
         this.analyticsService = analyticsService1;
-        this.securityUtils = securityUtils;
+
     }
 
-    @GetMapping("/ads-roi")
-    public ResponseEntity<AdsRoiResultDTO> getAdsRoi(
-            @RequestParam AdsChannel channel,
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<GlobalDashBoardResultDTO> getGlobalDashBoard(
             @ModelAttribute DataRangeDTO period
+
     ) {
         return ResponseEntity.ok(
-                analyticsService.getAdsRoi(channel, period, securityUtils.getCurrentUserId())
-        );
+                analyticsService.getGlobalDashBoard(period));
     }
+
 
     @GetMapping("/conversion")
     public ResponseEntity<StageConversionResultDTO> getConversionByStage(
@@ -42,7 +42,7 @@ public class AnalyticsController {
             @RequestParam @Validated Sector sector
     ) {
         return ResponseEntity.ok(
-                analyticsService.getConversionByStage(period, sector, securityUtils.getCurrentUserId())
+                analyticsService.getConversionByStage(period, sector)
         );
     }
 
@@ -50,7 +50,7 @@ public class AnalyticsController {
     public ResponseEntity<List<SectorDropOffResultDTO>> getDropOffBySector(
             @ModelAttribute DataRangeDTO period) {
         return ResponseEntity.ok(
-                analyticsService.getDropOffBySector(period, securityUtils.getCurrentUserId()));
+                analyticsService.getDropOffBySector(period));
     }
 
     @GetMapping("/user-performance/{targetUserId}")
@@ -58,30 +58,7 @@ public class AnalyticsController {
             @PathVariable UUID targetUserId,
             @ModelAttribute DataRangeDTO period) {
         return ResponseEntity.ok(
-                analyticsService.getUserPerformance(targetUserId, period, securityUtils.getCurrentUserId()));
+                analyticsService.getUserPerformance(targetUserId, period));
     }
-
-    @GetMapping("/bonus/{id}")
-    public ResponseEntity<BonusResultDTO> getCalculatedBonus(
-            @PathVariable UUID id,
-            @RequestParam String periodRef) {
-        return ResponseEntity.ok(
-                analyticsService.getCalculatedBonus(id, periodRef, securityUtils.getCurrentUserId()));
-    }
-
-    @GetMapping("/post-procedure")
-    public ResponseEntity<PostProcedureResultDTO> getPostProcedure(
-            @ModelAttribute DataRangeDTO period
-    ) {
-        return ResponseEntity.ok(analyticsService.getPostProcedureMetrics(period, securityUtils.getCurrentUserId()));
-    }
-
-    @GetMapping("/dashboard")
-    public ResponseEntity<GlobalDashBoardResultDTO> getGlobalDashBoard(
-            @ModelAttribute DataRangeDTO period) {
-        return ResponseEntity.ok(
-                analyticsService.getGlobalDashBoard(period, securityUtils.getCurrentUserId()));
-    }
-
 
 }

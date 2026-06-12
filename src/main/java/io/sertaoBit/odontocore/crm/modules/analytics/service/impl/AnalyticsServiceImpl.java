@@ -1,7 +1,8 @@
 package io.sertaoBit.odontocore.crm.modules.analytics.service.impl;
 
-import io.sertaoBit.odontocore.crm.core.enums.Action;
+import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.*;
@@ -18,6 +19,7 @@ import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.ANALYTICS;
 import static io.sertaoBit.odontocore.crm.core.enums.Sector.*;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
@@ -47,6 +50,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private final BonusConfigRepository bonusConfigRepository;
     private final ConfigService configService;
     private final PermissionService permissionService;
+    private final SecurityUtils securityUtils;
 
     public AnalyticsServiceImpl(
             CustomerRepository customerRepository,
@@ -55,7 +59,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             UserRepository userRepository,
             BonusConfigRepository bonusConfigRepository,
             ConfigService configService,
-            PermissionService permissionService
+            PermissionService permissionService,
+            SecurityUtils securityUtils
     ) {
         this.customerRepository = customerRepository;
         this.leadTicketRepository = leadTicketRepository;
@@ -64,59 +69,16 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         this.bonusConfigRepository = bonusConfigRepository;
         this.configService = configService;
         this.permissionService = permissionService;
+        this.securityUtils = securityUtils;
     }
 
-    @Override
-    public AdsRoiResultDTO getAdsRoi(AdsChannel channel, DataRangeDTO period, UUID userId) {
 
-        var currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        permissionService.checkOrThrow(
-                currentUser, ANALYTICS, Action.READ,
-                null, null
-        );
-
-        List<Customer> customers = customerRepository.findByAdsChannel(channel);
-        List<UUID> customersId = customers.stream().map(Customer::getId).toList();
-
-        List<LeadTicket> tickets = leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(
-                customersId, WIN,
-                period.from().atStartOfDay(),
-                period.to().atTime(23, 59, 59)
-        );
-
-        List<UUID> ticketsIds = tickets.stream().map(LeadTicket::getId).toList();
-        List<Deal> closeDeals = dealRepository.findByTicketIdIn(ticketsIds).stream()
-                .filter(deal -> !deal.isArchived()).toList();
-
-        BigDecimal totalRevenue = closeDeals.stream()
-                .map(d -> d.getFinalValue() != null ? d.getFinalValue() : ZERO)
-                .reduce(ZERO, BigDecimal::add);
-
-        BigDecimal totalInvestment = configService.sumInvestmentByChannelAndPeriod(channel, period);
-
-        BigDecimal roiMultiplier = totalInvestment.compareTo(ZERO) == 0
-                ? ZERO
-                : totalRevenue.divide(totalInvestment, 2, RoundingMode.HALF_UP);
-
-        return new AdsRoiResultDTO(
-                channel,
-                totalInvestment,
-                totalRevenue,
-                roiMultiplier,
-                (long) customers.size(),
-                (long) tickets.size()
-        );
-
-
-    }
 
     @Override
-    public StageConversionResultDTO getConversionByStage(DataRangeDTO period, Sector sector, UUID userId) {
-        var currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public StageConversionResultDTO getConversionByStage(DataRangeDTO period, Sector sector) {
+        User user = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
-                currentUser, ANALYTICS, Action.READ,
+                user, ANALYTICS, READ,
                 null, null
         );
 
@@ -169,11 +131,10 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
     @Override
-    public List<SectorDropOffResultDTO> getDropOffBySector(DataRangeDTO period, UUID userId) {
-        var currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public List<SectorDropOffResultDTO> getDropOffBySector(DataRangeDTO period) {
+        User user = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
-                currentUser, ANALYTICS, Action.READ,
+                user, ANALYTICS, READ,
                 null, null
         );
 
@@ -220,21 +181,17 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         );
     }
 
-    private SectorDropOffResultDTO buildDropOff(Sector sector, long entryCount, long lossCount) {
-        long exitCount = entryCount - lossCount;
-        BigDecimal dropOffPct = entryCount == 0 ? ZERO
-                : valueOf(lossCount * 100)
-                .divide(valueOf(entryCount), 2, RoundingMode.HALF_UP);
-        return new SectorDropOffResultDTO(sector, entryCount, exitCount, lossCount, dropOffPct);
-
-
-    }
 
     @Override
-    public UserPerformanceResultDTO getUserPerformance(UUID targetUserId, DataRangeDTO period, UUID userId) {
-        var currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        permissionService.checkOrThrow(currentUser, ANALYTICS, Action.READ, null, userId);
+    public UserPerformanceResultDTO getUserPerformance(UUID targetUserId, DataRangeDTO period) {
+        User user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                ANALYTICS,
+                READ,
+                user.getSector(),
+                user.getId()
+        );
 
         var targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target user not found"));
@@ -282,7 +239,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .divide(valueOf(totalAssigned), 2, RoundingMode.HALF_UP);
 
         String periodRef = period.from().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        BigDecimal calculatedBonus = getCalculatedBonus(targetUser.getId(), periodRef, userId).value();
+        BigDecimal calculatedBonus = getCalculatedBonus(targetUser.getId(), periodRef).value();
 
         return new UserPerformanceResultDTO(
                 targetUser.getId(),
@@ -297,11 +254,42 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         );
     }
 
+
+
     @Override
-    public BonusResultDTO getCalculatedBonus(UUID targetId, String periodRef, UUID userId) {
-        var currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        permissionService.checkOrThrow(currentUser, ANALYTICS, Action.READ, null, null);
+    public GlobalDashBoardResultDTO getGlobalDashBoard(DataRangeDTO period) {
+        User  user = securityUtils.getCurrentUser();
+        permissionService.checkOrThrow(
+                user,
+                ANALYTICS,
+                READ,
+                null,
+                null
+        );
+
+        var adsRoiList = Arrays.stream(AdsChannel.values())
+                .map(channel -> getAdsRoi(channel, period))
+                .toList();
+
+        var stageConversion = getConversionByStage(period, null);
+        var sectorDropOff = getDropOffBySector(period);
+
+        var topPerformers = userRepository.findByActiveTrue().stream()
+                .map(u -> getUserPerformance(u.getId(), period))
+                .toList();
+
+        var from = period.from().atStartOfDay();
+        var to = period.to().atTime(23, 59, 59);
+        BigDecimal totalExpectedCash = dealRepository.findByClosedAtBetweenAndArchivedFalse(from, to).stream()
+                .filter(d -> d.getFinalValue() != null && d.getPaymentMethod() != null)
+                .map(d -> d.getFinalValue().multiply(d.getPaymentMethod().getConversionFactor()))
+                .reduce(ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        return new GlobalDashBoardResultDTO(period, adsRoiList, stageConversion, sectorDropOff, topPerformers, totalExpectedCash);
+    }
+
+    private BonusResultDTO getCalculatedBonus(UUID targetId, String periodRef) {
 
         var targetUser = userRepository.findById(targetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target user not found"));
@@ -323,40 +311,48 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         return new BonusResultDTO(calculated);
     }
 
-    @Override
-    public GlobalDashBoardResultDTO getGlobalDashBoard(DataRangeDTO period, UUID userId) {
-        var currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        permissionService.checkOrThrow(currentUser, ANALYTICS, Action.READ, null, null);
 
-        var adsRoiList = Arrays.stream(AdsChannel.values())
-                .map(channel -> getAdsRoi(channel, period, userId))
-                .toList();
+    private AdsRoiResultDTO getAdsRoi(AdsChannel channel, DataRangeDTO period) {
 
-        var stageConversion = getConversionByStage(period, null, userId);
-        var sectorDropOff = getDropOffBySector(period, userId);
+        List<Customer> customers = customerRepository.findByAdsChannel(channel);
+        List<UUID> customersId = customers.stream().map(Customer::getId).toList();
 
-        var topPerformers = userRepository.findByActiveTrue().stream()
-                .map(u -> getUserPerformance(u.getId(), period, userId))
-                .toList();
+        List<LeadTicket> tickets = leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(
+                customersId, WIN,
+                period.from().atStartOfDay(),
+                period.to().atTime(23, 59, 59)
+        );
 
-        var from = period.from().atStartOfDay();
-        var to = period.to().atTime(23, 59, 59);
-        BigDecimal totalExpectedCash = dealRepository.findByClosedAtBetweenAndArchivedFalse(from, to).stream()
-                .filter(d -> d.getFinalValue() != null && d.getPaymentMethod() != null)
-                .map(d -> d.getFinalValue().multiply(d.getPaymentMethod().getConversionFactor()))
-                .reduce(ZERO, BigDecimal::add)
-                .setScale(2, RoundingMode.HALF_UP);
+        List<UUID> ticketsIds = tickets.stream().map(LeadTicket::getId).toList();
+        List<Deal> closeDeals = dealRepository.findByTicketIdIn(ticketsIds).stream()
+                .filter(deal -> !deal.isArchived()).toList();
 
-        return new GlobalDashBoardResultDTO(period, adsRoiList, stageConversion, sectorDropOff, topPerformers, totalExpectedCash);
+        BigDecimal totalRevenue = closeDeals.stream()
+                .map(d -> d.getFinalValue() != null ? d.getFinalValue() : ZERO)
+                .reduce(ZERO, BigDecimal::add);
+
+        BigDecimal totalInvestment = configService.sumInvestmentByChannelAndPeriod(channel, period);
+
+        BigDecimal roiMultiplier = totalInvestment.compareTo(ZERO) == 0
+                ? ZERO
+                : totalRevenue.divide(totalInvestment, 2, RoundingMode.HALF_UP);
+
+        return new AdsRoiResultDTO(
+                channel,
+                totalInvestment,
+                totalRevenue,
+                roiMultiplier,
+                (long) customers.size(),
+                (long) tickets.size()
+        );
+
+
     }
 
-    @Override
+
+
     @Transactional(readOnly = true)
-    public PostProcedureResultDTO getPostProcedureMetrics(DataRangeDTO period, UUID userId) {
-        var currentUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        permissionService.checkOrThrow(currentUser, ANALYTICS, Action.READ, null, null);
+    private PostProcedureResultDTO getPostProcedureMetrics(DataRangeDTO period) {
 
         var from = period.from().atStartOfDay();
         var to = period.to().atTime(23, 59, 59);
@@ -374,12 +370,24 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         var pendingCount = procedures.stream()
                 .filter(p -> p.getStatus().equals(POST_PROCEDURE)).count();
 
-            BigDecimal returnRate = totalProcedures == 0 ? ZERO
-                    : valueOf(returnCount * 100)
-                    .divide(valueOf(totalProcedures), 2, RoundingMode.HALF_UP);
+        BigDecimal returnRate = totalProcedures == 0 ? ZERO
+                : valueOf(returnCount * 100)
+                .divide(valueOf(totalProcedures), 2, RoundingMode.HALF_UP);
 
-        return new PostProcedureResultDTO(totalProcedures, (int) returnCount,(int) lostCount, returnRate,(int) pendingCount);
+        return new PostProcedureResultDTO(totalProcedures, (int) returnCount, (int) lostCount, returnRate, (int) pendingCount);
     }
+
+
+    private SectorDropOffResultDTO buildDropOff(Sector sector, long entryCount, long lossCount) {
+        long exitCount = entryCount - lossCount;
+        BigDecimal dropOffPct = entryCount == 0 ? ZERO
+                : valueOf(lossCount * 100)
+                .divide(valueOf(entryCount), 2, RoundingMode.HALF_UP);
+        return new SectorDropOffResultDTO(sector, entryCount, exitCount, lossCount, dropOffPct);
+
+
+    }
+
 
     private long resolveMetric(User targetUser, DataRangeDTO period) {
         var from = period.from().atStartOfDay();
