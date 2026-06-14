@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
@@ -31,6 +32,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.TICKET;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -391,6 +394,7 @@ public class LeadTicketServiceTest {
         UUID customerId = UUID.randomUUID();
         User user = buildUser(Role.ADM_SYSTEM);
         when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, TICKET, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
         when(customerRepository.existsById(customerId)).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class,
@@ -405,6 +409,7 @@ public class LeadTicketServiceTest {
         UUID userId = UUID.randomUUID();
         User user = buildUser(Role.ADM_SYSTEM);
         when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, TICKET, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
         when(userRepository.existsById(userId)).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class,

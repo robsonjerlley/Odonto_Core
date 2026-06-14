@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
@@ -29,7 +30,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
 import static io.sertaoBit.odontocore.crm.core.enums.ContactChannel.FACEBOOK;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.CONTACT_LOG;
 import static io.sertaoBit.odontocore.crm.core.enums.TicketStatus.IN_CONTACT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -150,6 +153,7 @@ class ContactLogServiceTest {
         UUID userId = UUID.randomUUID();
         User user = User.builder().id(userId).sector(Sector.LEADS).build();
         when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, CONTACT_LOG, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
 
         ContactLog contactLog = ContactLog.builder()
                 .id(UUID.randomUUID())
