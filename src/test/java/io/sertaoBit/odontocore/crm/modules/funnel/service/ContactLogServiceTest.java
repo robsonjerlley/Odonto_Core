@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
@@ -179,7 +180,7 @@ class ContactLogServiceTest {
         );
 
         Page<ContactLog> page = new PageImpl<>(List.of(contactLog));
-        when(contactLogRepository.findByTicketId(eq(ticketId), any(Pageable.class))).thenReturn(page);
+        when(contactLogRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
         when(contactLogMapper.toResponseDTO(contactLog)).thenReturn(expectedDTO);
 
         Page<ContactLogResponseDTO> result = contactLogService.search(ticketId, Pageable.unpaged());
@@ -188,7 +189,7 @@ class ContactLogServiceTest {
         assertEquals(1, result.getTotalElements());
         assertEquals(ticketId, result.getContent().get(0).ticketId());
 
-        verify(contactLogRepository, times(1)).findByTicketId(eq(ticketId), any(Pageable.class));
+        verify(contactLogRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
         verify(contactLogMapper, times(1)).toResponseDTO(contactLog);
     }
 

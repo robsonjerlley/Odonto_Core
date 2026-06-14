@@ -26,9 +26,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -389,32 +392,34 @@ public class LeadTicketServiceTest {
     // ========== SEARCH ==========
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao buscar tickets de customer inexistente")
-    void search_byUnknownCustomer_throwsNotFound() {
+    @DisplayName("Deve retornar página vazia ao buscar tickets de customer inexistente")
+    void search_byUnknownCustomer_returnsEmptyPage() {
         UUID customerId = UUID.randomUUID();
         User user = buildUser(Role.ADM_SYSTEM);
         when(securityUtils.getCurrentUser()).thenReturn(user);
         when(permissionService.getScope(user, TICKET, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
-        when(customerRepository.existsById(customerId)).thenReturn(false);
+        when(ticketRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
 
-        assertThrows(ResourceNotFoundException.class,
-                () -> leadTicketService.search(customerId, null, null, Pageable.unpaged()));
+        Page<LeadTicketResponseDTO> result =
+                leadTicketService.search(customerId, null, null, Pageable.unpaged());
 
-        verify(ticketRepository, never()).findByCustomerId(any(), any());
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao buscar tickets de usuário inexistente")
-    void search_byUnknownAssignee_throwsNotFound() {
+    @DisplayName("Deve retornar página vazia ao buscar tickets de usuário inexistente")
+    void search_byUnknownAssignee_returnsEmptyPage() {
         UUID userId = UUID.randomUUID();
         User user = buildUser(Role.ADM_SYSTEM);
         when(securityUtils.getCurrentUser()).thenReturn(user);
         when(permissionService.getScope(user, TICKET, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
-        when(userRepository.existsById(userId)).thenReturn(false);
+        when(ticketRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
 
-        assertThrows(ResourceNotFoundException.class,
-                () -> leadTicketService.search(null, null, userId, Pageable.unpaged()));
+        Page<LeadTicketResponseDTO> result =
+                leadTicketService.search(null, null, userId, Pageable.unpaged());
 
-        verify(ticketRepository, never()).findByAssignedTo(any(), any());
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
     }
 }
