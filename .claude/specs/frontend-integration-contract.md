@@ -1,10 +1,18 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.3  
-**Data:** 2026-06-11  
+**Versão:** 1.4  
+**Data:** 2026-06-14  
 **Branch:** main  
-**Commit de referência:** `b9ec632` (HEAD)  
+**Commit de referência:** `949a4a9` (HEAD)  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, `PermissionSeeder`, `GlobalExceptionHandler`)
+
+> **Changelog 1.4 (2026-06-14) — ADR-015 implementada: analytics scope-aware.** Endpoints
+> `/ads-roi`, `/post-procedure` e `/bonus/{id}` removidos como endpoints independentes — seus dados
+> ficam acessíveis apenas via `GET /analytics/dashboard` (GLOBAL). Dashboard passa a incluir
+> `postProcedures` (`PostProcedureResultDTO`). `getConversionByStage` e `getDropOffBySector` agora
+> respondem corretamente para escopo `SECTOR` (ADMs de setor recebem dados filtrados ao próprio
+> setor). `getUserPerformance` reforça guarda `OWN` — papel `OWN` só pode consultar o próprio
+> `targetUserId`. Testes unitários reescritos para cobrir os novos comportamentos de scope. Ver §13 e §15.
 
 > **Changelog 1.3 (2026-06-11) — sincronização total com o código.** Esta revisão reescreveu o
 > contrato a partir da leitura direta de todos os controllers, DTOs, enums, services e do
@@ -102,13 +110,10 @@
 | GET | `/api/v1/config/recycle` | Consultar config de reciclagem | CONFIG:CONFIGURE | 200 |
 | GET | `/api/v1/config/bonus` | Consultar configs de bônus | CONFIG:CONFIGURE | 200 |
 | GET | `/api/v1/config/ads-investment` | Consultar investimentos ADS | CONFIG:CONFIGURE | 200 |
-| GET | `/api/v1/analytics/ads-roi` | ROI de canal ADS | ANALYTICS:READ | 200 |
-| GET | `/api/v1/analytics/conversion` | Conversão por etapa | ANALYTICS:READ | 200 |
-| GET | `/api/v1/analytics/dropoff` | Abandono por setor | ANALYTICS:READ | 200 |
-| GET | `/api/v1/analytics/user-performance/{targetUserId}` | Performance de usuário | ANALYTICS:READ | 200 |
-| GET | `/api/v1/analytics/bonus/{id}` | Bônus apurado | ANALYTICS:READ | 200 |
-| GET | `/api/v1/analytics/post-procedure` | Métricas pós-procedimento | ANALYTICS:READ | 200 |
-| GET | `/api/v1/analytics/dashboard` | Dashboard global | ANALYTICS:READ | 200 |
+| GET | `/api/v1/analytics/conversion` | Conversão por etapa | ANALYTICS:READ (GLOBAL + SECTOR) | 200 |
+| GET | `/api/v1/analytics/dropoff` | Abandono por setor | ANALYTICS:READ (GLOBAL + SECTOR) | 200 |
+| GET | `/api/v1/analytics/user-performance/{targetUserId}` | Performance de usuário | ANALYTICS:READ (GLOBAL + OWN) | 200 |
+| GET | `/api/v1/analytics/dashboard` | Dashboard global — inclui `postProcedures` e `adsRoi` | ANALYTICS:READ (GLOBAL only) | 200 |
 
 ---
 
@@ -1577,8 +1582,7 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 - **Lê/edita:** clientes e tickets em escopo **`INTAKE`** (recursos cujo ticket está em `LEADS` ou `ATTENDANT`)
 - **Lê:** contact_log (`INTAKE`)
 - **Não acessa:** deals, config, USER
-- **Analytics:** `ANALYTICS:READ:SECTOR` semeado — porém na prática os endpoints de analytics passam
-  `targetSector=null` e retornam **403** para escopo SECTOR (ver §13)
+- **Analytics:** `ANALYTICS:READ:SECTOR` — acessa `/conversion` e `/dropoff` filtrados ao próprio setor (ADR-015); `/dashboard` continua restrito a GLOBAL (§13)
 - **Rota inicial sugerida:** `/clientes`
 
 ### USER_LEADS
@@ -1586,7 +1590,7 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 - **Cria:** clientes/tickets (`OWN`), logs de contato (`OWN`)
 - **Lê:** clientes/tickets em `INTAKE`; **atualiza** tickets em escopo `SECTOR` (só `currentSector==LEADS`)
 - **Lê:** contact_log (`SECTOR`)
-- **Analytics:** `ANALYTICS:READ:OWN` — só `user-performance` da própria conta funciona (§13)
+- **Analytics:** `ANALYTICS:READ:OWN` — acessa `/user-performance/{próprio-id}` (§13)
 - **Rota inicial sugerida:** `/clientes`
 
 ---
@@ -1596,7 +1600,7 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 - **Cria:** clientes (`OWN`), logs de contato (`OWN`)
 - **Lê/atualiza:** clientes e tickets em escopo **`INTAKE`** (`LEADS`/`ATTENDANT`)
 - **Não pode:** criar ticket; transição **LOSS** e transição **IN_CONTACT** (bloqueio explícito → 403)
-- **Analytics:** `ANALYTICS:READ:OWN` — só `user-performance` próprio funciona (§13)
+- **Analytics:** `ANALYTICS:READ:OWN` — acessa `/user-performance/{próprio-id}` (§13)
 - **Rota inicial sugerida:** `/atendimentos`
 
 ---
@@ -1605,7 +1609,7 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 
 - **Cria/edita:** deals (`SECTOR`); edita tickets (`SECTOR`)
 - **Lê:** clientes (`SECTOR`), contact_log (`GLOBAL` — histórico de captação completo)
-- **Analytics:** `SECTOR` (na prática 403 nos dashboards — §13)
+- **Analytics:** `SECTOR` — acessa `/conversion` e `/dropoff` filtrados ao próprio setor (ADR-015); `/dashboard` restrito a GLOBAL (§13)
 - **Rota inicial sugerida:** `/avaliacoes`
 
 ### USER_EVALUATOR
@@ -1613,7 +1617,7 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 - **Cria/edita:** deals (`OWN`)
 - **Edita/lê:** tickets (`SECTOR`)
 - **Lê:** clientes (`GLOBAL`), contact_log (`GLOBAL`)
-- **Analytics:** `OWN` (só `user-performance` próprio — §13)
+- **Analytics:** `OWN` — acessa `/user-performance/{próprio-id}` (§13)
 - **Rota inicial sugerida:** `/avaliacoes`
 
 ---
@@ -1623,7 +1627,7 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 - **Edita/fecha:** deals (`SECTOR`)
 - **Lê/edita:** tickets (`SECTOR`); lê clientes (`SECTOR`), contact_log (`SECTOR`)
 - **Não cria:** deals, tickets, usuários
-- **Analytics:** `SECTOR` (na prática 403 nos dashboards — §13)
+- **Analytics:** `SECTOR` — acessa `/conversion` e `/dropoff` filtrados ao próprio setor (ADR-015); `/dashboard` restrito a GLOBAL (§13)
 - **Rota inicial sugerida:** `/negociacoes`
 
 ### USER_COMMERCIAL
@@ -1632,15 +1636,17 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
   outro membro do setor, mas só lê/fecha os próprios)
 - **Lê/edita:** tickets (`OWN`); lê clientes (`SECTOR`), contact_log (`GLOBAL`)
 - **Não cria:** deals, tickets
-- **Analytics:** `OWN` (só `user-performance` próprio — §13)
+- **Analytics:** `OWN` — acessa `/user-performance/{próprio-id}` (§13)
 - **Rota inicial sugerida:** `/negociacoes`
 
 ---
 
-> **Regra de ouro (revisada 1.3):** **todos** os papéis têm `ANALYTICS:READ` semeado, mas o **escopo**
-> mais a forma como o backend chama `checkOrThrow` fazem com que, **na prática**, apenas `ADM_SYSTEM`
-> (escopo `GLOBAL`) acesse os endpoints de dashboard; papéis `OWN` só acessam `user-performance` (deles
-> mesmos) e papéis `SECTOR` recebem 403 em quase tudo. Detalhe em §13.
+> **Regra de ouro (revisada 1.4 — ADR-015):** **todos** os papéis têm `ANALYTICS:READ` semeado.
+> Com a ADR-015 o scope é resolvido uma vez no entry point de cada método:
+> `GLOBAL` acessa `/dashboard` (dados completos); `SECTOR` acessa `/conversion` e `/dropoff` filtrados
+> ao próprio setor; `OWN` acessa `/user-performance/{próprio-id}` (qualquer outro `targetUserId` → 403).
+> Endpoints `/ads-roi`, `/bonus/{id}` e `/post-procedure` foram removidos — dados disponíveis apenas
+> dentro de `/dashboard`. Detalhe em §13.
 
 ---
 
@@ -1802,40 +1808,29 @@ A maioria dos endpoints analytics recebe `DataRangeDTO` como `@ModelAttribute` (
 Todos os papéis têm `ANALYTICS:READ` semeado, **mas** o backend chama `checkOrThrow` de formas
 diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targetOwnerId`:
 
-| Endpoint | `checkOrThrow(... targetSector, targetOwnerId)` | Quem **consegue** acessar |
-|----------|--------------------------------------------------|---------------------------|
-| `ads-roi`, `conversion`, `dropoff`, `bonus/{id}`, `post-procedure`, `dashboard` | `(null, null)` | **Só escopo GLOBAL** → na prática **apenas `ADM_SYSTEM`**. Papéis `SECTOR`/`OWN` → **403** |
-| `user-performance/{targetUserId}` | `(null, callerId)` | `GLOBAL` (`ADM_SYSTEM`) **e** todos os papéis de escopo `OWN` (`USER_LEADS`, `USER_ATTENDANT`, `USER_EVALUATOR`, `USER_COMMERCIAL`). Papéis `SECTOR` (`ADM_LEADS`, `ADM_EVALUATOR`, `ADM_COMMERCIAL`) → **403** |
+| Endpoint | Scope aceito | Quem acessa | Comportamento por scope |
+|----------|--------------|-------------|------------------------|
+| `GET /analytics/dashboard` | GLOBAL only | `ADM_SYSTEM` | Escopo não-GLOBAL → **403** |
+| `GET /analytics/conversion` | GLOBAL + SECTOR | `ADM_SYSTEM`, `ADM_LEADS`, `ADM_EVALUATOR`, `ADM_COMMERCIAL` | GLOBAL: sem filtro; SECTOR: `effectiveSector = user.getSector()`, ignora o `sector` do query param |
+| `GET /analytics/dropoff` | GLOBAL + SECTOR | `ADM_SYSTEM`, `ADM_LEADS`, `ADM_EVALUATOR`, `ADM_COMMERCIAL` | GLOBAL: retorna os 3 setores; SECTOR: retorna apenas o setor do usuário |
+| `GET /analytics/user-performance/{targetUserId}` | GLOBAL + OWN | `ADM_SYSTEM`, `USER_LEADS`, `USER_ATTENDANT`, `USER_EVALUATOR`, `USER_COMMERCIAL` | OWN: `targetUserId` deve ser o próprio `user.id` (caso contrário → **403**); GLOBAL: qualquer `targetUserId`. Papéis SECTOR → **403** |
 
-> Ou seja, hoje o **dashboard e as métricas agregadas são efetivamente exclusivos de `ADM_SYSTEM`**.
-> Papéis de usuário (`OWN`) só conseguem `user-performance`. Como o `user-performance` checa
-> `OWN` contra `callerId` (sempre verdadeiro), eles podem passar **qualquer** `targetUserId` no path.
-> Isto é provavelmente um gap de backend (ver §15) — o frontend deve, por ora, **só exibir o menu de
-> dashboard para `ADM_SYSTEM`** e tratar 403 como "sem acesso a analytics".
-
----
-
-#### GET /api/v1/analytics/ads-roi
-
-**Params:** `channel` (AdsChannel, obrigatório) + `from/to`
-
-```json
-// Response 200
-{
-  "channel": "INSTAGRAM",
-  "totalInvestment": 3500.00,
-  "totalRevenue": 15000.00,
-  "roiMultiplier": 4.28,
-  "leadsCount": 45,
-  "closedCount": 12
-}
-```
+> **ADR-015 (2026-06-14):** a implementação anterior passava `(null, null)` ao `checkOrThrow` em todos
+> os métodos de analytics, bloqueando qualquer papel não-GLOBAL. Com a ADR-015, o scope é resolvido via
+> `getScope()` no entry point de cada método e a visibilidade é aplicada nos dados (não apenas no check).
+> Endpoints `/ads-roi`, `/bonus/{id}` e `/post-procedure` foram removidos do contrato público — seus
+> dados ficam dentro de `GET /analytics/dashboard` (GLOBAL apenas).
 
 ---
 
 #### GET /api/v1/analytics/conversion
 
-**Params:** `sector` (Sector, obrigatório) + `from/to`
+**Params:** `sector` (Sector) + `from/to`
+
+> ⚠️ **Comportamento por scope (ADR-015):** o parâmetro `sector` é relevante apenas para escopo
+> `GLOBAL`. Com escopo `SECTOR`, o backend ignora o `sector` recebido e usa `user.getSector()`
+> como `effectiveSector` — enviar `sector=EVALUATOR` com um `ADM_LEADS` retorna dados de `LEADS`.
+> O campo `sector` na response reflete o `effectiveSector` aplicado.
 
 ```json
 // Response 200
@@ -1857,6 +1852,10 @@ diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targe
 
 **Params:** `from/to` apenas
 
+> ⚠️ **Comportamento por scope (ADR-015):** com escopo `GLOBAL` retorna os 3 setores (`LEADS`,
+> `EVALUATOR`, `COMMERCIAL`). Com escopo `SECTOR`, retorna apenas o DTO do setor do usuário (array
+> com 1 elemento).
+
 ```json
 // Response 200 — List<SectorDropOffResultDTO>
 [
@@ -1877,6 +1876,10 @@ diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targe
 **Path param:** `targetUserId` (UUID)  
 **Params:** `from/to`
 
+> ⚠️ **Guarda OWN (ADR-015):** papéis com escopo `OWN` só podem consultar o próprio `targetUserId`.
+> Enviar o UUID de outro usuário → **403**. Papéis com escopo `GLOBAL` (`ADM_SYSTEM`) podem consultar
+> qualquer usuário. Papéis com escopo `SECTOR` → **403** (não têm acesso a este endpoint).
+
 ```json
 // Response 200
 {
@@ -1896,37 +1899,9 @@ diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targe
 
 ---
 
-#### GET /api/v1/analytics/bonus/{id}
-
-**Path param:** `id` (UUID do usuário)  
-**Query param:** `periodRef` (string, ex: "2026-06")
-
-```json
-// Response 200
-{ "value": 850.00 }
-```
-
----
-
-#### GET /api/v1/analytics/post-procedure
-
-**Params:** `from/to`
-
-```json
-// Response 200
-{
-  "totalPostProcedure": 50,
-  "returnedCount": 35,
-  "lostCount": 10,
-  "returnRate": 70.00,
-  "pendingCount": 5
-}
-```
-
----
-
 #### GET /api/v1/analytics/dashboard
 
+**Permissão:** GLOBAL only — apenas `ADM_SYSTEM`  
 **Params:** `from/to`
 
 ```json
@@ -1937,9 +1912,14 @@ diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targe
   "stageConversion": { /* StageConversionResultDTO */ },
   "sectorDropOff": [ /* List<SectorDropOffResultDTO> */ ],
   "topPerformers": [ /* List<UserPerformanceResultDTO> */ ],
+  "postProcedures": { /* PostProcedureResultDTO */ },
   "totalExpectedCash": 125000.00
 }
 ```
+
+> `postProcedures` contém as métricas pós-procedimento do período (`totalPostProcedure`,
+> `returnedCount`, `lostCount`, `returnRate`, `pendingCount`). Antes disponível como endpoint
+> independente `/post-procedure` — removido na v1.4 (ADR-015).
 
 ---
 
@@ -2402,6 +2382,7 @@ export interface GlobalDashboardResult {
   stageConversion: StageConversionResult;
   sectorDropOff: SectorDropOffResult[];
   topPerformers: UserPerformanceResult[];
+  postProcedures: PostProcedureResult; // adicionado v1.4 — ADR-015
   totalExpectedCash: number;
 }
 
@@ -2608,6 +2589,20 @@ Esta tabela lista o que **mudou em relação ao texto anterior** deste contrato;
 > **Nota de topologia (não afeta o frontend):** apesar de a documentação interna citar dois bancos
 > (`identity_db`/`crm_db`), o `application.properties` configura **um único datasource**
 > (`odontocoredb`) com `ddl-auto=update`. As entidades não usam `schema` explícito. Sem impacto na API.
+
+---
+
+### ADR-015 — Analytics scope-aware (2026-06-14)
+
+| # | Local | Situação anterior | Situação atual | Ação do frontend |
+|---|-------|-------------------|----------------|-----------------|
+| E1 | `GET /analytics/ads-roi` | Endpoint público (GLOBAL only na prática) | **Removido** — dados disponíveis em `GET /analytics/dashboard` | Remover chamadas a `/ads-roi`; ler `adsRoi` do dashboard |
+| E2 | `GET /analytics/bonus/{id}` | Endpoint público (GLOBAL only na prática) | **Removido** — bônus disponível em `getUserPerformance.calculatedBonus` | Remover chamadas a `/bonus/{id}` |
+| E3 | `GET /analytics/post-procedure` | Endpoint público (GLOBAL only na prática) | **Removido** — dados disponíveis em `GET /analytics/dashboard` | Remover chamadas a `/post-procedure`; ler `postProcedures` do dashboard |
+| E4 | `GET /analytics/dashboard` response | Não incluía métricas pós-procedimento | Inclui `postProcedures: PostProcedureResultDTO` (campo novo) | Adicionar `postProcedures` ao type `GlobalDashboardResult` |
+| E5 | `GET /analytics/conversion` | Retornava 403 para escopo SECTOR | SECTOR usa `effectiveSector = user.getSector()`; parâmetro `sector` do query é **ignorado** para escopo SECTOR | ADMs de setor recebem dados do próprio setor sem precisar enviar `sector` |
+| E6 | `GET /analytics/dropoff` | Retornava 403 para escopo SECTOR | SECTOR retorna array com 1 elemento (setor do usuário) em vez dos 3 setores | Tratar response como array de 1 a 3 elementos conforme o papel |
+| E7 | `GET /analytics/user-performance/{targetUserId}` | Escopo OWN checava `callerId` — sempre passava; qualquer `targetUserId` era aceito | OWN: `targetUserId != user.id` → **403** | Papéis OWN devem passar sempre o próprio UUID no path |
 
 ---
 

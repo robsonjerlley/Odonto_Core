@@ -27,10 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.ANALYTICS;
@@ -73,23 +70,27 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
 
-
     @Override
     public StageConversionResultDTO getConversionByStage(DataRangeDTO period, Sector sector) {
         User user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
-                user, ANALYTICS, READ,
-                null, null
-        );
+        PermissionScope scope = permissionService.getScope(
+                user,
+                ANALYTICS,
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
+
+        Sector effectiveSector = scope == PermissionScope.SECTOR
+                ? user.getSector()
+                : sector;
 
         List<LeadTicket> tickets = leadTicketRepository.findByCreatedAtBetween(
                 period.from().atStartOfDay(),
                 period.to().atTime(23, 59, 59)
         );
 
-        if (sector != null) {
+        if (effectiveSector != null) {
             tickets = tickets.stream()
-                    .filter(t -> t.getCurrentSector() == sector)
+                    .filter(t -> t.getCurrentSector() == effectiveSector)
                     .toList();
 
         }
@@ -119,7 +120,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .divide(valueOf(dealCreatedCount), 2, RoundingMode.HALF_UP);
 
         return new StageConversionResultDTO(
-                sector,
+                effectiveSector,
                 captureCount,
                 scheduledCount,
                 dealCreatedCount,
@@ -133,10 +134,12 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     public List<SectorDropOffResultDTO> getDropOffBySector(DataRangeDTO period) {
         User user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
-                user, ANALYTICS, READ,
-                null, null
-        );
+        PermissionScope scope = permissionService.getScope(
+                user,
+                ANALYTICS,
+                READ
+
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
         List<LeadTicket> tickets = leadTicketRepository.findByCreatedAtBetween(
                 period.from().atStartOfDay(),
@@ -174,24 +177,32 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                         && t.getCurrentSector() == COMMERCIAL)
                 .count();
 
-        return List.of(
+        List<SectorDropOffResultDTO> result = List.of(
                 buildDropOff(LEADS, leadsEntry, leadsLoss),
                 buildDropOff(EVALUATOR, evaluatorEntry, evaluatorLoss),
                 buildDropOff(COMMERCIAL, commercialEntry, commercialLoss)
         );
+
+        return scope ==  PermissionScope.SECTOR
+                ? result.stream().filter(
+                        r -> r.sector() == user.getSector()
+        ).toList() : result;
+
     }
 
 
     @Override
     public UserPerformanceResultDTO getUserPerformance(UUID targetUserId, DataRangeDTO period) {
         User user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
+        PermissionScope scope = permissionService.getScope(
                 user,
                 ANALYTICS,
-                READ,
-                user.getSector(),
-                user.getId()
-        );
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
+
+        if(scope == PermissionScope.OWN && !user.getId().equals(targetUserId)) {
+            throw new AccessDeniedException("Access denied");
+        }
 
         var targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target user not found"));
@@ -255,17 +266,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
 
-
     @Override
     public GlobalDashBoardResultDTO getGlobalDashBoard(DataRangeDTO period) {
-        User  user = securityUtils.getCurrentUser();
-        permissionService.checkOrThrow(
+        User user = securityUtils.getCurrentUser();
+        PermissionScope scope = permissionService.getScope(
                 user,
                 ANALYTICS,
-                READ,
-                null,
-                null
-        );
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
+
+        if(scope != PermissionScope.GLOBAL) {
+            throw new AccessDeniedException("Access denied");
+        }
 
         var adsRoiList = Arrays.stream(AdsChannel.values())
                 .map(channel -> getAdsRoi(channel, period))
@@ -278,6 +290,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .map(u -> getUserPerformance(u.getId(), period))
                 .toList();
 
+        var postProcedures = getPostProcedureMetrics(period);
+
         var from = period.from().atStartOfDay();
         var to = period.to().atTime(23, 59, 59);
         BigDecimal totalExpectedCash = dealRepository.findByClosedAtBetweenAndArchivedFalse(from, to).stream()
@@ -286,7 +300,15 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .reduce(ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        return new GlobalDashBoardResultDTO(period, adsRoiList, stageConversion, sectorDropOff, topPerformers, totalExpectedCash);
+        return new GlobalDashBoardResultDTO(
+                period,
+                adsRoiList,
+                stageConversion,
+                sectorDropOff,
+                topPerformers,
+                postProcedures,
+                totalExpectedCash
+        );
     }
 
     private BonusResultDTO getCalculatedBonus(UUID targetId, String periodRef) {
@@ -351,7 +373,6 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
 
 
-    @Transactional(readOnly = true)
     private PostProcedureResultDTO getPostProcedureMetrics(DataRangeDTO period) {
 
         var from = period.from().atStartOfDay();

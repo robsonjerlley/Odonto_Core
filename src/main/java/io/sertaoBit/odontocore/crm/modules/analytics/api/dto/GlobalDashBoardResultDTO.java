@@ -11,6 +11,8 @@ public record GlobalDashBoardResultDTO(
         StageConversionResultDTO stageConversion,
         List<SectorDropOffResultDTO> sectorDropOff,
         List<UserPerformanceResultDTO> topPerformers,
+        PostProcedureResultDTO postProcedures,
         BigDecimal totalExpectedCash
 ) {
 }
+

@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.analytics.service;
 
+import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.*;
-import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.analytics.api.dto.*;
 import io.sertaoBit.odontocore.crm.modules.analytics.service.impl.AnalyticsServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,10 +30,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.ANALYTICS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AnalyticsService - Testes Unitários")
@@ -46,6 +49,7 @@ public class AnalyticsServiceTest {
     @Mock private BonusConfigRepository bonusConfigRepository;
     @Mock private ConfigService configService;
     @Mock private PermissionService permissionService;
+    @Mock private SecurityUtils securityUtils;
 
     private final DataRangeDTO period = new DataRangeDTO(
             LocalDate.of(2026, 5, 1),
@@ -56,7 +60,7 @@ public class AnalyticsServiceTest {
     void setUp() {
         analyticsService = new AnalyticsServiceImpl(
                 customerRepository, leadTicketRepository, dealRepository,
-                userRepository, bonusConfigRepository, configService, permissionService);
+                userRepository, bonusConfigRepository, configService, permissionService, securityUtils);
     }
 
     private User buildUser(UUID id, Sector sector, Role role) {
@@ -82,70 +86,15 @@ public class AnalyticsServiceTest {
     }
 
     // -------------------------------------------------------------------------
-    // getAdsRoi
-    // -------------------------------------------------------------------------
-
-    @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao calcular ROI com usuário inexistente")
-    void getAdsRoi_userNotFound() {
-        UUID userId = UUID.randomUUID();
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class,
-                () -> analyticsService.getAdsRoi(AdsChannel.META, period, userId));
-    }
-
-    @Test
-    @DisplayName("Deve retornar roiMultiplier zero quando não há investimento no período")
-    void getAdsRoi_zeroInvestment_roiIsZero() {
-        UUID userId = UUID.randomUUID();
-        User user = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(customerRepository.findByAdsChannel(AdsChannel.META)).thenReturn(List.of());
-        when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any()))
-                .thenReturn(List.of());
-        when(dealRepository.findByTicketIdIn(any())).thenReturn(List.of());
-        when(configService.sumInvestmentByChannelAndPeriod(any(), any())).thenReturn(BigDecimal.ZERO);
-
-        AdsRoiResultDTO result = analyticsService.getAdsRoi(AdsChannel.META, period, userId);
-
-        assertEquals(BigDecimal.ZERO, result.roiMultiplier());
-        assertEquals(BigDecimal.ZERO, result.totalRevenue());
-    }
-
-    // -------------------------------------------------------------------------
-    // getCalculatedBonus
-    // -------------------------------------------------------------------------
-
-    @Test
-    @DisplayName("Deve retornar BigDecimal.ZERO quando não há BonusConfig para o usuário")
-    void getCalculatedBonus_noConfig_returnsZero() {
-        UUID userId = UUID.randomUUID();
-        UUID targetId = UUID.randomUUID();
-
-        User user = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
-        User target = buildUser(targetId, Sector.COMMERCIAL, Role.USER_COMMERCIAL);
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
-        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any()))
-                .thenReturn(Optional.empty());
-
-        BonusResultDTO result = analyticsService.getCalculatedBonus(targetId, "2026-05", userId);
-
-        assertEquals(BigDecimal.ZERO, result.value());
-    }
-
-    // -------------------------------------------------------------------------
     // getConversionByStage
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("Deve calcular percentuais de conversão por estágio corretamente")
-    void getConversionByStage_correctPercentages() {
-        UUID userId = UUID.randomUUID();
-        User user = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
+    @DisplayName("getConversionByStage — GLOBAL: calcula percentuais sem filtro de setor")
+    void getConversionByStage_global_calculatesPercentagesWithoutSectorFilter() {
+        User user = buildUser(UUID.randomUUID(), null, Role.ADM_SYSTEM);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
 
         LeadTicket t1 = LeadTicket.builder().id(UUID.randomUUID()).status(TicketStatus.NEW).build();
         LeadTicket t2 = LeadTicket.builder().id(UUID.randomUUID()).status(TicketStatus.NEW).build();
@@ -158,11 +107,10 @@ public class AnalyticsServiceTest {
                 .scheduledAt(LocalDateTime.now())
                 .build();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(leadTicketRepository.findByCreatedAtBetween(any(), any()))
                 .thenReturn(List.of(t1, t2, t3, t4));
 
-        StageConversionResultDTO result = analyticsService.getConversionByStage(period, null, userId);
+        StageConversionResultDTO result = analyticsService.getConversionByStage(period, null);
 
         assertEquals(4L, result.captureCount());
         assertEquals(2L, result.scheduledCount());
@@ -173,62 +121,169 @@ public class AnalyticsServiceTest {
         assertEquals(new BigDecimal("50.00"), result.commercialConversionPct());
     }
 
+    @Test
+    @DisplayName("getConversionByStage — SECTOR: usa setor do usuário, ignora parâmetro recebido")
+    void getConversionByStage_sector_usesUserSectorIgnoresParam() {
+        User user = buildUser(UUID.randomUUID(), Sector.LEADS, Role.ADM_LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.SECTOR));
+
+        LeadTicket leadsTicket1 = LeadTicket.builder().id(UUID.randomUUID())
+                .status(TicketStatus.NEW).currentSector(Sector.LEADS).build();
+        LeadTicket leadsTicket2 = LeadTicket.builder().id(UUID.randomUUID())
+                .status(TicketStatus.NEW).currentSector(Sector.LEADS).build();
+        LeadTicket evaluatorTicket = LeadTicket.builder().id(UUID.randomUUID())
+                .status(TicketStatus.NEW).currentSector(Sector.EVALUATOR).build();
+
+        when(leadTicketRepository.findByCreatedAtBetween(any(), any()))
+                .thenReturn(List.of(leadsTicket1, leadsTicket2, evaluatorTicket));
+
+        // EVALUATOR como parâmetro — deve ser ignorado com escopo SECTOR; usa setor do usuário (LEADS)
+        StageConversionResultDTO result = analyticsService.getConversionByStage(period, Sector.EVALUATOR);
+
+        assertEquals(2L, result.captureCount());
+        assertEquals(Sector.LEADS, result.sector());
+    }
+
+    @Test
+    @DisplayName("getConversionByStage — sem permissão: lança AccessDeniedException")
+    void getConversionByStage_noPermission_throwsAccessDenied() {
+        User user = buildUser(UUID.randomUUID(), Sector.LEADS, Role.USER_LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> analyticsService.getConversionByStage(period, null));
+    }
+
     // -------------------------------------------------------------------------
-    // getUserPerformance — expectedCash
+    // getDropOffBySector
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("Deve calcular expectedCash aplicando conversionFactor para vendedor COMMERCIAL")
-    void getUserPerformance_commercial_calculatesExpectedCash() {
+    @DisplayName("getDropOffBySector — GLOBAL: retorna os 3 setores")
+    void getDropOffBySector_global_returnsAllThreeSectors() {
+        User user = buildUser(UUID.randomUUID(), null, Role.ADM_SYSTEM);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
+        when(leadTicketRepository.findByCreatedAtBetween(any(), any())).thenReturn(List.of());
+
+        List<SectorDropOffResultDTO> result = analyticsService.getDropOffBySector(period);
+
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    @DisplayName("getDropOffBySector — SECTOR: retorna apenas o setor do usuário")
+    void getDropOffBySector_sector_returnsOnlyUserSector() {
+        User user = buildUser(UUID.randomUUID(), Sector.LEADS, Role.ADM_LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.SECTOR));
+        when(leadTicketRepository.findByCreatedAtBetween(any(), any())).thenReturn(List.of());
+
+        List<SectorDropOffResultDTO> result = analyticsService.getDropOffBySector(period);
+
+        assertEquals(1, result.size());
+        assertEquals(Sector.LEADS, result.get(0).sector());
+    }
+
+    @Test
+    @DisplayName("getDropOffBySector — sem permissão: lança AccessDeniedException")
+    void getDropOffBySector_noPermission_throwsAccessDenied() {
+        User user = buildUser(UUID.randomUUID(), Sector.LEADS, Role.USER_LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> analyticsService.getDropOffBySector(period));
+    }
+
+    // -------------------------------------------------------------------------
+    // getUserPerformance
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("getUserPerformance — OWN: permite consultar a si mesmo")
+    void getUserPerformance_own_allowsSelf() {
         UUID userId = UUID.randomUUID();
+        User user = buildUser(userId, Sector.LEADS, Role.USER_LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.OWN));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(leadTicketRepository.findByCreatedAtBetween(any(), any())).thenReturn(List.of());
+        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any())).thenReturn(Optional.empty());
+
+        assertDoesNotThrow(() -> analyticsService.getUserPerformance(userId, period));
+    }
+
+    @Test
+    @DisplayName("getUserPerformance — OWN: nega acesso a outro usuário")
+    void getUserPerformance_own_deniesOtherUser() {
+        UUID userId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+        User user = buildUser(userId, Sector.LEADS, Role.USER_LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.OWN));
+
+        assertThrows(AccessDeniedException.class,
+                () -> analyticsService.getUserPerformance(otherId, period));
+    }
+
+    @Test
+    @DisplayName("getUserPerformance — COMMERCIAL: calcula expectedCash aplicando conversionFactor")
+    void getUserPerformance_commercial_calculatesExpectedCash() {
+        UUID requesterId = UUID.randomUUID();
         UUID sellerId = UUID.randomUUID();
-        User requester = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
+        User requester = buildUser(requesterId, null, Role.ADM_SYSTEM);
         User seller = buildUser(sellerId, Sector.COMMERCIAL, Role.USER_COMMERCIAL);
 
-        // PIX: 5000 * 1.00 = 5000.00
-        // CREDIT_CARD: 3000 * 0.97 = 2910.00
-        // total esperado: 7910.00
+        when(securityUtils.getCurrentUser()).thenReturn(requester);
+        when(permissionService.getScope(requester, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
+        when(userRepository.findById(sellerId)).thenReturn(Optional.of(seller));
+
+        // PIX: 5000 * 1.00 = 5000.00 | CREDIT_CARD: 3000 * 0.97 = 2910.00 → total: 7910.00
         Deal dealPix = buildClosedDeal(sellerId, new BigDecimal("5000.00"), PaymentMethod.PIX);
         Deal dealCredit = buildClosedDeal(sellerId, new BigDecimal("3000.00"), PaymentMethod.CREDIT_CARD);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
-        when(userRepository.findById(sellerId)).thenReturn(Optional.of(seller));
         when(dealRepository.findByClosedByAndClosedAtBetween(eq(sellerId), any(), any()))
                 .thenReturn(List.of(dealPix, dealCredit));
-        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any()))
-                .thenReturn(Optional.empty());
+        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any())).thenReturn(Optional.empty());
 
-        UserPerformanceResultDTO result = analyticsService.getUserPerformance(sellerId, period, userId);
+        UserPerformanceResultDTO result = analyticsService.getUserPerformance(sellerId, period);
 
         assertEquals(new BigDecimal("7910.00"), result.expectedCash());
     }
 
     @Test
-    @DisplayName("Deve retornar expectedCash zero para usuário não-COMMERCIAL")
+    @DisplayName("getUserPerformance — não-COMMERCIAL: expectedCash é zero")
     void getUserPerformance_nonCommercial_expectedCashIsZero() {
-        UUID userId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
         UUID attendantId = UUID.randomUUID();
-        User requester = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
+        User requester = buildUser(requesterId, null, Role.ADM_SYSTEM);
         User attendant = buildUser(attendantId, Sector.ATTENDANT, Role.USER_ATTENDANT);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
+        when(securityUtils.getCurrentUser()).thenReturn(requester);
+        when(permissionService.getScope(requester, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
         when(userRepository.findById(attendantId)).thenReturn(Optional.of(attendant));
         when(leadTicketRepository.findByCreatedAtBetween(any(), any())).thenReturn(List.of());
-        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any()))
-                .thenReturn(Optional.empty());
+        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any())).thenReturn(Optional.empty());
 
-        UserPerformanceResultDTO result = analyticsService.getUserPerformance(attendantId, period, userId);
+        UserPerformanceResultDTO result = analyticsService.getUserPerformance(attendantId, period);
 
         assertEquals(BigDecimal.ZERO, result.expectedCash());
     }
 
     @Test
-    @DisplayName("Deve ignorar deals sem paymentMethod no cálculo de expectedCash")
+    @DisplayName("getUserPerformance — deal sem paymentMethod é ignorado no cálculo de expectedCash")
     void getUserPerformance_commercial_ignoresDealWithoutPaymentMethod() {
-        UUID userId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
         UUID sellerId = UUID.randomUUID();
-        User requester = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
+        User requester = buildUser(requesterId, null, Role.ADM_SYSTEM);
         User seller = buildUser(sellerId, Sector.COMMERCIAL, Role.USER_COMMERCIAL);
+
+        when(securityUtils.getCurrentUser()).thenReturn(requester);
+        when(permissionService.getScope(requester, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
+        when(userRepository.findById(sellerId)).thenReturn(Optional.of(seller));
 
         Deal dealComPayment = buildClosedDeal(sellerId, new BigDecimal("4000.00"), PaymentMethod.CASH);
         Deal dealSemPayment = Deal.builder()
@@ -239,68 +294,76 @@ public class AnalyticsServiceTest {
                 .archived(false)
                 .build();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
-        when(userRepository.findById(sellerId)).thenReturn(Optional.of(seller));
         when(dealRepository.findByClosedByAndClosedAtBetween(eq(sellerId), any(), any()))
                 .thenReturn(List.of(dealComPayment, dealSemPayment));
-        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any()))
-                .thenReturn(Optional.empty());
+        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any())).thenReturn(Optional.empty());
 
-        UserPerformanceResultDTO result = analyticsService.getUserPerformance(sellerId, period, userId);
+        UserPerformanceResultDTO result = analyticsService.getUserPerformance(sellerId, period);
 
-        // apenas o deal com CASH (1.00) é contabilizado: 4000 * 1.00 = 4000.00
+        // CASH (1.00): 4000 * 1.00 = 4000.00; deal sem paymentMethod excluído
         assertEquals(new BigDecimal("4000.00"), result.expectedCash());
     }
 
     // -------------------------------------------------------------------------
-    // getGlobalDashboard — totalExpectedCash
+    // getGlobalDashBoard
     // -------------------------------------------------------------------------
 
     @Test
-    @DisplayName("Deve calcular totalExpectedCash no dashboard global somando todos os deals fechados")
-    void getGlobalDashboard_calculatesTotalExpectedCash() {
-        UUID userId = UUID.randomUUID();
-        User user = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
+    @DisplayName("getGlobalDashBoard — GLOBAL: retorna dashboard com postProcedures e totalExpectedCash corretos")
+    void getGlobalDashBoard_global_returnsDashboardWithPostProceduresAndExpectedCash() {
+        User user = buildUser(UUID.randomUUID(), null, Role.ADM_SYSTEM);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
 
-        // INSTALLMENT: 10000 * 0.85 = 8500.00
-        // DENTAL_INSURANCE: 5000 * 0.90 = 4500.00
-        // total esperado: 13000.00
-        Deal d1 = buildClosedDeal(UUID.randomUUID(), new BigDecimal("10000.00"), PaymentMethod.INSTALLMENT);
-        Deal d2 = buildClosedDeal(UUID.randomUUID(), new BigDecimal("5000.00"), PaymentMethod.DENTAL_INSURANCE);
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(customerRepository.findByAdsChannel(any())).thenReturn(List.of());
-        when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any()))
-                .thenReturn(List.of());
+        when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any())).thenReturn(List.of());
         when(dealRepository.findByTicketIdIn(any())).thenReturn(List.of());
         when(configService.sumInvestmentByChannelAndPeriod(any(), any())).thenReturn(BigDecimal.ZERO);
         when(leadTicketRepository.findByCreatedAtBetween(any(), any())).thenReturn(List.of());
         when(userRepository.findByActiveTrue()).thenReturn(List.of());
+        when(leadTicketRepository.findByProcedurePerformedAtBetween(any(), any())).thenReturn(List.of());
+
+        // INSTALLMENT: 10000 * 0.85 = 8500.00 | DENTAL_INSURANCE: 5000 * 0.90 = 4500.00 → total: 13000.00
+        Deal d1 = buildClosedDeal(UUID.randomUUID(), new BigDecimal("10000.00"), PaymentMethod.INSTALLMENT);
+        Deal d2 = buildClosedDeal(UUID.randomUUID(), new BigDecimal("5000.00"), PaymentMethod.DENTAL_INSURANCE);
         when(dealRepository.findByClosedAtBetweenAndArchivedFalse(any(), any())).thenReturn(List.of(d1, d2));
 
-        GlobalDashBoardResultDTO result = analyticsService.getGlobalDashBoard(period, userId);
+        GlobalDashBoardResultDTO result = analyticsService.getGlobalDashBoard(period);
 
+        assertNotNull(result.postProcedures());
         assertEquals(new BigDecimal("13000.00"), result.totalExpectedCash());
     }
 
     @Test
-    @DisplayName("Deve retornar totalExpectedCash zero quando não há deals fechados no período")
-    void getGlobalDashboard_noDeals_totalExpectedCashIsZero() {
-        UUID userId = UUID.randomUUID();
-        User user = buildUser(userId, Sector.LEADS, Role.ADM_LEADS);
+    @DisplayName("getGlobalDashBoard — sem deals: totalExpectedCash zero e postProcedures não nulo")
+    void getGlobalDashBoard_noDeals_totalExpectedCashIsZeroAndPostProceduresNotNull() {
+        User user = buildUser(UUID.randomUUID(), null, Role.ADM_SYSTEM);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(customerRepository.findByAdsChannel(any())).thenReturn(List.of());
-        when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any()))
-                .thenReturn(List.of());
+        when(leadTicketRepository.findByCustomerIdInAndStatusAndClosedAtBetween(any(), any(), any(), any())).thenReturn(List.of());
         when(dealRepository.findByTicketIdIn(any())).thenReturn(List.of());
         when(configService.sumInvestmentByChannelAndPeriod(any(), any())).thenReturn(BigDecimal.ZERO);
         when(leadTicketRepository.findByCreatedAtBetween(any(), any())).thenReturn(List.of());
         when(userRepository.findByActiveTrue()).thenReturn(List.of());
         when(dealRepository.findByClosedAtBetweenAndArchivedFalse(any(), any())).thenReturn(List.of());
+        when(leadTicketRepository.findByProcedurePerformedAtBetween(any(), any())).thenReturn(List.of());
 
-        GlobalDashBoardResultDTO result = analyticsService.getGlobalDashBoard(period, userId);
+        GlobalDashBoardResultDTO result = analyticsService.getGlobalDashBoard(period);
 
         assertEquals(new BigDecimal("0.00"), result.totalExpectedCash());
+        assertNotNull(result.postProcedures());
+    }
+
+    @Test
+    @DisplayName("getGlobalDashBoard — escopo não-GLOBAL: lança AccessDeniedException")
+    void getGlobalDashBoard_nonGlobalScope_throwsAccessDenied() {
+        User user = buildUser(UUID.randomUUID(), Sector.LEADS, Role.ADM_LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(user, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.SECTOR));
+
+        assertThrows(AccessDeniedException.class,
+                () -> analyticsService.getGlobalDashBoard(period));
     }
 }
