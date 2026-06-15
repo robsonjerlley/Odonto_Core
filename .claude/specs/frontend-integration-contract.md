@@ -1,10 +1,16 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.5  
-**Data:** 2026-06-14  
+**Versão:** 1.6  
+**Data:** 2026-06-15  
 **Branch:** main  
-**Commit de referência:** `949a4a9` (HEAD)  
+**Commit de referência:** HEAD  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, `PermissionSeeder`, `GlobalExceptionHandler`)
+
+> **Changelog 1.6 (2026-06-15) — ADR-017 implementada: dashboard global aceita range livre.**
+> `GET /analytics/dashboard` não exige mais range de mês único — aceita qualquer range ("últimos 30
+> dias", trimestre, etc.). `topPerformers` é calculado via núcleo interno sem bônus: `calculatedBonus`
+> sempre chega como `0` e `bonusPeriodRef` sempre chega como `null` no contexto do dashboard. O
+> frontend **não deve renderizar** bônus nos cards do ranking do dashboard. Ver §13 e §15 (ADR-017).
 
 > **Changelog 1.5 (2026-06-14) — ADR-016 implementada: bônus mensal vs. métricas por range.**
 > `GET /analytics/user-performance/{targetUserId}` ganha o campo `bonusPeriodRef` (`yyyy-MM`),
@@ -1915,12 +1921,12 @@ diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targe
 #### GET /api/v1/analytics/dashboard
 
 **Permissão:** GLOBAL only — apenas `ADM_SYSTEM`  
-**Params:** `from/to`
+**Params:** `from/to` — **range livre** (ADR-017): aceita qualquer intervalo ("últimos 30 dias", trimestre, etc.). Sem guard de mês único.
 
 ```json
 // Response 200
 {
-  "period": { "from": "2026-06-01", "to": "2026-06-30" },
+  "period": { "from": "2026-05-16", "to": "2026-06-15" },
   "adsRoi": [ /* List<AdsRoiResultDTO> */ ],
   "stageConversion": { /* StageConversionResultDTO */ },
   "sectorDropOff": [ /* List<SectorDropOffResultDTO> */ ],
@@ -1933,6 +1939,12 @@ diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targe
 > `postProcedures` contém as métricas pós-procedimento do período (`totalPostProcedure`,
 > `returnedCount`, `lostCount`, `returnRate`, `pendingCount`). Antes disponível como endpoint
 > independente `/post-procedure` — removido na v1.4 (ADR-015).
+
+> ⚠️ **`topPerformers` não carrega bônus (ADR-017):** cada `UserPerformanceResultDTO` no array
+> `topPerformers` sempre terá `calculatedBonus = 0` e `bonusPeriodRef = null`. Bônus é mensal e não
+> se aplica a range livre. **Não renderizar o campo de bônus** nos cards do ranking do dashboard;
+> redirecionar o usuário para `/user-performance/{id}` (com range de mês único) se o bônus for
+> necessário.
 
 ---
 
@@ -2626,7 +2638,23 @@ Esta tabela lista o que **mudou em relação ao texto anterior** deste contrato;
 |---|-------|-------------------|----------------|-----------------|
 | F1 | `GET /analytics/user-performance/{targetUserId}` response | `calculatedBonus` sem indicação do mês — derivado silenciosamente do mês do `from` | Campo novo `bonusPeriodRef: string` (`yyyy-MM`) explicita o mês do bônus | Adicionar `bonusPeriodRef` ao type `UserPerformanceResult`; exibir "Bônus de {mês}" |
 | F2 | `GET /analytics/user-performance/{targetUserId}` range | Range cruzando meses computava bônus só do mês do `from` e descartava o resto sem aviso | Range deve estar contido em **1 mês calendário**; cross-month → **422** | Restringir o seletor de período a 1 mês quando exibir bônus |
-| F3 | `GET /analytics/dashboard` range | aceitava qualquer range | Reutiliza `user-performance` p/ `topPerformers` → **mesmo guard de mês único (422)** | Restringir período do dashboard a 1 mês calendário |
+| F3 | `GET /analytics/dashboard` range | aceitava qualquer range | ~~Reutilizava `user-performance` p/ `topPerformers` → guard de mês único (422)~~ → **RESOLVIDO pela ADR-017**: dashboard aceita range livre; `topPerformers` calculado via núcleo sem bônus | ~~Restringir a 1 mês~~ — Ver ADR-017 abaixo |
+
+---
+
+### ADR-017 — Dashboard global com range livre, topPerformers sem bônus (2026-06-15)
+
+| # | Local | Situação anterior (ADR-016) | Situação atual | Ação do frontend |
+|---|-------|----------------------------|----------------|-----------------|
+| G1 | `GET /analytics/dashboard` range | Guard de mês único herdado de `getUserPerformance` → range cross-month retornava **422** | **Range livre**: aceita qualquer intervalo ("últimos 30 dias", trimestre, etc.) sem 422 | Remover restrição de mês no seletor de período do dashboard |
+| G2 | `GET /analytics/dashboard` → `topPerformers[]` | Cada item tinha `calculatedBonus` calculado para o mês e `bonusPeriodRef` preenchido | **`calculatedBonus = 0` e `bonusPeriodRef = null` sempre** — bônus não se aplica a range livre | Não renderizar bônus nos cards do ranking; ocultar ou desabilitar campo `calculatedBonus`/`bonusPeriodRef` no componente do dashboard |
+| G3 | `GET /analytics/user-performance/{id}` range | Guard de mês único (ADR-016) | **Inalterado** — guard permanece; endpoint continua exigindo range de 1 mês | Manter restrição de mês no seletor de período da tela de performance individual |
+
+> **Causa-raiz corrigida (ADR-017):** `getUserPerformance()` acumulava duas responsabilidades —
+> métricas de performance (range livre) e bônus mensal (mês único). O dashboard reutilizava o
+> método inteiro e herdava o guard. A solução foi extrair um núcleo privado `computePerformance()`
+> sem bônus; o dashboard usa o núcleo diretamente, e `getUserPerformance()` usa o núcleo + injeta
+> o bônus calculado no DTO de retorno.
 
 ---
 

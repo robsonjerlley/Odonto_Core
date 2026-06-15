@@ -212,60 +212,19 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                     "Analytics de performance carrega bônus mensal: o range deve estar contido em um único mês calendário.");
         }
 
-        var from = period.from().atStartOfDay();
-        var to = period.to().atTime(23, 59, 59);
-
-        long totalAssigned;
-        long totalConverted;
-        BigDecimal avgTicketValue = ZERO;
-        BigDecimal expectedCash = ZERO;
-
-        var sector = targetUser.getSector();
-        if (sector == LEADS || sector == ATTENDANT) {
-            var tickets = leadTicketRepository.findByCreatedAtBetween(from, to).stream()
-                    .filter(t -> targetUser.getId().equals(t.getAssignedTo()))
-                    .toList();
-            totalAssigned = tickets.size();
-            totalConverted = tickets.stream().filter(t -> t.getScheduledAt() != null).count();
-
-        } else if (sector == EVALUATOR) {
-            var deals = dealRepository.findByCreatedByAndCreatedAtBetween(targetUser.getId(), from, to);
-            totalAssigned = deals.size();
-            totalConverted = deals.stream().filter(d -> d.getFinalValue() != null).count();
-
-        } else {
-            var closedDeals = dealRepository.findByClosedByAndClosedAtBetween(targetUser.getId(), from, to);
-            totalAssigned = closedDeals.size();
-            totalConverted = closedDeals.stream().filter(d -> d.getFinalValue() != null).count();
-            if (!closedDeals.isEmpty()) {
-                avgTicketValue = closedDeals.stream()
-                        .map(d -> d.getFinalValue() != null ? d.getFinalValue() : ZERO)
-                        .reduce(ZERO, BigDecimal::add)
-                        .divide(valueOf(closedDeals.size()), 2, RoundingMode.HALF_UP);
-                expectedCash = closedDeals.stream()
-                        .filter(d -> d.getFinalValue() != null && d.getPaymentMethod() != null)
-                        .map(d -> d.getFinalValue().multiply(d.getPaymentMethod().getConversionFactor()))
-                        .reduce(ZERO, BigDecimal::add)
-                        .setScale(2, RoundingMode.HALF_UP);
-            }
-        }
-
-        BigDecimal conversionPct = totalAssigned == 0 ? ZERO
-                : valueOf(totalConverted * 100)
-                .divide(valueOf(totalAssigned), 2, RoundingMode.HALF_UP);
-
         String periodRef = period.from().format(DateTimeFormatter.ofPattern("yyyy-MM"));
         BigDecimal calculatedBonus = getCalculatedBonus(targetUser.getId(), periodRef).value();
 
+        var target = computePerformance(targetUser,period);
         return new UserPerformanceResultDTO(
-                targetUser.getId(),
-                targetUser.getName(),
-                targetUser.getSector(),
-                totalAssigned,
-                totalConverted,
-                conversionPct,
-                avgTicketValue,
-                expectedCash,
+                target.userId(),
+                target.name(),
+                target.sector(),
+                target.totalAssigned(),
+                target.totalConverted(),
+                target.conversionPct(),
+                target.avgTicketValue(),
+                target.expectedCash(),
                 calculatedBonus,
                 periodRef
         );
@@ -293,7 +252,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         var sectorDropOff = getDropOffBySector(period);
 
         var topPerformers = userRepository.findByActiveTrue().stream()
-                .map(u -> getUserPerformance(u.getId(), period))
+                .map(u -> computePerformance(u, period))
                 .toList();
 
         var postProcedures = getPostProcedureMetrics(period);
@@ -316,6 +275,67 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 totalExpectedCash
         );
     }
+
+
+    private UserPerformanceResultDTO computePerformance(User targetUser, DataRangeDTO period) {
+
+        long totalAssigned;
+        long totalConverted;
+        BigDecimal avgTicketValue = ZERO;
+        BigDecimal expectedCash = ZERO;
+
+        var periodFrom = period.from().atStartOfDay();
+        var periodTo = period.to().atTime(23, 59, 59);
+
+        var sector = targetUser.getSector();
+        if (sector == LEADS || sector == ATTENDANT) {
+            var tickets = leadTicketRepository.findByCreatedAtBetween(periodFrom, periodTo).stream()
+                    .filter(t -> targetUser.getId().equals(t.getAssignedTo()))
+                    .toList();
+            totalAssigned = tickets.size();
+            totalConverted = tickets.stream().filter(t -> t.getScheduledAt() != null).count();
+
+        } else if (sector == EVALUATOR) {
+            var deals = dealRepository.findByCreatedByAndCreatedAtBetween(targetUser.getId(), periodFrom, periodTo);
+            totalAssigned = deals.size();
+            totalConverted = deals.stream().filter(d -> d.getFinalValue() != null).count();
+
+        } else {
+            var closedDeals = dealRepository.findByClosedByAndClosedAtBetween(targetUser.getId(), periodFrom, periodTo);
+            totalAssigned = closedDeals.size();
+            totalConverted = closedDeals.stream().filter(d -> d.getFinalValue() != null).count();
+            if (!closedDeals.isEmpty()) {
+                avgTicketValue = closedDeals.stream()
+                        .map(d -> d.getFinalValue() != null ? d.getFinalValue() : ZERO)
+                        .reduce(ZERO, BigDecimal::add)
+                        .divide(valueOf(closedDeals.size()), 2, RoundingMode.HALF_UP);
+                expectedCash = closedDeals.stream()
+                        .filter(d -> d.getFinalValue() != null && d.getPaymentMethod() != null)
+                        .map(d -> d.getFinalValue().multiply(d.getPaymentMethod().getConversionFactor()))
+                        .reduce(ZERO, BigDecimal::add)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+        }
+
+        BigDecimal conversionPct = totalAssigned == 0 ? ZERO
+                : valueOf(totalConverted * 100)
+                .divide(valueOf(totalAssigned), 2, RoundingMode.HALF_UP);
+
+        return new UserPerformanceResultDTO(
+                targetUser.getId(),
+                targetUser.getName(),
+                targetUser.getSector(),
+                totalAssigned,
+                totalConverted,
+                conversionPct,
+                avgTicketValue,
+                expectedCash,
+                ZERO,
+                null
+        );
+
+    }
+
 
     private BonusResultDTO getCalculatedBonus(UUID targetId, String periodRef) {
 
