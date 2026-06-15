@@ -207,6 +207,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         var targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Target user not found"));
 
+        if (!YearMonth.from(period.from()).equals(YearMonth.from(period.to()))) {
+            throw new IllegalArgumentException(
+                    "Analytics de performance carrega bônus mensal: o range deve estar contido em um único mês calendário.");
+        }
+
         var from = period.from().atStartOfDay();
         var to = period.to().atTime(23, 59, 59);
 
@@ -261,7 +266,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 conversionPct,
                 avgTicketValue,
                 expectedCash,
-                calculatedBonus
+                calculatedBonus,
+                periodRef
         );
     }
 

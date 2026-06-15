@@ -14,6 +14,7 @@ public record UserPerformanceResultDTO(
         BigDecimal conversionPct,
         BigDecimal avgTicketValue,
         BigDecimal expectedCash,
-        BigDecimal calculatedBonus
+        BigDecimal calculatedBonus,
+        String bonusPeriodRef
 ) {
 }

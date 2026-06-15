@@ -304,6 +304,43 @@ public class AnalyticsServiceTest {
         assertEquals(new BigDecimal("4000.00"), result.expectedCash());
     }
 
+    @Test
+    @DisplayName("getUserPerformance — range cruzando meses lança IllegalArgumentException")
+    void getUserPerformance_crossMonthRange_throws() {
+        UUID requesterId = UUID.randomUUID();
+        UUID sellerId = UUID.randomUUID();
+        User requester = buildUser(requesterId, null, Role.ADM_SYSTEM);
+        User seller = buildUser(sellerId, Sector.COMMERCIAL, Role.USER_COMMERCIAL);
+
+        when(securityUtils.getCurrentUser()).thenReturn(requester);
+        when(permissionService.getScope(requester, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
+        when(userRepository.findById(sellerId)).thenReturn(Optional.of(seller));
+
+        DataRangeDTO crossMonth = new DataRangeDTO(LocalDate.of(2026, 5, 25), LocalDate.of(2026, 6, 5));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> analyticsService.getUserPerformance(sellerId, crossMonth));
+    }
+
+    @Test
+    @DisplayName("getUserPerformance — expõe bonusPeriodRef do mês consultado")
+    void getUserPerformance_exposesBonusPeriodRef() {
+        UUID requesterId = UUID.randomUUID();
+        UUID attendantId = UUID.randomUUID();
+        User requester = buildUser(requesterId, null, Role.ADM_SYSTEM);
+        User attendant = buildUser(attendantId, Sector.ATTENDANT, Role.USER_ATTENDANT);
+
+        when(securityUtils.getCurrentUser()).thenReturn(requester);
+        when(permissionService.getScope(requester, ANALYTICS, READ)).thenReturn(Optional.of(PermissionScope.GLOBAL));
+        when(userRepository.findById(attendantId)).thenReturn(Optional.of(attendant));
+        when(leadTicketRepository.findByCreatedAtBetween(any(), any())).thenReturn(List.of());
+        when(bonusConfigRepository.findByRoleAndSectorAndPeriodRef(any(), any(), any())).thenReturn(Optional.empty());
+
+        UserPerformanceResultDTO result = analyticsService.getUserPerformance(attendantId, period);
+
+        assertEquals("2026-05", result.bonusPeriodRef());
+    }
+
     // -------------------------------------------------------------------------
     // getGlobalDashBoard
     // -------------------------------------------------------------------------
