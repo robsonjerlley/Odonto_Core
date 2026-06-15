@@ -103,7 +103,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         );
 
         long captureCount = tickets.size();
-        long scheduledCount = tickets.stream().filter(t -> t.getScheduledAt() != null).count();
+        var scheduledStatuses = Set.of(SCHEDULED, IN_EVALUATION, NEGOTIATION, WIN, PENDING, RECYCLED, POST_PROCEDURE);
+        long scheduledCount = tickets.stream().filter(t -> scheduledStatuses.contains(t.getStatus())).count();
         long dealCreatedCount = tickets.stream().filter(t -> dealStatuses.contains(t.getStatus())).count();
         long closedCount = tickets.stream().filter(t -> t.getStatus() == WIN).count();
 

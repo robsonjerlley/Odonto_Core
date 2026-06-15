@@ -2642,6 +2642,14 @@ Esta tabela lista o que **mudou em relação ao texto anterior** deste contrato;
 
 ---
 
+### Fix — getConversionByStage: porcentagem ultrapassava 100% (2026-06-15)
+
+| # | Local | Problema | Correção aplicada | Ação do frontend |
+|---|-------|----------|-------------------|-----------------|
+| H1 | `GET /analytics/conversion` — `evaluationConversionPct` | `scheduledCount` era calculado com `scheduledAt != null`. Como `scheduledAt` só é persistido quando o cliente envia `returnScheduledAt` no body da transição `→ SCHEDULED`, tickets agendados sem data ficavam fora de `scheduledCount` mas dentro de `dealCreatedCount` → `evaluationConversionPct` podia ultrapassar 100% (ex.: 2 deals fechados / 1 agendado com data = **200%**) | `scheduledCount` agora conta tickets cujo `status` ∈ {`SCHEDULED`, `IN_EVALUATION`, `NEGOTIATION`, `WIN`, `PENDING`, `RECYCLED`, `POST_PROCEDURE`} — todos que passaram pelo estágio de agendamento. `dealStatuses` ⊂ `scheduledStatuses`, logo `dealCreatedCount ≤ scheduledCount` sempre | Nenhuma mudança de contrato de dados — os campos da response são os mesmos. Apenas os valores agora são matematicamente corretos (0–100%). **Remover qualquer lógica de clamp no frontend** se ela existir como workaround |
+
+---
+
 ### ADR-017 — Dashboard global com range livre, topPerformers sem bônus (2026-06-15)
 
 | # | Local | Situação anterior (ADR-016) | Situação atual | Ação do frontend |
