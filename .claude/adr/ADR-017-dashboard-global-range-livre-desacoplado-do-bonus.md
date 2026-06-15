@@ -1,6 +1,6 @@
 # ADR-017: Dashboard global aceita range livre — desacoplado do guard de bônus mensal
 
-**Status**: Aceito — implementação pendente (próxima sessão)
+**Status**: Implementado
 **Data**: 2026-06-15
 **Autores**: Backend (revisão guiada / J.A.R.V.I.S) — materialização de risco previsto em ADR-016
 **Impacto**: `AnalyticsServiceImpl.getGlobalDashBoard()`, `AnalyticsServiceImpl.getUserPerformance()`,
