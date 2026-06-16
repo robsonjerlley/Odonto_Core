@@ -105,6 +105,7 @@ public class AnalyticsServiceTest {
         LeadTicket t4 = LeadTicket.builder().id(UUID.randomUUID())
                 .status(TicketStatus.WIN)
                 .scheduledAt(LocalDateTime.now())
+                .closedAt(LocalDateTime.now())
                 .build();
 
         when(leadTicketRepository.findByCreatedAtBetween(any(), any()))
