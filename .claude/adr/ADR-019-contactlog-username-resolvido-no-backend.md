@@ -1,9 +1,9 @@
-# ADR-019: ContactLogResponseDTO expõe userName resolvido no backend
+# ADR-019: ContactLog persiste username do autor no momento da criação
 
 **Status**: Aceito  
 **Data**: 2026-06-16  
 **Autores**: Arquiteto-Agent  
-**Impacto**: Módulo funnel — ContactLog (entity), ContactLogResponseDTO, ContactLogServiceImpl, ContactLogMapper
+**Impacto**: Módulo funnel — ContactLog (entity + migration), ContactLogResponseDTO, ContactLogServiceImpl, ContactLogMapper
 
 ---
 
@@ -11,111 +11,78 @@
 
 ### Situação atual
 
-`ContactLog` armazena `UUID userId` — referência lógica ao usuário que registrou o log, sem join físico (padrão estabelecido no projeto). `ContactLogResponseDTO` expõe esse campo como `UUID userId`, sem resolução de nome.
+`ContactLog` armazena `UUID userId` — referência lógica ao usuário que registrou o log, sem join físico. `ContactLogResponseDTO` expõe esse campo como `UUID userId`, sem resolução de nome.
 
 O frontend precisa exibir o autor de cada log por nome legível (ex.: "João Silva"), não por UUID. Sem essa resolução, a UI exigiria chamadas adicionais para `GET /users/{id}` a fim de obter o nome de cada autor — uma por log exibido na listagem.
-
-### Problema
-
-A ausência de `userName` no DTO cria dois caminhos ruins:
-
-1. **N+1 HTTP no frontend**: uma lista de 20 logs dispara 20 chamadas `GET /users/{id}`. Inevitavelmente leva a cache local no frontend, com stale data e complexidade de invalidação crescente.
-2. **Responsabilidade de resolução no cliente**: regra de negócio ("este log foi criado por tal pessoa") sai da fonte de verdade (backend) e vai para o consumidor — violando o princípio de separação de responsabilidades.
 
 ---
 
 ## Decisão
 
-Adicionar `String userName` ao `ContactLogResponseDTO`, resolvido via lookup por `userId` no `ContactLogServiceImpl` antes do mapeamento.
+Persistir `String username` diretamente na tabela `contact_logs`, preenchido uma única vez no `create()` a partir do `currentUser.getName()`. Leituras (`findById`, `search`) obtêm o campo direto da coluna — zero query extra.
 
-### Por que a entidade precisa de `@Transient String userName`
+### Raciocínio
 
-`ContactLogServiceImpl.create()` e `search()` constroem o response via `contactLogMapper.toResponseDTO(contactLog)` — o mapper opera sobre a entidade com assinatura de um único argumento. Alterar essa assinatura para `toResponseDTO(ContactLog, String)` quebraria o `search()`, que usa referência de método (`.map(contactLogMapper::toResponseDTO)`) sobre a Page retornada pelo repositório.
+`ContactLog` é imutável após a criação (ADR-003) e `userId` é **sempre** o `currentUser` no momento do `create()`. Portanto:
 
-A única forma de injetar `userName` no fluxo sem alterar a assinatura do mapper é adicionar o campo `@Transient` na entidade: JPA não persiste, Lombok expõe via `@Getter`, MapStruct lê automaticamente.
+- O autor nunca muda — imutabilidade garante isso
+- `currentUser.getName()` no `create()` é o nome correto do autor para toda a vida do registro
+- Não há cenário onde um log tenha um autor diferente do `currentUser` no momento da criação
+
+Consequência direta: o nome pode ser gravado junto com o log, eliminando qualquer necessidade de lookup na leitura. A abordagem `@Transient` (populado em memória a cada leitura) foi considerada e descartada — ver Alternativas.
 
 ### Implementação
 
-**`ContactLog` — campo transiente:**
+**`ContactLog` — campo persistido:**
 
 ```java
-@Transient
-private String userName;
+@Column
+private String username;
 ```
 
-O campo não tem coluna correspondente na tabela `contact_logs`. É preenchido em memória pelo service antes de chamar o mapper.
-
-**`ContactLogResponseDTO` — novo campo:**
+**`ContactLogServiceImpl.create()` — já correto:**
 
 ```java
-public record ContactLogResponseDTO(
-    UUID id,
-    UUID ticketId,
-    UUID userId,
-    String userName,
-    ContactChannel channel,
-    String note,
-    TicketStatus statusBefore,
-    TicketStatus statusAfter,
-    LocalDateTime occurredAt,
-    LocalDateTime createdAt
-) {}
+ContactLog contactLog = ContactLog.builder()
+        .ticketId(ticket.getId())
+        .userId(userId)
+        .username(user.getName())   // gravado uma vez, nunca alterado
+        ...
+        .build();
 ```
 
-**`ContactLogServiceImpl` — resolver e setar antes de mapear:**
+**`findById()` e `search()`** — nenhuma alteração. O mapper lê `username` direto da coluna.
 
-O service injeta `UserRepository`. Antes de chamar o mapper, resolve o nome e seta no objeto da entidade:
-
-```java
-// create()
-ContactLog saved = contactLogRepository.save(contactLog);
-userRepository.findById(saved.getUserId())
-        .map(User::getName)
-        .ifPresentOrElse(saved::setUserName, () -> saved.setUserName("Usuário removido"));
-return contactLogMapper.toResponseDTO(saved);
-
-// search() — resolver no stream antes do map
-return contactLogRepository.findAll(spec, pageable)
-        .map(log -> {
-            userRepository.findById(log.getUserId())
-                    .map(User::getName)
-                    .ifPresentOrElse(log::setUserName, () -> log.setUserName("Usuário removido"));
-            return contactLogMapper.toResponseDTO(log);
-        });
-```
-
-**`ContactLogMapper`** — nenhuma alteração necessária. MapStruct detecta o getter `getUserName()` na entidade e mapeia para o campo `userName` do DTO automaticamente por convenção de nome.
+**`ContactLogMapper`** — nenhuma alteração. MapStruct mapeia `getUsername()` → `username` por convenção de nome.
 
 ---
 
 ## Consequências Positivas
 
-- Elimina N+1 HTTP no frontend — toda a informação necessária para renderizar o log chega em uma única resposta
-- Regra de resolução centralizada no backend — frontend não precisa conhecer a estrutura interna de `userId`
-- Contrato do DTO humanamente legível — `userName` é autodocumentado
-- Join por PK (`userId`) é O(1) no banco; custo operacional desprezível no volume atual
+- Zero query extra em leituras — `username` está na coluna, disponível sem join
+- `UserRepository` desnecessário no service — sem nova dependência
+- `create()` já tem `currentUser` em memória — nenhum custo adicional na escrita
+- Snapshot histórico correto: o log registra o nome do autor como era no momento da criação; uma eventual mudança de nome do usuário não altera o histórico (comportamento desejável em logs de auditoria)
+- Elimina N+1 HTTP no frontend
 
 ## Consequências Negativas / Riscos
 
-- Join extra por `userId` a cada leitura de log — mitigável com Redis Cache (spec já existente no backlog) quando o volume justificar
-- Se o usuário for deletado (ou desativado) futuramente, o lookup pode não encontrar o registro — tratar com fallback `"Usuário removido"` ou equivalente
+- Registros existentes terão `username = null` — o projeto usa `ddl-auto=update`; Hibernate adiciona a coluna automaticamente no próximo start. Aceitável: o frontend trata `null` como "Usuário desconhecido"
 
 ---
 
 ## Alternativas Consideradas
 
-- **Frontend resolve via `GET /users/{id}`**: descartado. Introduz N+1 HTTP, pressiona o frontend a implementar cache, e desloca responsabilidade de resolução de dados para o cliente HTTP.
-- **Embutir objeto `UserSummaryDTO` (id + name + sector)**: descartado como solução primária — over-engineering para o caso de uso atual. Se futuramente o frontend precisar de mais campos do autor (ex.: setor), a decisão pode evoluir para um objeto aninhado sem quebrar o contrato existente.
-- **Alterar assinatura do mapper para `toResponseDTO(ContactLog, String userName)`**: descartado. Quebra `search()` que usa referência de método sobre `Page.map()`. Exigiria refatorar o fluxo de paginação em todos os call sites.
-- **Resolver via `@Context UserRepository` no mapper**: descartado. Introduz dependência de repositório dentro do mapper, violando sua responsabilidade de transformação pura 1:1.
+- **Frontend resolve via `GET /users/{id}`**: descartado. Introduz N+1 HTTP, pressiona o frontend a implementar cache.
+- **`@Transient String username` populado no service a cada leitura**: descartado. Requer `UserRepository` injetado, adiciona uma query por log lido, e ignora o fato de que a imutabilidade do `ContactLog` torna a resolução em escrita suficiente e mais eficiente.
+- **Lookup via `UserRepository` no `create()` após `save()`**: descartado. `currentUser` já está em memória — fazer uma query para buscar o mesmo usuário é redundante.
+- **Alterar assinatura do mapper para `toResponseDTO(ContactLog, String)`**: descartado. Quebra `search()` que usa referência de método sobre `Page.map()`.
 
 ---
 
 ## Referências Cruzadas
 
-- `ADR-003` — ContactLog é imutável; `userId` nunca muda após criação — `userName` é estável por construção
-- `ADR-013` — padrão de Specifications; não impacta leitura por ID
-- `spec-redis-cache.md` — cache de usuários pode ser aplicado futuramente para eliminar o lookup a cada leitura
-- `ContactLogResponseDTO.java` — ponto de implementação do novo campo
-- `ContactLogServiceImpl.java` — ponto de resolução do `userName`
-- `frontend-integration-contract.md` — `ContactLogResponse` TypeScript precisa ser atualizado com campo `userName: string`
+- `ADR-003` — ContactLog é imutável; garante que `username` gravado na criação é definitivo
+- `ContactLog.java` — trocar `@Transient` por `@Column`; Hibernate (`ddl-auto=update`) cria a coluna automaticamente
+- `ContactLogServiceImpl.java` — `create()` já correto; `findById()` e `search()` sem alteração
+- `frontend-integration-contract.md` — `ContactLogResponse` TypeScript com campo `username: string`
