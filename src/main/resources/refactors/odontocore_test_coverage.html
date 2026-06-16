@@ -165,7 +165,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
             <div class="svc-name">CustomerServiceTest</div>
             <div class="svc-file">modules/funnel/service/</div>
           </div>
-          <span class="svc-badge badge-teal">9 testes</span>
+          <span class="svc-badge badge-teal">10 testes</span>
         </div>
         <div class="test-list">
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_deveAbrirLeadTicketComSetoDoUsuarioLogado</div><div class="test-desc">Abre LeadTicket com setor do usuário logado</div><span class="test-tag tag-happy">happy path</span></div></div>
@@ -177,6 +177,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testUpdateCustomerDuplicateCPF</div><div class="test-desc">Bloqueia CPF já existente em outro customer</div><span class="test-tag tag-error">error path</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testDeleteCustomerSuccess</div><div class="test-desc">Anonimiza PII — não chama deleteById</div><span class="test-tag tag-adr">ADR-006</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testDeleteCustomerNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-adr">ADR-006</span></div></div>
+          <div class="test-row"><div class="dot dot-yellow"></div><div><div class="test-name">search_naoRetornaClientesAnonimizados</div><div class="test-desc">search() com customer.anonymized=true não aparece no resultado — valida predicado notAnonymized()</div><span class="test-tag tag-adr">ADR-018</span></div></div>
         </div>
       </div>
 
@@ -362,14 +363,14 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   </div>
 
   <div class="section">
-    <div class="sec-label">CustomerService — 9 testes</div>
+    <div class="sec-label">CustomerService — 10 testes</div>
     <div class="svc">
       <div class="svc-head">
         <div>
           <div class="svc-name">CustomerServiceTest</div>
           <div class="svc-file">modules/funnel/service/CustomerServiceTest.java</div>
         </div>
-        <span class="svc-badge badge-teal">9 testes</span>
+        <span class="svc-badge badge-teal">10 testes</span>
       </div>
       <div class="test-list">
         <div class="test-row"><div class="dot dot-green"></div><div>
@@ -413,6 +414,11 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
           <div class="test-name">testDeleteCustomerNotFound</div>
           <div class="test-desc">Lança ResourceNotFoundException. Nunca salva.</div>
           <span class="test-tag tag-adr">ADR-006</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-yellow"></div><div>
+          <div class="test-name">search_naoRetornaClientesAnonimizados</div>
+          <div class="test-desc">search() com customer.anonymized=true não aparece no resultado — valida predicado notAnonymized() injetado na chain do Specification.</div>
+          <span class="test-tag tag-adr">ADR-018</span>
         </div></div>
       </div>
     </div>

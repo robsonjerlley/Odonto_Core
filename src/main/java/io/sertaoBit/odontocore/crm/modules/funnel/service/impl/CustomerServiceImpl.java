@@ -34,6 +34,7 @@ import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.CUSTOMER;
+import static io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerSpecifications.*;
 import static io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerSpecifications.byScope;
 
 @Service
@@ -159,9 +160,10 @@ public class CustomerServiceImpl implements CustomerService {
 
         Specification<Customer> spec = Specification
                 .where(byScope(scope, user))
-                .and(CustomerSpecifications.hasPhoneNumber(phone))
-                .and(CustomerSpecifications.hasName(name))
-                .and(CustomerSpecifications.hasAdsChannel(asdChannel));
+                .and(notAnonymized())
+                .and(hasPhoneNumber(phone))
+                .and(hasName(name))
+                .and(hasAdsChannel(asdChannel));
 
         return customerRepository.findAll(spec, pageable)
                 .map(customerMapper::toResponseDTO);

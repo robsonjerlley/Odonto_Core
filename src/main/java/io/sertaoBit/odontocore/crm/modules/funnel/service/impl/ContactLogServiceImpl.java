@@ -22,7 +22,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
 import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;

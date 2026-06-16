@@ -67,6 +67,10 @@ public final class CustomerSpecifications {
     }
 
 
+    public static Specification<Customer> notAnonymized() {
+        return (root, query, cb) -> cb.isFalse(root.get("anonymized"));
+    }
+
     public static Specification<Customer> byScope(PermissionScope scope, User user) {
         return switch (scope) {
             case GLOBAL -> ((root, query, cb) -> cb.conjunction());
