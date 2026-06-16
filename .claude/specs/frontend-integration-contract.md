@@ -2222,6 +2222,7 @@ export interface ContactLogResponse {
   id: string;
   ticketId: string;
   userId: string;
+  userName: string;        // ADR-019: nome do autor resolvido no backend
   channel: ContactChannel;
   note: string;
   statusBefore: TicketStatus | null;
