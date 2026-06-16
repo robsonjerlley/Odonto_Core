@@ -1,6 +1,6 @@
 # ADR-019: ContactLog persiste username do autor no momento da criação
 
-**Status**: Aceito  
+**Status**: Implementado  
 **Data**: 2026-06-16  
 **Autores**: Arquiteto-Agent  
 **Impacto**: Módulo funnel — ContactLog (entity + migration), ContactLogResponseDTO, ContactLogServiceImpl, ContactLogMapper
