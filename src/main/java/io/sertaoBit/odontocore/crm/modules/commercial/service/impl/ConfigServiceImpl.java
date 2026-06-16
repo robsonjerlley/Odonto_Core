@@ -1,7 +1,6 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
-import io.sertaoBit.odontocore.crm.core.enums.Action;
 import io.sertaoBit.odontocore.crm.core.enums.AdsChannel;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.adsInvestment.AdsInvestmentRequestDTO;
@@ -22,12 +21,12 @@ import io.sertaoBit.odontocore.crm.modules.commercial.service.ConfigService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
 import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
-import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.CONFIGURE;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.CONFIG;
@@ -137,7 +136,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     @Transactional(readOnly = true)
-    public RecycleConfigResponseDTO getRecycle() {
+    public Optional<RecycleConfigResponseDTO> getRecycle() {
         User user = securityUtils.getCurrentUser();
         permissionService.checkOrThrow(
                 user,
@@ -147,15 +146,14 @@ public class ConfigServiceImpl implements ConfigService {
                 null
         );
 
-        RecycleConfig recycle = configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()
-                .orElseThrow(() -> new ResourceNotFoundException("No active recycle configuration found"));
-
-        return new RecycleConfigResponseDTO(
-                recycle.getId(),
-                recycle.getAfterDays(),
-                recycle.isActive(),
-                recycle.getCreatedAt()
-        );
+        return configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()
+                .map(recycle ->
+                        new RecycleConfigResponseDTO(
+                                recycle.getId(),
+                                recycle.getAfterDays(),
+                                recycle.isActive(),
+                                recycle.getCreatedAt()
+                        ));
     }
 
     @Override

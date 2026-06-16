@@ -15,6 +15,7 @@ import io.sertaoBit.odontocore.crm.shared.DataRangeDTO;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface ConfigService {
 
@@ -26,7 +27,7 @@ public interface ConfigService {
 
     BigDecimal sumInvestmentByChannelAndPeriod(AdsChannel channel, DataRangeDTO period);
 
-    RecycleConfigResponseDTO getRecycle();
+  Optional<RecycleConfigResponseDTO> getRecycle();
 
     List<BonusConfigResponseDTO>  getBonusConfigs(Sector sector);
 

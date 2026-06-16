@@ -52,10 +52,9 @@ public class ConfigController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/recycle")
-    public ResponseEntity<RecycleConfigResponseDTO> recycle() {
-        return ResponseEntity.ok(configService.getRecycle());
-    }
+
+
+
 
     @GetMapping("/bonus")
     public ResponseEntity<List<BonusConfigResponseDTO>> bonus(@RequestParam Sector sector) {

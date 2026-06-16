@@ -139,11 +139,23 @@ public class ConfigServiceTest {
 
         when(configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()).thenReturn(Optional.of(config));
 
-        RecycleConfigResponseDTO result = configService.getRecycle();
+        Optional<RecycleConfigResponseDTO> result = configService.getRecycle();
 
-        assertNotNull(result);
-        assertEquals(30, result.afterDays());
-        assertTrue(result.active());
+        assertTrue(result.isPresent());
+        assertEquals(30, result.get().afterDays());
+        assertTrue(result.get().active());
+    }
+
+    @Test
+    @DisplayName("Deve retornar Optional vazio quando nenhuma config de reciclo está cadastrada — bug #18")
+    void getRecycle_semConfig_retornaVazio() {
+        when(securityUtils.getCurrentUser()).thenReturn(buildUser());
+        when(configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()).thenReturn(Optional.empty());
+
+        Optional<RecycleConfigResponseDTO> result = configService.getRecycle();
+
+        assertTrue(result.isEmpty());
+        verify(configRepository).findFirstByActiveTrueOrderByCreatedAtDesc();
     }
 
     @Test
