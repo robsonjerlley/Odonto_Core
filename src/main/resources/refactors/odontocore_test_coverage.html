@@ -190,10 +190,10 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
           <span class="svc-badge badge-blue">5 testes</span>
         </div>
         <div class="test-list">
-          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create</div><div class="test-desc">Cria ContactLog imutável com sucesso</div><span class="test-tag tag-adr">ADR-003</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create</div><div class="test-desc">Cria ContactLog imutável com sucesso; valida username = currentUser.getName() no response</div><span class="test-tag tag-adr">ADR-003</span><span class="test-tag tag-adr">ADR-019</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">create_shouldThrow_WhenNotPermitted</div><div class="test-desc">Lança AccessDeniedException</div><span class="test-tag tag-perm">permissão</span></div></div>
-          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">search_byTicketId_success</div><div class="test-desc">Retorna Page&lt;ContactLogResponseDTO&gt; pelo ticketId</div></div></div>
-          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">findById</div><div class="test-desc">Retorna ContactLogResponseDTO pelo id</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">search_byTicketId_success</div><div class="test-desc">Retorna Page&lt;ContactLogResponseDTO&gt; pelo ticketId; username presente no DTO</div></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">findById</div><div class="test-desc">Retorna ContactLogResponseDTO pelo id; username presente no DTO</div></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">findById_shouldThrow_WhenNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-error">error path</span></div></div>
         </div>
       </div>
@@ -437,8 +437,8 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
       <div class="test-list">
         <div class="test-row"><div class="dot dot-green"></div><div>
           <div class="test-name">create</div>
-          <div class="test-desc">Cria ContactLog com ticketId, userId, channel, note e statusBefore. ContactLog é imutável — sem update/delete.</div>
-          <span class="test-tag tag-adr">ADR-003</span>
+          <div class="test-desc">Cria ContactLog com ticketId, userId, channel, note e statusBefore. Valida username = currentUser.getName() no response. ContactLog é imutável — sem update/delete.</div>
+          <span class="test-tag tag-adr">ADR-003</span><span class="test-tag tag-adr">ADR-019</span>
         </div></div>
         <div class="test-row"><div class="dot dot-green"></div><div>
           <div class="test-name">create_shouldThrow_WhenNotPermitted</div>
