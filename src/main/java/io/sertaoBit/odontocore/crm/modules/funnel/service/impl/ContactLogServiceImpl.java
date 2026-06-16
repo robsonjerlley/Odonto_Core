@@ -67,10 +67,12 @@ public class ContactLogServiceImpl implements ContactLogService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
 
         var userId = user.getId();
+        var username = user.getName();
 
         ContactLog contactLog = ContactLog.builder()
                 .ticketId(ticket.getId())
                 .userId(userId)
+                .username(username)
                 .channel(dto.channel())
                 .note(dto.note())
                 .statusBefore(null)

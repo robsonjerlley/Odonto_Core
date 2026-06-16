@@ -10,6 +10,7 @@ public record ContactLogResponseDTO(
         UUID id,
         UUID ticketId,
         UUID userId,
+        String username,
         ContactChannel channel,
         String note,
         TicketStatus statusBefore,

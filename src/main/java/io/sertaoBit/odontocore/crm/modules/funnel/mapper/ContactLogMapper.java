@@ -15,11 +15,15 @@ public interface ContactLogMapper {
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "statusAfter", ignore = true),
             @Mapping(target = "statusBefore", ignore = true),
-            @Mapping(target = "userId", ignore = true)
+            @Mapping(target = "userId", ignore = true),
+            @Mapping(target = "username", ignore = true)
     })
     ContactLog toEntity(ContactLogCreateRequestDTO dto);
 
 
     ContactLogResponseDTO toResponseDTO(ContactLog entity);
+
+
+
 
 }
