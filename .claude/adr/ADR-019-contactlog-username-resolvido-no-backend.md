@@ -3,7 +3,7 @@
 **Status**: Aceito  
 **Data**: 2026-06-16  
 **Autores**: Arquiteto-Agent  
-**Impacto**: Módulo funnel — ContactLogResponseDTO, ContactLogServiceImpl, ContactLogMapper
+**Impacto**: Módulo funnel — ContactLog (entity), ContactLogResponseDTO, ContactLogServiceImpl, ContactLogMapper
 
 ---
 
@@ -28,7 +28,22 @@ A ausência de `userName` no DTO cria dois caminhos ruins:
 
 Adicionar `String userName` ao `ContactLogResponseDTO`, resolvido via lookup por `userId` no `ContactLogServiceImpl` antes do mapeamento.
 
+### Por que a entidade precisa de `@Transient String userName`
+
+`ContactLogServiceImpl.create()` e `search()` constroem o response via `contactLogMapper.toResponseDTO(contactLog)` — o mapper opera sobre a entidade com assinatura de um único argumento. Alterar essa assinatura para `toResponseDTO(ContactLog, String)` quebraria o `search()`, que usa referência de método (`.map(contactLogMapper::toResponseDTO)`) sobre a Page retornada pelo repositório.
+
+A única forma de injetar `userName` no fluxo sem alterar a assinatura do mapper é adicionar o campo `@Transient` na entidade: JPA não persiste, Lombok expõe via `@Getter`, MapStruct lê automaticamente.
+
 ### Implementação
+
+**`ContactLog` — campo transiente:**
+
+```java
+@Transient
+private String userName;
+```
+
+O campo não tem coluna correspondente na tabela `contact_logs`. É preenchido em memória pelo service antes de chamar o mapper.
 
 **`ContactLogResponseDTO` — novo campo:**
 
@@ -37,7 +52,7 @@ public record ContactLogResponseDTO(
     UUID id,
     UUID ticketId,
     UUID userId,
-    String userName,          // nome do usuário resolvido no backend
+    String userName,
     ContactChannel channel,
     String note,
     TicketStatus statusBefore,
@@ -47,20 +62,29 @@ public record ContactLogResponseDTO(
 ) {}
 ```
 
-**`ContactLogServiceImpl` — resolver antes de mapear:**
+**`ContactLogServiceImpl` — resolver e setar antes de mapear:**
 
-O service injeta `UserRepository`, busca o `User` por `userId` e passa o nome ao mapper (ou constrói o DTO diretamente). O mapper permanece "burro" — transforma campos 1:1, sem lógica de join.
+O service injeta `UserRepository`. Antes de chamar o mapper, resolve o nome e seta no objeto da entidade:
 
 ```java
-// exemplo de resolução no service antes do mapeamento
-User author = userRepository.findById(log.getUserId())
-        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-// mapper recebe o nome via @Context ou método auxiliar
+// create()
+ContactLog saved = contactLogRepository.save(contactLog);
+userRepository.findById(saved.getUserId())
+        .map(User::getName)
+        .ifPresentOrElse(saved::setUserName, () -> saved.setUserName("Usuário removido"));
+return contactLogMapper.toResponseDTO(saved);
+
+// search() — resolver no stream antes do map
+return contactLogRepository.findAll(spec, pageable)
+        .map(log -> {
+            userRepository.findById(log.getUserId())
+                    .map(User::getName)
+                    .ifPresentOrElse(log::setUserName, () -> log.setUserName("Usuário removido"));
+            return contactLogMapper.toResponseDTO(log);
+        });
 ```
 
-**`ContactLogMapper` — alternativa com `@Context`:**
-
-Caso o mapper seja mantido como ponto de conversão, injetar `UserRepository` via `@Context` e resolver no `@AfterMapping`. Preferir a resolução no service para manter o mapper sem dependências de repositório.
+**`ContactLogMapper`** — nenhuma alteração necessária. MapStruct detecta o getter `getUserName()` na entidade e mapeia para o campo `userName` do DTO automaticamente por convenção de nome.
 
 ---
 
@@ -82,6 +106,8 @@ Caso o mapper seja mantido como ponto de conversão, injetar `UserRepository` vi
 
 - **Frontend resolve via `GET /users/{id}`**: descartado. Introduz N+1 HTTP, pressiona o frontend a implementar cache, e desloca responsabilidade de resolução de dados para o cliente HTTP.
 - **Embutir objeto `UserSummaryDTO` (id + name + sector)**: descartado como solução primária — over-engineering para o caso de uso atual. Se futuramente o frontend precisar de mais campos do autor (ex.: setor), a decisão pode evoluir para um objeto aninhado sem quebrar o contrato existente.
+- **Alterar assinatura do mapper para `toResponseDTO(ContactLog, String userName)`**: descartado. Quebra `search()` que usa referência de método sobre `Page.map()`. Exigiria refatorar o fluxo de paginação em todos os call sites.
+- **Resolver via `@Context UserRepository` no mapper**: descartado. Introduz dependência de repositório dentro do mapper, violando sua responsabilidade de transformação pura 1:1.
 
 ---
 
