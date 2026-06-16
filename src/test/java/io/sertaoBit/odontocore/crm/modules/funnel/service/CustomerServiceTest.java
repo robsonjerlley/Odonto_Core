@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.funnel.service;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
@@ -25,14 +26,24 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
 import static io.sertaoBit.odontocore.crm.core.enums.AdsChannel.INSTAGRAM;
 import static io.sertaoBit.odontocore.crm.core.enums.CustomerSource.ADS_PAID;
+import static io.sertaoBit.odontocore.crm.core.enums.Resource.CUSTOMER;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -365,5 +376,38 @@ class CustomerServiceTest {
 
         verify(customerRepository, never()).save(any());
         verify(customerRepository, never()).deleteById(any());
+    }
+
+    // ========== SEARCH TESTS (ADR-018 — anonimizados excluídos da listagem) ==========
+
+    @Test
+    @DisplayName("search() não deve retornar clientes com anonymized=true — ADR-018")
+    void search_naoRetornaClientesAnonimizados() {
+        User currentUser = buildUser(Sector.LEADS);
+        when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+        when(permissionService.getScope(currentUser, CUSTOMER, READ))
+                .thenReturn(Optional.of(PermissionScope.GLOBAL));
+
+        Customer active = Customer.builder()
+                .id(UUID.randomUUID())
+                .name("Paciente Ativo")
+                .anonymized(false)
+                .build();
+
+        CustomerResponseDTO activeDTO = new CustomerResponseDTO(
+                active.getId(), active.getName(), null, null, null, null, null,
+                null, null, null, null, null, null, null, false
+        );
+
+        Pageable pageable = PageRequest.of(0, 10);
+        when(customerRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(active)));
+        when(customerMapper.toResponseDTO(active)).thenReturn(activeDTO);
+
+        Page<CustomerResponseDTO> result = customerService.search(null, null, null, pageable);
+
+        assertEquals(1, result.getTotalElements());
+        assertFalse(result.getContent().get(0).anonymized());
+        verify(customerRepository).findAll(any(Specification.class), eq(pageable));
     }
 }

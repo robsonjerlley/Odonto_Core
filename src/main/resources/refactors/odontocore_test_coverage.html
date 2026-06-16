@@ -177,7 +177,7 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testUpdateCustomerDuplicateCPF</div><div class="test-desc">Bloqueia CPF já existente em outro customer</div><span class="test-tag tag-error">error path</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testDeleteCustomerSuccess</div><div class="test-desc">Anonimiza PII — não chama deleteById</div><span class="test-tag tag-adr">ADR-006</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">testDeleteCustomerNotFound</div><div class="test-desc">Lança ResourceNotFoundException</div><span class="test-tag tag-adr">ADR-006</span></div></div>
-          <div class="test-row"><div class="dot dot-yellow"></div><div><div class="test-name">search_naoRetornaClientesAnonimizados</div><div class="test-desc">search() com customer.anonymized=true não aparece no resultado — valida predicado notAnonymized()</div><span class="test-tag tag-adr">ADR-018</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">search_naoRetornaClientesAnonimizados</div><div class="test-desc">search() com customer.anonymized=true não aparece no resultado — valida predicado notAnonymized()</div><span class="test-tag tag-adr">ADR-018</span></div></div>
         </div>
       </div>
 
