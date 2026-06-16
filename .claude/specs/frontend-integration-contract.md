@@ -1398,10 +1398,12 @@ Todos os endpoints requerem `CONFIG:CONFIGURE` (apenas ADM_SYSTEM).
 ```
 
 > Retorna a config **global** ativa mais recente. `sector` é omitido (ADR-007).
+> Quando nenhuma config foi cadastrada ainda, retorna `200` com body `null`. O frontend deve tratar `null` como estado "não configurado" e exibir o formulário de criação.
 
-| Erro | Causa |
-|------|-------|
-| 404 | Nenhuma `RecycleConfig` ativa cadastrada — chamar `POST /config/recycle` primeiro |
+| Resposta | Causa |
+|----------|-------|
+| 200 + body | Config ativa encontrada |
+| 200 + null | Nenhuma `RecycleConfig` cadastrada ainda — exibir estado vazio com botão de criação |
 | 403 | sem permissão (`CONFIG:CONFIGURE` — apenas `ADM_SYSTEM`) |
 
 ---

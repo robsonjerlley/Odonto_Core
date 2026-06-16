@@ -204,13 +204,14 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
             <div class="svc-name">ConfigServiceTest</div>
             <div class="svc-file">modules/commercial/service/</div>
           </div>
-          <span class="svc-badge badge-amber">9 testes</span>
+          <span class="svc-badge badge-amber">10 testes</span>
         </div>
         <div class="test-list">
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">setRecycleConfig_success</div><div class="test-desc">Salva config global de reciclo (sem sector)</div><span class="test-tag tag-adr">ADR-007</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">setRecycleConfig_accessDenied</div><div class="test-desc">Lança AccessDeniedException</div><span class="test-tag tag-perm">permissão</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">registerAdsInvestment_success</div><div class="test-desc">Registra AdsInvestment com canal e período</div><span class="test-tag tag-happy">happy path</span></div></div>
-          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getRecycle_success</div><div class="test-desc">Retorna config ativa mais recente</div><span class="test-tag tag-adr">ADR-007</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getRecycle_success</div><div class="test-desc">Retorna Optional com config ativa mais recente</div><span class="test-tag tag-adr">ADR-007</span></div></div>
+          <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getRecycle_semConfig_retornaVazio</div><div class="test-desc">Retorna Optional.empty() quando sem config cadastrada — bug #18</div><span class="test-tag tag-error">bug #18</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getRecycle_accessDenied</div><div class="test-desc">Lança AccessDeniedException</div><span class="test-tag tag-perm">permissão</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getBonusConfigs_success</div><div class="test-desc">Retorna lista de BonusConfig por setor</div><span class="test-tag tag-adr">ADR-007</span></div></div>
           <div class="test-row"><div class="dot dot-green"></div><div><div class="test-name">getBonusConfigs_empty</div><div class="test-desc">Retorna lista vazia sem config para o setor</div></div></div>
@@ -533,14 +534,14 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   </div>
 
   <div class="section">
-    <div class="sec-label">ConfigService — 9 testes</div>
+    <div class="sec-label">ConfigService — 10 testes</div>
     <div class="svc">
       <div class="svc-head">
         <div>
           <div class="svc-name">ConfigServiceTest</div>
           <div class="svc-file">modules/commercial/service/ConfigServiceTest.java</div>
         </div>
-        <span class="svc-badge badge-amber">9 testes</span>
+        <span class="svc-badge badge-amber">10 testes</span>
       </div>
       <div class="test-list">
         <div class="test-row"><div class="dot dot-green"></div><div>
@@ -560,8 +561,13 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
         </div></div>
         <div class="test-row"><div class="dot dot-green"></div><div>
           <div class="test-name">getRecycle_success</div>
-          <div class="test-desc">findFirstByActiveTrueOrderByCreatedAtDesc → RecycleConfigResponseDTO com afterDays e active corretos.</div>
+          <div class="test-desc">findFirstByActiveTrueOrderByCreatedAtDesc → Optional com RecycleConfigResponseDTO; afterDays e active corretos.</div>
           <span class="test-tag tag-adr">ADR-007</span>
+        </div></div>
+        <div class="test-row"><div class="dot dot-green"></div><div>
+          <div class="test-name">getRecycle_semConfig_retornaVazio</div>
+          <div class="test-desc">Banco sem RecycleConfig ativa → Optional.empty(). Corrige bug #18: antes lançava 404.</div>
+          <span class="test-tag tag-error">bug #18</span>
         </div></div>
         <div class="test-row"><div class="dot dot-green"></div><div>
           <div class="test-name">getRecycle_accessDenied</div>
