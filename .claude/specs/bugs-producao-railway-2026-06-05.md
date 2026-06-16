@@ -12,7 +12,7 @@
 | Área | Itens | Severidade |
 |------|-------|------------|
 | Backend — RBAC / PermissionSeeder | #1, #2, #6, #11, #14, #16, #17 | 🔴 Bloqueador |
-| Backend — Business Logic / API | #5, #10, #15 | 🔴/🟡 Crítico |
+| Backend — Business Logic / API | #5, #10, #15, #18 | 🔴/🟡 Crítico |
 | Frontend — UI/UX | #3, #7, #8, #9, #12 | 🟡/🟢 Médio |
 | Feature nova (backlog) | #4, #13 | 🟢 Backlog |
 
@@ -379,6 +379,35 @@ Então o valor armazenado e exibido deve ser R$ 5.000,00.
 - Frontend: selector ao lado do campo de valor.
 
 **Padrão de mercado odontológico:** procedimentos como implantes são cobrados por dente (UNIT); tratamentos como aparelho e alinhadores são por pacote/fase (TOTAL).
+
+---
+
+### #18 — ADM_SYSTEM recebe 404 ao acessar painel de config sem RecycleConfig cadastrada
+
+**Sintoma:** `GET /api/v1/config/recycle` retorna `404 Not Found` com body `"No active recycle configuration found"` quando nenhuma `RecycleConfig` foi criada ainda.
+
+**Causa:** `ConfigServiceImpl.getRecycle()` lança `ResourceNotFoundException` via `orElseThrow` quando o banco não tem nenhum registro com `active = true`. É um estado válido (painel nunca configurado), mas o backend trata como erro.
+
+**Arquivos:**
+- `ConfigService.java` — `RecycleConfigResponseDTO getRecycle()` → `Optional<RecycleConfigResponseDTO> getRecycle()`
+- `ConfigServiceImpl.java` — substituir `orElseThrow` por `map(...)` retornando `Optional`
+- `ConfigController.java` — retornar `200 OK` com body quando presente, `204 No Content` quando ausente
+
+**Correção esperada:**
+```java
+// ConfigServiceImpl
+return configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()
+        .map(recycle -> new RecycleConfigResponseDTO(...));
+
+// ConfigController
+Optional<RecycleConfigResponseDTO> result = configService.getRecycle();
+return result.map(ResponseEntity::ok)
+             .orElse(ResponseEntity.noContent().build());
+```
+
+**Frontend:** tratar `204` como "não configurado ainda" — exibir estado vazio com botão de criação, não mensagem de erro.
+
+**Severidade:** 🟡 Médio — bloqueia visualização do painel de config, mas não impede operação do funil.
 
 ---
 
