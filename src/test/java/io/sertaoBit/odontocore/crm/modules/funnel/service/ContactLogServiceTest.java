@@ -69,7 +69,7 @@ class ContactLogServiceTest {
     @DisplayName("Deve criar um contactLog com sucesso")
     void create() {
         UUID userId = UUID.randomUUID();
-        User user = User.builder().id(userId).sector(Sector.LEADS).build();
+        User user = User.builder().id(userId).name("João Leads").sector(Sector.LEADS).build();
         when(securityUtils.getCurrentUser()).thenReturn(user);
 
         UUID ticketId = UUID.randomUUID();
@@ -91,9 +91,11 @@ class ContactLogServiceTest {
                 .id(UUID.randomUUID())
                 .ticketId(dto.ticketId())
                 .userId(userId)
+                .username(user.getName())
                 .channel(dto.channel())
                 .note(dto.note())
-                .statusBefore(leadTicket.getStatus())
+                .statusBefore(null)
+                .statusAfter(null)
                 .createdAt(LocalDateTime.now())
                 .occurredAt(dto.occurredAt())
                 .build();
@@ -104,6 +106,7 @@ class ContactLogServiceTest {
                 contactLog.getId(),
                 contactLog.getTicketId(),
                 contactLog.getUserId(),
+                contactLog.getUsername(),
                 contactLog.getChannel(),
                 contactLog.getNote(),
                 contactLog.getStatusBefore(),
@@ -120,6 +123,7 @@ class ContactLogServiceTest {
         assertEquals(dto.channel(), result.channel());
         assertEquals(dto.note(), result.note());
         assertEquals(dto.occurredAt(), result.occurredAt());
+        assertEquals(user.getName(), result.username());
 
         verify(contactLogRepository, times(1)).save(any(ContactLog.class));
         verify(securityUtils, times(1)).getCurrentUser();
@@ -160,6 +164,7 @@ class ContactLogServiceTest {
                 .id(UUID.randomUUID())
                 .ticketId(ticketId)
                 .userId(userId)
+                .username("João Leads")
                 .channel(FACEBOOK)
                 .note("Cliente atingido pela promoção de junho")
                 .statusBefore(IN_CONTACT)
@@ -171,6 +176,7 @@ class ContactLogServiceTest {
                 contactLog.getId(),
                 contactLog.getTicketId(),
                 contactLog.getUserId(),
+                contactLog.getUsername(),
                 contactLog.getChannel(),
                 contactLog.getNote(),
                 contactLog.getStatusBefore(),
@@ -207,6 +213,7 @@ class ContactLogServiceTest {
                 .id(UUID.randomUUID())
                 .ticketId(ticketId)
                 .userId(userId)
+                .username("João Leads")
                 .channel(FACEBOOK)
                 .note("Cliente atingido pela promoção de junho")
                 .statusBefore(IN_CONTACT)
@@ -218,6 +225,7 @@ class ContactLogServiceTest {
                 contactLog.getId(),
                 contactLog.getTicketId(),
                 contactLog.getUserId(),
+                contactLog.getUsername(),
                 contactLog.getChannel(),
                 contactLog.getNote(),
                 contactLog.getStatusBefore(),
