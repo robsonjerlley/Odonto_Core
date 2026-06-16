@@ -1,10 +1,18 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.6  
-**Data:** 2026-06-15  
+**Versão:** 1.7  
+**Data:** 2026-06-16  
 **Branch:** main  
 **Commit de referência:** HEAD  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, `PermissionSeeder`, `GlobalExceptionHandler`)
+
+> **Changelog 1.7 (2026-06-16) — ADR-018 + ADR-019 + bug #18.**
+> `GET /customers` nunca retorna clientes com `anonymized=true` — filtro aplicado por default no SQL
+> via `CustomerSpecifications.notAnonymized()` (ADR-018). `ContactLogResponseDTO` agora inclui o campo
+> `username` (nome do autor gravado no momento da criação, ADR-019) — logs anteriores a esta versão
+> chegam com `null`. `GET /config/recycle` retorna `200 + null` quando nenhuma config foi cadastrada
+> (era 404, bug #18); frontend deve tratar `null` como "não configurado" e exibir formulário de
+> criação. Ver §6, §7.5, §7.7 e §15.
 
 > **Changelog 1.6 (2026-06-15) — ADR-017 implementada: dashboard global aceita range livre.**
 > `GET /analytics/dashboard` não exige mais range de mês único — aceita qualquer range ("últimos 30
@@ -645,6 +653,7 @@ Todos os enums são enviados e recebidos como **string com o nome exato do valor
 | `id` | `UUID` | não | PK |
 | `ticketId` | `UUID` | não | FK para LeadTicket.id |
 | `userId` | `UUID` | não | UUID do usuário que registrou |
+| `username` | `String` | sim | Nome do usuário no momento da criação — snapshot imutável (ADR-019); `null` em logs anteriores à feature |
 | `channel` | `ContactChannel` | não | Canal do contato |
 | `note` | `String` (500 chars) | não | Descrição da interação |
 | `statusBefore` | `TicketStatus` | sim | Status antes (preenchido em logs automáticos de transição) |
@@ -653,6 +662,7 @@ Todos os enums são enviados e recebidos como **string com o nome exato do valor
 | `createdAt` | `LocalDateTime` | não | @CreationTimestamp |
 
 > Sem UPDATE, sem DELETE — ADR-003. Logs criados manualmente pelo usuário têm `statusBefore`/`statusAfter` = null. Logs gerados automaticamente pela transição de status têm ambos preenchidos com `channel = OTHER`.
+> `username` é um snapshot gravado na criação (ContactLog é imutável após criar, ADR-003 + ADR-019) — elimina lookup ao `UserRepository` em tempo de leitura.
 
 ### Deal (crm_db → tabela deals)
 
@@ -1166,6 +1176,7 @@ Avança ou recua o ticket na máquina de estados.
   "id": "...",
   "ticketId": "...",
   "userId": "...",
+  "username": "João Silva",
   "channel": "WHATSAPP",
   "note": "Cliente confirmou interesse...",
   "statusBefore": null,
@@ -1174,6 +1185,10 @@ Avança ou recua o ticket na máquina de estados.
   "createdAt": "2026-06-03T14:30:05"
 }
 ```
+
+> `username` é o nome do usuário autenticado no momento da criação (ADR-019). Logs automáticos de
+> transição de status também recebem o `username` do usuário que disparou a transição. Logs criados
+> antes da v1.7 chegam com `username: null`.
 
 ---
 
@@ -2666,6 +2681,31 @@ Esta tabela lista o que **mudou em relação ao texto anterior** deste contrato;
 > método inteiro e herdava o guard. A solução foi extrair um núcleo privado `computePerformance()`
 > sem bônus; o dashboard usa o núcleo diretamente, e `getUserPerformance()` usa o núcleo + injeta
 > o bônus calculado no DTO de retorno.
+
+---
+
+### ADR-018 — Pacientes anonimizados excluídos da listagem (2026-06-16)
+
+| # | Local | Situação anterior | Situação atual | Ação do frontend |
+|---|-------|-------------------|----------------|-----------------|
+| I1 | `GET /customers` | Clientes com `anonymized=true` podiam aparecer na listagem | **`notAnonymized()` aplicado por default no SQL** — clientes anonimizados nunca aparecem em `search()` | Nenhuma mudança de contrato: a paginação já chega filtrada. Remover qualquer workaround de filter no lado do cliente |
+
+---
+
+### ADR-019 — username do autor gravado no ContactLog (2026-06-16)
+
+| # | Local | Situação anterior | Situação atual | Ação do frontend |
+|---|-------|-------------------|----------------|-----------------|
+| J1 | `ContactLogResponseDTO` | Campo `username` inexistente — o frontend precisava fazer `GET /users/{userId}` por log para exibir o nome | **Campo `username: string \| null` adicionado** — nome gravado no momento da criação (snapshot imutável, ADR-003) | Usar `username` diretamente para exibir o autor; eliminar chamadas `GET /users/{id}` por linha de log |
+| J2 | Logs anteriores à v1.7 | — | `username = null` (coluna adicionada com `nullable=true` via `ddl-auto=update`) | Tratar `null` com fallback: exibir `userId` ou "Sistema" |
+
+---
+
+### Bug #18 — GET /config/recycle retornava 404 quando sem config (2026-06-16, RESOLVIDO)
+
+| # | Local | Situação anterior | Situação atual | Ação do frontend |
+|---|-------|-------------------|----------------|-----------------|
+| K1 | `GET /api/v1/config/recycle` | `ConfigServiceImpl.getRecycle()` usava `orElseThrow(ResourceNotFoundException)` → **404** quando nenhuma `RecycleConfig` existe no banco | Retorna **`200` com body `null`** quando nenhuma config está cadastrada | Remover tratamento de 404 neste endpoint; exibir estado vazio ("Nenhuma config cadastrada — criar agora") quando `body === null` |
 
 ---
 
