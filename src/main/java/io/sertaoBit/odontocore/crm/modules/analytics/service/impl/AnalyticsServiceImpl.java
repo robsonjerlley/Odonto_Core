@@ -90,7 +90,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
         if (effectiveSector != null) {
             tickets = tickets.stream()
-                    .filter(t -> t.getCurrentSector() == effectiveSector)
+                    .filter(t -> t.getCurrentSector() == effectiveSector
+                        || (t.getStatus() == POST_PROCEDURE && effectiveSector == COMMERCIAL))
                     .toList();
 
         }
@@ -99,14 +100,15 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 NEGOTIATION,
                 WIN,
                 PENDING,
-                RECYCLED
+                RECYCLED,
+                POST_PROCEDURE
         );
 
         long captureCount = tickets.size();
         var scheduledStatuses = Set.of(SCHEDULED, IN_EVALUATION, NEGOTIATION, WIN, PENDING, RECYCLED, POST_PROCEDURE);
         long scheduledCount = tickets.stream().filter(t -> scheduledStatuses.contains(t.getStatus())).count();
         long dealCreatedCount = tickets.stream().filter(t -> dealStatuses.contains(t.getStatus())).count();
-        long closedCount = tickets.stream().filter(t -> t.getStatus() == WIN).count();
+        long closedCount = tickets.stream().filter(t -> t.getClosedAt() != null).count();
 
         BigDecimal leadsConversionPct = captureCount == 0 ? ZERO
                 : valueOf(scheduledCount * 100)

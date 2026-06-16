@@ -1,10 +1,21 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.7  
+**Versão:** 1.8  
 **Data:** 2026-06-16  
 **Branch:** main  
 **Commit de referência:** HEAD  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, `PermissionSeeder`, `GlobalExceptionHandler`)
+
+> **Changelog 1.8 (2026-06-16) — analytics POST_PROCEDURE + scope USER_COMMERCIAL.**
+> `GET /analytics/conversion`: `POST_PROCEDURE` adicionado a `dealStatuses` (tickets em
+> acompanhamento pós-venda não desapareciam mais do `dealCreatedCount`); `closedCount` corrigido
+> de `status == WIN` para `closedAt != null`, capturando também tickets que avançaram para
+> `POST_PROCEDURE` (cujo `closedAt` persiste da transição WIN); filtro de setor `COMMERCIAL`
+> expandido para incluir tickets em `POST_PROCEDURE` (apesar de `currentSector` mudar para `LEADS`
+> na transição `WIN→POST_PROCEDURE`, esses tickets pertencem ao funil comercial).
+> `USER_COMMERCIAL.TICKET:READ` corrigido de `OWN` para `SECTOR` — vendedor agora enxerga todos os
+> tickets do setor COMMERCIAL (antes não via tickets em `NEGOTIATION` de outros membros do setor).
+> Ver §8, §9, §13 e §15.
 
 > **Changelog 1.7 (2026-06-16) — ADR-018 + ADR-019 + bug #18.**
 > `GET /customers` nunca retorna clientes com `anonymized=true` — filtro aplicado por default no SQL
@@ -1546,7 +1557,8 @@ Todos os endpoints requerem `CONFIG:CONFIGURE` (apenas ADM_SYSTEM).
 | USER_COMMERCIAL | DEAL | READ | OWN |
 | USER_COMMERCIAL | DEAL | UPDATE | SECTOR |
 | USER_COMMERCIAL | DEAL | CLOSE | OWN |
-| USER_COMMERCIAL | TICKET | READ / UPDATE / CLOSE | OWN |
+| USER_COMMERCIAL | TICKET | READ | SECTOR |
+| USER_COMMERCIAL | TICKET | UPDATE / CLOSE | OWN |
 | USER_COMMERCIAL | CUSTOMER | READ | SECTOR |
 | USER_COMMERCIAL | CONTACT_LOG | READ | GLOBAL |
 | USER_COMMERCIAL | ANALYTICS | READ | OWN |
@@ -1663,7 +1675,7 @@ canAccess(user, resource, action, targetSector, targetOwnerId):
 
 - **Lê/fecha:** deals (`OWN`); **atualiza** deals em escopo **`SECTOR`** (pode editar deal criado por
   outro membro do setor, mas só lê/fecha os próprios)
-- **Lê/edita:** tickets (`OWN`); lê clientes (`SECTOR`), contact_log (`GLOBAL`)
+- **Lê** tickets (`SECTOR`); **edita/fecha** tickets (`OWN`); lê clientes (`SECTOR`), contact_log (`GLOBAL`)
 - **Não cria:** deals, tickets
 - **Analytics:** `OWN` — acessa `/user-performance/{próprio-id}` (§13)
 - **Rota inicial sugerida:** `/negociacoes`
@@ -1860,6 +1872,15 @@ diferentes por endpoint, e o `resolveScope` compara contra `targetSector`/`targe
 > `GLOBAL`. Com escopo `SECTOR`, o backend ignora o `sector` recebido e usa `user.getSector()`
 > como `effectiveSector` — enviar `sector=EVALUATOR` com um `ADM_LEADS` retorna dados de `LEADS`.
 > O campo `sector` na response reflete o `effectiveSector` aplicado.
+
+> ⚠️ **Semântica de `dealCreatedCount` e `closedCount` (v1.8):**
+> `dealCreatedCount` conta tickets com status ∈ `{NEGOTIATION, WIN, PENDING, RECYCLED, POST_PROCEDURE}` —
+> inclui `POST_PROCEDURE` porque tickets que avançaram de `WIN` para o acompanhamento pós-venda
+> pertencem ao funil comercial. `closedCount` conta tickets onde `closedAt != null`: isso captura
+> tickets atualmente em `WIN` (cujo `closedAt` é setado pelo `DEAL:CLOSE`) **e** tickets em
+> `POST_PROCEDURE` (cujo `closedAt` persiste da transição WIN). Com `effectiveSector = COMMERCIAL`,
+> o filtro de setor inclui explicitamente tickets em `POST_PROCEDURE` mesmo que seu `currentSector`
+> tenha sido alterado para `LEADS` pela transição `WIN→POST_PROCEDURE`.
 
 ```json
 // Response 200
@@ -2490,7 +2511,7 @@ export const ROLE_CAPABILITIES: Record<Role, Record<ResourceAction, Scope>> = {
   },
   USER_COMMERCIAL: {
     'DEAL:READ': 'OWN', 'DEAL:UPDATE': 'SECTOR', 'DEAL:CLOSE': 'OWN',
-    'TICKET:READ': 'OWN', 'TICKET:UPDATE': 'OWN', 'TICKET:CLOSE': 'OWN',
+    'TICKET:READ': 'SECTOR', 'TICKET:UPDATE': 'OWN', 'TICKET:CLOSE': 'OWN',
     'CUSTOMER:READ': 'SECTOR',
     'CONTACT_LOG:READ': 'GLOBAL',
     'ANALYTICS:READ': 'OWN',
@@ -2706,6 +2727,17 @@ Esta tabela lista o que **mudou em relação ao texto anterior** deste contrato;
 | # | Local | Situação anterior | Situação atual | Ação do frontend |
 |---|-------|-------------------|----------------|-----------------|
 | K1 | `GET /api/v1/config/recycle` | `ConfigServiceImpl.getRecycle()` usava `orElseThrow(ResourceNotFoundException)` → **404** quando nenhuma `RecycleConfig` existe no banco | Retorna **`200` com body `null`** quando nenhuma config está cadastrada | Remover tratamento de 404 neste endpoint; exibir estado vazio ("Nenhuma config cadastrada — criar agora") quando `body === null` |
+
+---
+
+### Correções 2026-06-16 — analytics POST_PROCEDURE + scope USER_COMMERCIAL
+
+| # | Local | Problema | Correção aplicada | Ação do frontend |
+|---|-------|----------|-------------------|-----------------|
+| L1 | `AnalyticsServiceImpl.getConversionByStage()` — `dealStatuses` | `POST_PROCEDURE` ausente em `dealStatuses`: tickets que avançaram de `WIN` para `POST_PROCEDURE` saíam do `dealCreatedCount` enquanto o ticket progredia — o deal ganho desaparecia do funil | `POST_PROCEDURE` adicionado a `dealStatuses` | Nenhuma — valores agora corretos |
+| L2 | `AnalyticsServiceImpl.getConversionByStage()` — `closedCount` | `closedCount` usava `t.getStatus() == WIN`: tickets em `POST_PROCEDURE` (que tinham `closedAt` setado na transição WIN e não mais estavam em status WIN) não eram contados → `commercialConversionPct` subestimado | `closedCount` corrigido para `t.getClosedAt() != null` — captura WIN atual + POST_PROCEDURE | Nenhuma — valores agora corretos |
+| L3 | `AnalyticsServiceImpl.getConversionByStage()` — filtro de setor `COMMERCIAL` | `applyPostProcedure()` seta `currentSector = LEADS`. Com `effectiveSector = COMMERCIAL`, esses tickets eram excluídos do filtro inteiro — desapareciam de `captureCount`, `scheduledCount`, `dealCreatedCount` e `closedCount` no dashboard comercial | Filtro expandido: `t.getCurrentSector() == effectiveSector \|\| (t.getStatus() == POST_PROCEDURE && effectiveSector == COMMERCIAL)` | Nenhuma — dados do setor COMMERCIAL agora consistentes |
+| L4 | `PermissionSeeder` — `USER_COMMERCIAL, TICKET:READ` | Scope `OWN`: vendedor só via os próprios tickets — pipeline de `NEGOTIATION` de outros membros do setor era invisível na listagem | Scope corrigido para `SECTOR` | Atualizar `ROLE_CAPABILITIES.USER_COMMERCIAL['TICKET:READ']` de `'OWN'` para `'SECTOR'` no mapa TypeScript (§14) — já atualizado neste contrato |
 
 ---
 
