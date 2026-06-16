@@ -1,6 +1,6 @@
 # ADR-019: Pacientes anonimizados excluídos da listagem padrão de clientes
 
-**Status**: Aceito  
+**Status**: Implementado  
 **Data**: 2026-06-15  
 **Autores**: Arquiteto-Agent  
 **Impacto**: Módulo funnel — CustomerSpecifications, CustomerServiceImpl, CustomerServiceTest
