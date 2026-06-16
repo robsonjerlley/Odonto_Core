@@ -382,32 +382,19 @@ Então o valor armazenado e exibido deve ser R$ 5.000,00.
 
 ---
 
-### #18 — ADM_SYSTEM recebe 404 ao acessar painel de config sem RecycleConfig cadastrada
+### #18 — ADM_SYSTEM recebe 404 ao acessar painel de config sem RecycleConfig cadastrada ✅ RESOLVIDO
 
-**Sintoma:** `GET /api/v1/config/recycle` retorna `404 Not Found` com body `"No active recycle configuration found"` quando nenhuma `RecycleConfig` foi criada ainda.
+**Sintoma:** `GET /api/v1/config/recycle` retornava `404 Not Found` com body `"No active recycle configuration found"` quando nenhuma `RecycleConfig` havia sido criada ainda.
 
-**Causa:** `ConfigServiceImpl.getRecycle()` lança `ResourceNotFoundException` via `orElseThrow` quando o banco não tem nenhum registro com `active = true`. É um estado válido (painel nunca configurado), mas o backend trata como erro.
+**Causa:** `ConfigServiceImpl.getRecycle()` lançava `ResourceNotFoundException` via `orElseThrow`. Estado válido tratado como erro.
 
-**Arquivos:**
-- `ConfigService.java` — `RecycleConfigResponseDTO getRecycle()` → `Optional<RecycleConfigResponseDTO> getRecycle()`
-- `ConfigServiceImpl.java` — substituir `orElseThrow` por `map(...)` retornando `Optional`
-- `ConfigController.java` — retornar `200 OK` com body quando presente, `204 No Content` quando ausente
+**Resolução (2026-06-16):**
+- `ConfigService` — assinatura alterada para `Optional<RecycleConfigResponseDTO> getRecycle()`
+- `ConfigServiceImpl` — `orElseThrow` substituído por `.map(...)` retornando `Optional`
+- `ConfigController` — `ResponseEntity.ok(configService.getRecycle().orElse(null))` — mantém padrão do projeto; `null` body sinaliza "não configurado"
+- Frontend: tratar body `null` como estado vazio com botão de criação
 
-**Correção esperada:**
-```java
-// ConfigServiceImpl
-return configRepository.findFirstByActiveTrueOrderByCreatedAtDesc()
-        .map(recycle -> new RecycleConfigResponseDTO(...));
-
-// ConfigController
-Optional<RecycleConfigResponseDTO> result = configService.getRecycle();
-return result.map(ResponseEntity::ok)
-             .orElse(ResponseEntity.noContent().build());
-```
-
-**Frontend:** tratar `204` como "não configurado ainda" — exibir estado vazio com botão de criação, não mensagem de erro.
-
-**Severidade:** 🟡 Médio — bloqueia visualização do painel de config, mas não impede operação do funil.
+**Severidade:** 🟡 Médio — resolvido.
 
 ---
 
