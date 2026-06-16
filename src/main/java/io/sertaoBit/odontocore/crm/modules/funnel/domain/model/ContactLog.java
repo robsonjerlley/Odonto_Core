@@ -25,6 +25,8 @@ public class ContactLog {
     private UUID ticketId;
     @Column(nullable = false)
     private UUID userId;
+    @Column
+    private String username;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ContactChannel channel;
