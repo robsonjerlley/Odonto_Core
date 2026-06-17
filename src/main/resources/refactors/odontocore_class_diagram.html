@@ -689,7 +689,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-sans)}
       <div class="cls">
         <div class="cls-head h-blue"><span class="cls-stereo">«@Repository» «extends JpaRepository&lt;AdsInvestment,UUID&gt;»</span><span class="cls-name">AdsInvestmentRepository</span></div>
         <div class="method"><span class="mname">+ findByChannelAndPeriodStartGreaterThanEqual(channel: AdsChannel, from: LocalDate)</span><span class="msig">List&lt;AdsInvestment&gt;</span></div>
-        <div class="method"><span class="mname">+ sumAmountByChannelAndPeriod(channel: AdsChannel, from: LocalDate, to: LocalDate)</span><span class="msig">BigDecimal  @Query</span></div>
+        <div class="method"><span class="mname">+ sumAmountByChannelAndPeriod(channel: AdsChannel, from: LocalDate, to: LocalDate)</span><span class="msig">BigDecimal  @Query</span><span class="mrule">overlap: periodStart &lt;= :to AND periodEnd &gt;= :from — inclui campanhas ativas no período (ADR-021)</span></div>
       </div>
 
       <div class="cls">

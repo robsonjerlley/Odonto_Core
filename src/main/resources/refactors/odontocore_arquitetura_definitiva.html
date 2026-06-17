@@ -1050,8 +1050,9 @@ body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min
   <div class="mth"><span class="mname">findByChangedBy(UUID uid)</span><span class="msig">: List&lt;DealHistory&gt;</span></div>
 </div></div>
 <div class="cls"><div class="cls-head head-blue"><div class="cls-stereo">«JpaRepository&lt;AdsInvestment,UUID&gt;»</div><div class="cls-name">AdsInvestmentRepository</div></div><div class="cls-body">
-  <div class="mth"><span class="mname">findByChannelAndPeriodStartGreaterThanEqualAndPeriodEndLessThanEqual(AdsChannel, LocalDate, LocalDate)</span><span class="msig">: List&lt;AdsInvestment&gt;</span></div>
-  <div class="mth"><span class="mname">@Query sumAmountByChannelAndPeriod(AdsChannel ch, LocalDate s, LocalDate e)</span><span class="msig">: BigDecimal</span></div>
+  <div class="mth"><span class="mname">findByChannelAndPeriodStartGreaterThanEqual(AdsChannel channel, LocalDate from)</span><span class="msig">: List&lt;AdsInvestment&gt;</span></div>
+  <div class="mth"><span class="mname">findByChannelOrderByPeriodStartDesc(AdsChannel channel)</span><span class="msig">: List&lt;AdsInvestment&gt;</span></div>
+  <div class="mth"><span class="mname">@Query sumAmountByChannelAndPeriod(AdsChannel ch, LocalDate from, LocalDate to)</span><span class="msig">: BigDecimal</span><span class="mrule">overlap: periodStart &lt;= :to AND periodEnd &gt;= :from — inclui campanhas ativas no período (ADR-021)</span></div>
 </div></div>
 <div class="cls"><div class="cls-head head-blue"><div class="cls-stereo">«JpaRepository&lt;RecycleConfig,UUID&gt;»</div><div class="cls-name">RecycleConfigRepository</div></div><div class="cls-body">
   <div class="mth"><span class="mname">findBySectorAndActiveTrue(Sector sector)</span><span class="msig">: Optional&lt;RecycleConfig&gt;</span></div>

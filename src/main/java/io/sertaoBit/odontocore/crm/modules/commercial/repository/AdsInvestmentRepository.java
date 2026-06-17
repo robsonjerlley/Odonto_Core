@@ -19,8 +19,8 @@ public interface AdsInvestmentRepository extends JpaRepository<AdsInvestment, UU
 
     @Query("SELECT COALESCE(SUM(a.amount), 0) FROM AdsInvestment a "
             + "WHERE a.channel = :channel " +
-            "AND a.periodStart >= :from " +
-            "AND a.periodEnd <= :to"
+            "AND a.periodStart <= :to " +
+            "AND a.periodEnd >= :from"
     )
     BigDecimal sumAmountByChannelAndPeriod(
             @Param("channel") AdsChannel channel,
