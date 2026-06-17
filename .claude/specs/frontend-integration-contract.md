@@ -1,10 +1,17 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.8  
-**Data:** 2026-06-16  
+**Versão:** 1.9  
+**Data:** 2026-06-17  
 **Branch:** main  
 **Commit de referência:** HEAD  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, `PermissionSeeder`, `GlobalExceptionHandler`)
+
+> **Changelog 1.9 (2026-06-17) — bug M1: GET /config/recycle retornava 500.**
+> `GET /api/v1/config/recycle` retornava **500** em produção porque o endpoint nunca foi adicionado
+> ao `ConfigController` — o service `getRecycle()` existia, mas sem mapeamento `@GetMapping("/recycle")`
+> o Spring não encontrava handler e o `GlobalExceptionHandler` genérico retornava 500. Endpoint
+> adicionado com `ResponseEntity<RecycleConfigResponseDTO>` e `orElse(null)`. Comportamento de
+> resposta inalterado: `200 + body` quando config existe, `200 + null` quando não existe. Ver §15 M1.
 
 > **Changelog 1.8 (2026-06-16) — analytics POST_PROCEDURE + scope USER_COMMERCIAL.**
 > `GET /analytics/conversion`: `POST_PROCEDURE` adicionado a `dealStatuses` (tickets em
@@ -2738,6 +2745,14 @@ Esta tabela lista o que **mudou em relação ao texto anterior** deste contrato;
 | L2 | `AnalyticsServiceImpl.getConversionByStage()` — `closedCount` | `closedCount` usava `t.getStatus() == WIN`: tickets em `POST_PROCEDURE` (que tinham `closedAt` setado na transição WIN e não mais estavam em status WIN) não eram contados → `commercialConversionPct` subestimado | `closedCount` corrigido para `t.getClosedAt() != null` — captura WIN atual + POST_PROCEDURE | Nenhuma — valores agora corretos |
 | L3 | `AnalyticsServiceImpl.getConversionByStage()` — filtro de setor `COMMERCIAL` | `applyPostProcedure()` seta `currentSector = LEADS`. Com `effectiveSector = COMMERCIAL`, esses tickets eram excluídos do filtro inteiro — desapareciam de `captureCount`, `scheduledCount`, `dealCreatedCount` e `closedCount` no dashboard comercial | Filtro expandido: `t.getCurrentSector() == effectiveSector \|\| (t.getStatus() == POST_PROCEDURE && effectiveSector == COMMERCIAL)` | Nenhuma — dados do setor COMMERCIAL agora consistentes |
 | L4 | `PermissionSeeder` — `USER_COMMERCIAL, TICKET:READ` | Scope `OWN`: vendedor só via os próprios tickets — pipeline de `NEGOTIATION` de outros membros do setor era invisível na listagem | Scope corrigido para `SECTOR` | Atualizar `ROLE_CAPABILITIES.USER_COMMERCIAL['TICKET:READ']` de `'OWN'` para `'SECTOR'` no mapa TypeScript (§14) — já atualizado neste contrato |
+
+---
+
+### Bug M1 — GET /config/recycle retornava 500 (2026-06-17, RESOLVIDO)
+
+| # | Local | Situação anterior | Situação atual | Ação do frontend |
+|---|-------|-------------------|----------------|-----------------|
+| M1 | `ConfigController` | Endpoint `GET /recycle` ausente — `ConfigService.getRecycle()` implementado no service mas sem `@GetMapping("/recycle")` no controller; Spring não encontrava handler → `GlobalExceptionHandler` genérico → **500** | `@GetMapping("/recycle")` adicionado; retorna `ResponseEntity<RecycleConfigResponseDTO>` com `orElse(null)` | Nenhuma mudança de contrato: comportamento continua `200 + body` ou `200 + null`. Remover qualquer fallback que tratasse o 500 como esperado |
 
 ---
 

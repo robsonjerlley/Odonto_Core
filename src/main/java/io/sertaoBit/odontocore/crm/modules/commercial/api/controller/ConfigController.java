@@ -7,6 +7,7 @@ import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.bonusConfi
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.recycleConfig.RecycleConfigRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.adsInvestment.AdsInvestmentResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.bonusConfig.BonusConfigResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.recycleConfig.RecycleConfigResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.ConfigService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,4 +63,10 @@ public class ConfigController {
         return ResponseEntity.ok(configService.getAdsInvestments(channel));
     }
 
+    @GetMapping("/recycle")
+    public ResponseEntity<RecycleConfigResponseDTO> getRecycle() {
+        return ResponseEntity.ok(configService.getRecycle().orElse(null));
+    }
+
 }
+
