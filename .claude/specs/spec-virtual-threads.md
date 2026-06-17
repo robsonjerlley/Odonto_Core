@@ -1,6 +1,6 @@
 # Spec: Virtual Threads (Java 21 + Spring Boot 3.2+)
 
-**Status**: Backlog — aguardando conclusão das correções de backend
+**Status**: Implementado — 2026-06-17 (ADR-020)
 **Data**: 2026-06-11
 **Autores**: Arquiteto-Agent
 **Pré-requisito**: Java 21 (já em uso no projeto), Spring Boot 3.2+ (verificar versão atual)

@@ -185,7 +185,7 @@ public class AnalyticsServiceTest {
         List<SectorDropOffResultDTO> result = analyticsService.getDropOffBySector(period);
 
         assertEquals(1, result.size());
-        assertEquals(Sector.LEADS, result.get(0).sector());
+        assertEquals(Sector.LEADS, result.getFirst().sector());
     }
 
     @Test
