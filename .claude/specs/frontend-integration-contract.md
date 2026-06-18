@@ -1,10 +1,17 @@
 # Contrato de Integração Frontend ↔ Backend — OdontoCore CRM
 
-**Versão:** 1.9  
-**Data:** 2026-06-17  
+**Versão:** 2.0  
+**Data:** 2026-06-18  
 **Branch:** main  
 **Commit de referência:** HEAD  
 **Fonte da verdade:** código Java (controllers, DTOs, services, enums, `PermissionSeeder`, `GlobalExceptionHandler`)
+
+> **Changelog 2.0 (2026-06-18) — nova estrutura de paginação (VIA_DTO).**
+> `@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)` ativado em `Application.java`.
+> Todos os endpoints que retornam `Page<T>` passam a serializar via `PagedModel` — a estrutura JSON
+> muda: o bloco `pageable` e os campos `last/first/sort/numberOfElements/empty` são **removidos**;
+> a paginação fica em um objeto `page` com apenas 4 campos (`size`, `number`, `totalElements`,
+> `totalPages`). O array `content` permanece idêntico. Ver §4 e §15 bloco N1.
 
 > **Changelog 1.9 (2026-06-17) — bug M1: GET /config/recycle retornava 500.**
 > `GET /api/v1/config/recycle` retornava **500** em produção porque o endpoint nunca foi adicionado
@@ -438,28 +445,30 @@ Headers permitidos: `Authorization, Content-Type, X-Requested-With`
 
 ### Shape completo de Page\<T\>
 
+> ⚠️ **Breaking change v2.0 (2026-06-18):** `@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)`
+> ativado. O bloco `pageable`, campos `last`, `first`, `sort`, `numberOfElements`, `empty` e os
+> campos soltos `size`/`number` foram **removidos**. A paginação agora chega dentro de um objeto `page`.
+> O array `content` permanece idêntico. Atualizar todo código que lia `response.pageable.pageNumber`,
+> `response.totalElements` na raiz, etc.
+
 ```json
 {
   "content": [ /* array de T */ ],
-  "pageable": {
-    "pageNumber": 0,
-    "pageSize": 20,
-    "sort": { "empty": true, "sorted": false, "unsorted": true },
-    "offset": 0,
-    "paged": true,
-    "unpaged": false
-  },
-  "last": false,
-  "totalPages": 5,
-  "totalElements": 98,
-  "first": true,
-  "size": 20,
-  "number": 0,
-  "sort": { "empty": true, "sorted": false, "unsorted": true },
-  "numberOfElements": 20,
-  "empty": false
+  "page": {
+    "size": 20,
+    "number": 0,
+    "totalElements": 98,
+    "totalPages": 5
+  }
 }
 ```
+
+| Campo | Equivalente antigo | Descrição |
+|-------|--------------------|-----------|
+| `page.size` | `size` / `pageable.pageSize` | Tamanho da página |
+| `page.number` | `number` / `pageable.pageNumber` | Número da página atual (base 0) |
+| `page.totalElements` | `totalElements` | Total de registros |
+| `page.totalPages` | `totalPages` | Total de páginas |
 
 ### Endpoints paginados vs não-paginados
 
@@ -2087,25 +2096,16 @@ export const PAYMENT_METHOD_CONVERSION_FACTOR: Record<PaymentMethod, number> = {
 // COMMON
 // =============================================================
 
+// v2.0: estrutura VIA_DTO (@EnableSpringDataWebSupport). Campos pageable/last/first/sort/
+// numberOfElements/empty foram removidos. Toda paginação agora está em `page`.
 export interface Page<T> {
   content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: { empty: boolean; sorted: boolean; unsorted: boolean };
-    offset: number;
-    paged: boolean;
-    unpaged: boolean;
+  page: {
+    size: number;
+    number: number;        // base 0
+    totalElements: number;
+    totalPages: number;
   };
-  last: boolean;
-  totalPages: number;
-  totalElements: number;
-  first: boolean;
-  size: number;
-  number: number;
-  sort: { empty: boolean; sorted: boolean; unsorted: boolean };
-  numberOfElements: number;
-  empty: boolean;
 }
 
 export interface ApiError {
@@ -2745,6 +2745,14 @@ Esta tabela lista o que **mudou em relação ao texto anterior** deste contrato;
 | L2 | `AnalyticsServiceImpl.getConversionByStage()` — `closedCount` | `closedCount` usava `t.getStatus() == WIN`: tickets em `POST_PROCEDURE` (que tinham `closedAt` setado na transição WIN e não mais estavam em status WIN) não eram contados → `commercialConversionPct` subestimado | `closedCount` corrigido para `t.getClosedAt() != null` — captura WIN atual + POST_PROCEDURE | Nenhuma — valores agora corretos |
 | L3 | `AnalyticsServiceImpl.getConversionByStage()` — filtro de setor `COMMERCIAL` | `applyPostProcedure()` seta `currentSector = LEADS`. Com `effectiveSector = COMMERCIAL`, esses tickets eram excluídos do filtro inteiro — desapareciam de `captureCount`, `scheduledCount`, `dealCreatedCount` e `closedCount` no dashboard comercial | Filtro expandido: `t.getCurrentSector() == effectiveSector \|\| (t.getStatus() == POST_PROCEDURE && effectiveSector == COMMERCIAL)` | Nenhuma — dados do setor COMMERCIAL agora consistentes |
 | L4 | `PermissionSeeder` — `USER_COMMERCIAL, TICKET:READ` | Scope `OWN`: vendedor só via os próprios tickets — pipeline de `NEGOTIATION` de outros membros do setor era invisível na listagem | Scope corrigido para `SECTOR` | Atualizar `ROLE_CAPABILITIES.USER_COMMERCIAL['TICKET:READ']` de `'OWN'` para `'SECTOR'` no mapa TypeScript (§14) — já atualizado neste contrato |
+
+---
+
+### Breaking change v2.0 — nova estrutura de paginação VIA_DTO (2026-06-18)
+
+| # | Local | Situação anterior (≤ v1.9) | Situação atual (v2.0) | Ação do frontend |
+|---|-------|--------------------------|----------------------|-----------------|
+| N1 | Todos os endpoints `Page<T>` (`GET /users`, `/customers`, `/tickets`, `/contact-logs`) | Shape com `pageable` aninhado + campos soltos na raiz: `totalElements`, `totalPages`, `last`, `first`, `size`, `number`, `sort`, `numberOfElements`, `empty` | Shape simplificado: `content[]` + `page: { size, number, totalElements, totalPages }` | **Atualizar todo acesso à paginação:** `res.totalElements` → `res.page.totalElements`; `res.pageable.pageNumber` → `res.page.number`; `res.pageable.pageSize` → `res.page.size`; `res.totalPages` → `res.page.totalPages`. Remover leitura de `last`, `first`, `sort`, `numberOfElements`, `empty`. |
 
 ---
 
