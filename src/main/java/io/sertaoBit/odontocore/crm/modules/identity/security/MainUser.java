@@ -23,6 +23,7 @@ import java.util.UUID;
 public class MainUser implements UserDetails {
 
     private UUID id;
+    private UUID clinicId;
     private String username;
     private String passwordHash;
     private Role role;
@@ -62,6 +63,7 @@ public class MainUser implements UserDetails {
     public static MainUser form(User u) {
         return new MainUser(
                 u.getId(),
+                u.getClinicId(),
                 u.getUsername(),
                 u.getPassword(),
                 u.getRole(),
@@ -69,4 +71,5 @@ public class MainUser implements UserDetails {
                 u.isActive()
         );
     }
+
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -36,6 +37,7 @@ public class JwtUtil {
                 .claim("id", mainUser.getId())
                 .claim("role", mainUser.getRole())
                 .claim("sector", mainUser.getSector())
+                .claim("clinicId", mainUser.getClinicId())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSecretKey())
@@ -82,5 +84,16 @@ public class JwtUtil {
                 {
                 throw new JwtException(e.getMessage());
                 }
+    }
+
+    public UUID extractClinicId(String token) throws JwtException {
+        var clinicId = Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("clinicId", String.class);
+
+        return UUID.fromString(clinicId);
     }
 }

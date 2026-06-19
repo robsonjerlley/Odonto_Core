@@ -1,10 +1,17 @@
 # Spec: Cache com Redis
 
-**Status**: Backlog — aguardando conclusão das correções de backend
-**Data**: 2026-06-11
+**Status**: Backlog — aguardando implementação de ADR-022 (clinicId no User + JWT)
+**Data**: 2026-06-11 (atualizado 2026-06-17)
 **Autores**: Arquiteto-Agent
-**Pré-requisito**: correções de backend concluídas; ADR-015 implementada (analytics scope-aware)
-**ADR de referência**: ADR-014 (Flyway) — migrations de schema devem ser versionadas antes de adicionar infra
+**Pré-requisito**: ADR-015 implementada (analytics scope-aware) ✅ + **ADR-022 implementada (clinicId no User/JWT)**
+**ADR de referência**: ADR-014 (Flyway), ADR-022 (multi-tenancy), ADR-023 (TicketWonEvent)
+
+> **Atualização 2026-06-17**: Estratégia de cache revista para suportar múltiplas clínicas.
+> Todas as chaves de cache de analytics e configs novos **devem incluir `clinicId`** como
+> primeiro segmento após o namespace. Isso permite evicção cirúrgica por clínica
+> (`analytics:{clinicId}:*`) sem afetar dados de outras clínicas.
+> A implementação dos módulos Financeiro e Consultas (ADR-023) cria novos caches —
+> veja seção "Módulos novos" ao final.
 
 ---
 
@@ -261,10 +268,55 @@ Railway tem Redis como add-on nativo:
 
 ---
 
+## Módulos novos — caches financeiro e clínico (ADR-023)
+
+Os módulos Financeiro e Consultas geram novos dados de analytics. Todo cache desses módulos
+**obrigatoriamente inclui `clinicId`** como primeiro segmento da chave:
+
+```java
+// AnalyticsServiceImpl.java — métodos novos para módulos downstream
+
+@Cacheable(value = "analytics",
+           key = "'revenue:' + #clinicId + ':' + #from + ':' + #to")
+public RevenueResultDTO getRevenueRealized(UUID clinicId, LocalDate from, LocalDate to) { }
+
+@Cacheable(value = "analytics",
+           key = "'treatment-rate:' + #clinicId + ':' + #from + ':' + #to")
+public TreatmentRateResultDTO getTreatmentCompletionRate(UUID clinicId, LocalDate from, LocalDate to) { }
+```
+
+**Invalidação após escrita nos módulos downstream**: os listeners `FinancialEventListener` e
+`ClinicalEventListener` (ADR-023) processam em `@Async AFTER_COMMIT`. A invalidação do cache
+de analytics ocorre dentro do listener, por `clinicId`:
+
+```java
+// dentro do listener, após persistir o dado:
+Cache analyticsCache = cacheManager.getCache("analytics");
+// evicção cirúrgica: apenas entradas da clínica afetada
+analyticsCache.evict("revenue:" + event.getClinicId() + ":...");
+// ou, se múltiplas chaves: clear seletivo por prefixo via RedisTemplate
+```
+
+Para entradas de analytics dos módulos legados (tickets, deals) — TTL de 5 min permanece como
+estratégia. Para dados dos novos módulos — Write-Invalidation por `clinicId` via listener.
+
+---
+
+## O que NÃO cachear
+
+- **Entidades JPA completas** (`User`, `Customer`, `LeadTicket`) — usar apenas DTOs de resposta para evitar LazyInitializationException e vazar dados além do contrato
+- **Tokens JWT** — stateless por design; cache introduziria estado que conflita com ADR-005
+- **`Page<T>`** — paginação muda com cada insert/delete; cache de página específica cria inconsistência
+- **Analytics sem `clinicId` na chave** (a partir de ADR-022) — cache compartilhado entre clínicas é bug de isolamento de dados
+
+---
+
 ## Referências
 
 - [Spring Boot Cache Abstraction](https://docs.spring.io/spring-boot/docs/current/reference/html/io.html#io.caching)
 - [Spring Data Redis](https://docs.spring.io/spring-data/redis/docs/current/reference/html/)
 - `ADR-015` — analytics scope-aware (pré-requisito para cachear analytics corretamente)
+- `ADR-022` — clinicId em User + JWT (pré-requisito para chaves de cache multi-tenant)
+- `ADR-023` — TicketWonEvent contract (módulos downstream e novos caches)
 - `ADR-005` — refresh token single-token strategy (JWT stateless, não cachear)
 - `ConfigServiceImpl.java`, `AnalyticsServiceImpl.java`, `PermissionService.java` — arquivos alvo
