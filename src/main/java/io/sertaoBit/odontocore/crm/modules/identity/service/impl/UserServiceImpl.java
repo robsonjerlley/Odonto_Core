@@ -60,6 +60,7 @@ public class UserServiceImpl implements UserService {
 
         User newUser = userMapper.toEntity(dto);
         newUser.setActive(true);
+        newUser.setClinicId(userChek.getClinicId());
         newUser.setCreatedBy(securityUtils.getCurrentUserId());
         newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
         return userMapper.toResponseDTO(userRepository.save(newUser));
@@ -82,6 +83,7 @@ public class UserServiceImpl implements UserService {
 
         if (!passwordEncoder.matches(newPassword, user.getPassword())) {
             user.setPassword(passwordEncoder.encode(newPassword));
+            userChek.setClinicId(user.getClinicId());
         } else {
             throw new IllegalArgumentException("Nova senha não deve ser igual a senha atual.");
         }
@@ -93,6 +95,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> search(Sector sector, Role role, Pageable pageable) {
         var user = securityUtils.getCurrentUser();
+        userRepository.findByIdAndClinicId(user.getId(), user.getClinicId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found!"));
         permissionService.checkOrThrow(
                 user,
                 USER,

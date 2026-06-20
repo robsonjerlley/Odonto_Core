@@ -4,6 +4,7 @@ import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.repository.UserRepository;
+import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class UserSeeder implements ApplicationRunner {
 
@@ -19,6 +22,8 @@ public class UserSeeder implements ApplicationRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    @Value("${app.admin.clinicId}")
+    private UUID clinicId;
 
     @Value("${app.admin.username}")
     private String adminUsername;
@@ -35,12 +40,14 @@ public class UserSeeder implements ApplicationRunner {
     }
 
     @Override
+    @NullMarked
     public void run(ApplicationArguments args) {
         if (userRepository.count() > 0) {
             return;
         }
 
         User admin = User.builder()
+                .clinicId(clinicId)
                 .name(adminName)
                 .username(adminUsername)
                 .password(passwordEncoder.encode(adminPassword))

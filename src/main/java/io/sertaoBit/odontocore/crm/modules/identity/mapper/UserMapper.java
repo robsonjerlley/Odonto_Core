@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Mapping(target = "clinicId", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "active", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
