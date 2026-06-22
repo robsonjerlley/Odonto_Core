@@ -1,6 +1,7 @@
 package io.sertaoBit.odontocore.crm.config.security;
 
 import io.jsonwebtoken.JwtException;
+import io.sertaoBit.odontocore.crm.config.tenant.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,8 +61,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        filterChain.doFilter(request, response);
-    }
+        var clinicId = jwtUtil.extractClinicId(token);
 
+        TenantContext.setCurrent(clinicId);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
+        }
+
+    }
 
 }

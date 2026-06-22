@@ -5,6 +5,7 @@ import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.TenantId;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -21,6 +22,9 @@ public class ContactLog {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @TenantId
+    @Column(name = "clinic_id", nullable = false, updatable = false)
+    private UUID clinicId;
     @Column(nullable = false)
     private UUID ticketId;
     @Column(nullable = false)

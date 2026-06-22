@@ -6,6 +6,7 @@ import io.sertaoBit.odontocore.crm.core.enums.TicketStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,9 @@ public class LeadTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @TenantId
+    @Column(name = "clinic_id", nullable = false, updatable = false)
+    private UUID clinicId;
     @Column(nullable = false)
     private UUID customerId;
     @Enumerated(EnumType.STRING)

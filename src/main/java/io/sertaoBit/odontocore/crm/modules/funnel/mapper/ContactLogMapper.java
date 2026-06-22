@@ -16,7 +16,8 @@ public interface ContactLogMapper {
             @Mapping(target = "statusAfter", ignore = true),
             @Mapping(target = "statusBefore", ignore = true),
             @Mapping(target = "userId", ignore = true),
-            @Mapping(target = "username", ignore = true)
+            @Mapping(target = "username", ignore = true),
+            @Mapping(target = "clinicId", ignore = true)
     })
     ContactLog toEntity(ContactLogCreateRequestDTO dto);
 
