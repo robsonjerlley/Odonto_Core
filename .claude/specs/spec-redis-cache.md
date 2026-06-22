@@ -1,10 +1,10 @@
 # Spec: Cache com Redis
 
 **Status**: Backlog — aguardando implementação de ADR-022 (clinicId no User + JWT)
-**Data**: 2026-06-11 (atualizado 2026-06-17)
+**Data**: 2026-06-11 (atualizado 2026-06-22)
 **Autores**: Arquiteto-Agent
-**Pré-requisito**: ADR-015 implementada (analytics scope-aware) ✅ + **ADR-022 implementada (clinicId no User/JWT)**
-**ADR de referência**: ADR-014 (Flyway), ADR-022 (multi-tenancy), ADR-023 (TicketWonEvent)
+**Pré-requisito**: ADR-015 implementada (analytics scope-aware) ✅ + **ADR-022 implementada (clinicId no User/JWT)** + ADR-024 (enforcement `@TenantId`)
+**ADR de referência**: ADR-014 (Flyway), ADR-022 (multi-tenancy), ADR-024 (`@TenantId` enforcement), ADR-023 (TicketWonEvent)
 
 > **Atualização 2026-06-17**: Estratégia de cache revista para suportar múltiplas clínicas.
 > Todas as chaves de cache de analytics e configs novos **devem incluir `clinicId`** como
@@ -12,6 +12,32 @@
 > (`analytics:{clinicId}:*`) sem afetar dados de outras clínicas.
 > A implementação dos módulos Financeiro e Consultas (ADR-023) cria novos caches —
 > veja seção "Módulos novos" ao final.
+
+---
+
+> ## 🚫 Atualização 2026-06-22 — o `@TenantId` (ADR-024) NÃO cobre o Redis
+>
+> **Armadilha crítica.** A ADR-024 fez o Hibernate isolar o **banco** automaticamente (`@TenantId`
+> injeta `WHERE clinic_id = ?`). É fácil concluir, erradamente, que "o tenant agora é automático" e
+> relaxar a chave do cache. **O Redis é um keyspace global, cego a tenant.** O `@Cacheable` grava
+> sob a chave que você definir — se faltar `clinicId`, há vazamento entre clínicas **mesmo com o
+> banco perfeitamente isolado**:
+>
+> ```java
+> // 🚫 CILADA: banco isolado pelo @TenantId, mas cache vaza
+> @Cacheable(value = "analytics", key = "'revenue:' + #from + ':' + #to")  // sem clinicId!
+> public RevenueResultDTO getRevenue(LocalDate from, LocalDate to) { ... }
+> // Clínica A popula 'revenue:2026:...'; Clínica B chama com as mesmas datas → HIT → dados de A
+> ```
+>
+> **Regras invioláveis (independentes da ADR-024):**
+> 1. Todo método cacheado multi-tenant recebe `clinicId` como **parâmetro explícito** e o usa na
+>    chave via SpEL (`#clinicId`). Não dependa do `TenantContext` para compor a chave — funciona,
+>    mas fica frágil/implícito.
+> 2. `clinicId` é o **primeiro segmento** após o namespace → evicção cirúrgica `analytics:{clinicId}:*`.
+> 3. Invalidação em listener async usa `event.getClinicId()` do payload (não o `SecurityContext`).
+>
+> O `@TenantId` protege o banco; **a disciplina da chave protege o cache.** São camadas distintas.
 
 ---
 
@@ -317,6 +343,8 @@ estratégia. Para dados dos novos módulos — Write-Invalidation por `clinicId`
 - [Spring Data Redis](https://docs.spring.io/spring-data/redis/docs/current/reference/html/)
 - `ADR-015` — analytics scope-aware (pré-requisito para cachear analytics corretamente)
 - `ADR-022` — clinicId em User + JWT (pré-requisito para chaves de cache multi-tenant)
+- `ADR-024` — enforcement `@TenantId` (isola o **banco**, NÃO o Redis — chave com `clinicId` continua obrigatória e manual)
+- `ADR-025` — RLS PostgreSQL (defesa em profundidade futura; também não cobre o cache)
 - `ADR-023` — TicketWonEvent contract (módulos downstream e novos caches)
 - `ADR-005` — refresh token single-token strategy (JWT stateless, não cachear)
 - `ConfigServiceImpl.java`, `AnalyticsServiceImpl.java`, `PermissionService.java` — arquivos alvo

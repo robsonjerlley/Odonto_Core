@@ -4,8 +4,24 @@
 **Data**: 2026-06-17
 **Autores**: Arquiteto-Agent
 **Impacto**: `LeadTicketServiceImpl`, Módulo Financeiro, Módulo Consultas, `AnalyticsServiceImpl`
-**Relaciona**: ADR-022 (clinicId foundation), ADR-015 (analytics scope-aware), ADR-020 (Virtual Threads), ADR-003 (imutabilidade)
-**Pré-requisito**: ADR-022 implementado (`currentUser.getClinicId()` disponível no SecurityContext)
+**Relaciona**: ADR-022 (clinicId foundation), ADR-024 (enforcement `@TenantId` + `TenantContext`), ADR-015 (analytics scope-aware), ADR-020 (Virtual Threads), ADR-003 (imutabilidade)
+**Pré-requisito**: ADR-022 implementado + **ADR-024 implementada** (`TenantContext` + `@TenantId`)
+
+---
+
+> ## ⚠️ Revisão 2026-06-22 — listeners async e o `TenantContext` (ADR-024)
+>
+> Com a adoção do `@TenantId` (ADR-024), o `clinicId` das entidades dos módulos downstream
+> passa a ser preenchido **automaticamente pelo Hibernate** — desde que o tenant esteja no
+> `TenantContext`. Mas os listeners desta ADR rodam em `@Async` (outra thread) **após o commit**,
+> onde o `SecurityContext` **não existe**. Sem ação, o resolver retorna `null` e as entidades
+> nascem com `clinicId` nulo — o bug que a §4 jura proibir.
+>
+> **Correção mandatória** (detalhada na seção 3 abaixo): cada listener deve fazer
+> `TenantContext.set(event.clinicId())` no início e `TenantContext.clear()` em `finally`, usando
+> o `clinicId` que **já viaja no payload** do `TicketWonEvent` (§1). Consequência positiva: a
+> regra da §4 (`setClinicId` manual) **deixa de ser necessária** — vira comportamento do ORM;
+> resta apenas garantir o `TenantContext` no listener.
 
 ---
 
@@ -90,7 +106,7 @@ O evento é publicado dentro da transação. A entrega ao listener só ocorre ap
 
 ### 3. Consumo — `@TransactionalEventListener(AFTER_COMMIT)`
 
-Cada módulo downstream implementa seu próprio listener desacoplado:
+Cada módulo downstream implementa seu próprio listener desacoplado. **⚠️ Obrigatório (ADR-024)**: estabelecer o `TenantContext` a partir de `event.clinicId()` antes de chamar o service, e limpá-lo em `finally` — a thread `@Async` não herda o `SecurityContext` e a thread retorna ao pool:
 
 ```java
 // FinancialEventListener.java
@@ -98,9 +114,14 @@ Cada módulo downstream implementa seu próprio listener desacoplado:
 public class FinancialEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Async
+    @Async("tenantAwareExecutor")          // executor dedicado — ver nota abaixo
     public void onTicketWon(TicketWonEvent event) {
-        financialService.initializeFromWin(event);
+        TenantContext.set(event.clinicId());   // ← tenant do PAYLOAD, não do SecurityContext
+        try {
+            financialService.initializeFromWin(event);   // @TenantId preenche clinicId sozinho
+        } finally {
+            TenantContext.clear();             // ← obrigatório: thread volta limpa ao pool
+        }
     }
 }
 
@@ -109,16 +130,27 @@ public class FinancialEventListener {
 public class ClinicalEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Async
+    @Async("tenantAwareExecutor")
     public void onTicketWon(TicketWonEvent event) {
-        clinicalService.initializeFromWin(event);
+        TenantContext.set(event.clinicId());
+        try {
+            clinicalService.initializeFromWin(event);
+        } finally {
+            TenantContext.clear();
+        }
     }
 }
 ```
 
+> 📐 **Ordem importa**: `TenantContext.set()` precisa rodar **antes** de `initializeFromWin()` abrir
+> sua transação `@Transactional` — é na abertura da sessão Hibernate que o `@TenantId` consulta o
+> resolver (ADR-024 §6). Como a transação do funil já commitou (AFTER_COMMIT), a do listener é nova.
+
 **Por que `AFTER_COMMIT`**: garante que o listener só processa se a transação do funil foi comitada com sucesso. Falha no WIN antes do commit = evento nunca entregue. Comportamento correto: os módulos downstream só reagem a WINs durável no banco.
 
 **Por que `@Async`**: o processamento dos módulos não ocorre na thread de request do funil. Virtual Threads (ADR-020) gerenciam concorrência no Tomcat; `@Async` aqui garante separação de ciclo de vida entre o request de WIN e o processamento downstream.
+
+**Por que executor dedicado (`tenantAwareExecutor`)**: além de evitar contenção no pico (risco 2 abaixo), um executor próprio isola o ciclo de vida do `TenantContext` desses listeners — nenhuma thread compartilhada com outro fluxo que possa observar um `TenantContext` não limpo. Definir `@Bean ThreadPoolTaskExecutor tenantAwareExecutor` (ou virtual-thread executor por task, alinhado à ADR-020). O `clear()` em `finally` continua obrigatório independentemente do executor.
 
 **Falha no listener**: não reverte o WIN. O ticket permanece WIN. Os listeners devem:
 - Logar a falha de forma estruturada (ticketId, clinicId, erro)
@@ -130,13 +162,25 @@ public class ClinicalEventListener {
 
 Toda entidade criada pelos módulos Financeiro e Consultas deve ter:
 
-```
-clinicId UUID NOT NULL   — derivado de TicketWonEvent.clinicId
-ticketId UUID NOT NULL   — rastreabilidade até o ticket de origem
-createdAt                — imutável (sem update)
+```java
+@TenantId                              // ADR-024 — Hibernate preenche e filtra automaticamente
+@Column(name = "clinic_id", nullable = false, updatable = false)
+private UUID clinicId;                 // derivado do TenantContext (set do TicketWonEvent.clinicId)
+
+@Column(nullable = false, updatable = false)
+private UUID ticketId;                 // rastreabilidade até o ticket de origem
+
+@CreationTimestamp
+private LocalDateTime createdAt;       // imutável (sem update)
 ```
 
 Sem exceções. Entidade sem `clinicId` = bug de isolamento de tenant. Entidade sem `ticketId` = rastreabilidade quebrada.
+
+> 🔄 **Mudança vs. versão original (ADR-024)**: o `clinicId` **não é mais setado manualmente**
+> (`record.setClinicId(event.clinicId())`). Com `@TenantId`, o Hibernate o preenche a partir do
+> `TenantContext` — que o listener populou com `event.clinicId()` (§3). O `ticketId`, por não ser
+> tenant, **continua sendo setado explicitamente** a partir do evento. Não confundir os dois:
+> `clinicId` = automático via `@TenantId`; `ticketId` = manual via payload.
 
 ---
 
@@ -203,7 +247,8 @@ O `clinicId` é o primeiro segmento da chave depois do namespace — permite evi
 
 | Risco | Mitigação |
 |---|---|
-| Listener falha após commit (WIN no DB, FinancialRecord não criado) | Log estruturado obrigatório no catch; reconciliação por query `tickets WIN sem financial_record` pode ser adicionada como job noturno |
+| Listener falha após commit (WIN no DB, FinancialRecord não criado) | Log estruturado obrigatório no catch; reconciliação por query `tickets WIN sem financial_record` pode ser adicionada como job noturno. ⚠️ Esse job é cross-tenant e roda sem request — deve **iterar por clínica** com `TenantContext.set(clinicId)` → query → `clear()` (ADR-024 §6), pois o `@TenantId` filtra sempre |
+| `TenantContext` não limpo no listener vaza tenant para a próxima task do pool | `try/finally TenantContext.clear()` obrigatório (§3) + executor dedicado `tenantAwareExecutor` |
 | `@Async` com pool de threads compartilhado pode gerar contenção em pico | Definir executor dedicado para listeners (`@Bean ThreadPoolTaskExecutor listenerExecutor`) se houver gargalo monitorado |
 | `DealSnapshot` desatualizado se Deal sofrer correção após WIN | `Deal.archived = true` após WIN por regra de negócio — snapshot é consistente com o estado no momento do fechamento |
 
@@ -220,25 +265,29 @@ O `clinicId` é o primeiro segmento da chave depois do namespace — permite evi
 ## Ordem de implementação
 
 ```
+0. [PRÉ-REQUISITO] ADR-024 implementada      → TenantContext + ClinicTenantResolver + @TenantId
 1. core/events/TicketWonEvent.java          → record + DealSnapshot + DealProcedureSnapshot
 2. LeadTicketServiceImpl.java               → publicar evento no bloco WIN
 3. Módulo Financeiro:
-   a. FinancialRecord.java                  → entidade (clinicId + ticketId obrigatórios)
-   b. PaymentSchedule.java                  → entidade (clinicId + ticketId obrigatórios)
+   a. FinancialRecord.java                  → entidade (@TenantId no clinicId + ticketId manual)
+   b. PaymentSchedule.java                  → entidade (@TenantId no clinicId + ticketId manual)
    c. FinancialService / Impl               → initializeFromWin(TicketWonEvent)
-   d. FinancialEventListener.java           → @TransactionalEventListener + @Async
+   d. FinancialEventListener.java           → @TransactionalEventListener + @Async + TenantContext set/clear
 4. Módulo Consultas:
-   a. TreatmentPlan.java / Consultation.java → entidades (clinicId + ticketId obrigatórios)
+   a. TreatmentPlan.java / Consultation.java → entidades (@TenantId no clinicId + ticketId manual)
    b. ClinicalService / Impl                → initializeFromWin(TicketWonEvent)
-   c. ClinicalEventListener.java            → @TransactionalEventListener + @Async
-5. AnalyticsServiceImpl.java                → novos métodos com clinicId + cache key correta
+   c. ClinicalEventListener.java            → @TransactionalEventListener + @Async + TenantContext set/clear
+5. config — @Bean tenantAwareExecutor       → executor dedicado dos listeners (ADR-020/ADR-024)
+6. AnalyticsServiceImpl.java                → novos métodos com clinicId explícito + cache key correta
 ```
 
 ---
 
 ## Referências
 
-- ADR-022 — clinicId em User + JWT (pré-requisito: `currentUser.getClinicId()` disponível)
+- ADR-022 — clinicId em User + JWT (fundação)
+- ADR-024 — enforcement `@TenantId` + `TenantContext` (pré-requisito: `clinicId` automático nas entidades; listeners populam o `TenantContext` do payload)
+- ADR-025 — RLS PostgreSQL (defesa em profundidade futura)
 - ADR-015 — analytics scope-aware (padrão de `checkOrThrow` / `getScope()` para novos endpoints)
 - ADR-020 — Virtual Threads (contexto de `@Async` e concorrência no Tomcat)
 - ADR-003 — ContactLog imutabilidade (mesmo princípio aplicado a eventos e registros financeiros)

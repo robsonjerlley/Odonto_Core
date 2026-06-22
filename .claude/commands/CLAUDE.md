@@ -61,7 +61,7 @@ Nenhuma FK cross-db com `@ManyToOne`. Clientes, tickets e deals referenciam `Use
 ---
 
 ## Stack
-- Java 21 + Spring Boot 3
+- Java 21 + Spring Boot 4
 - PostgreSQL (dois schemas: `identity_db` e `crm_db`)
 - Spring Security + JWT (jjwt / io.jsonwebtoken)
 - Spring Data JPA + Hibernate
@@ -131,7 +131,7 @@ Regra: sempre `@Enumerated(EnumType.STRING)` nas entidades JPA.
 ## Módulo identity
 
 ### Entidades (`identity_db`)
-- **User**: id, name, email, passwordHash, sector(Sector), role(Role), active, createdBy, createdAt, updatedAt — implements UserDetails
+- **User**: id, clinicId(ADR-022), name, username, password, sector(Sector), role(Role), active, createdBy, createdAt, updatedAt — entidade JPA pura (o `UserDetails` é o `MainUser`, criado via `MainUser.form(User)`)
 - **PermissionRule**: id, role, sector(nullable), resource, action, scope, allowed, conditions(JSON)
 
 ### Padrão de permissões (RBAC com escopo)
@@ -145,14 +145,15 @@ Resolução: busca regra (role+sector+resource+action) → fallback (role+resour
 ### Serviços
 - `PermissionService` / `PermissionServiceImpl` — canAccess(), checkOrThrow()
 - `UserService` / `UserServiceImpl` — createUser(), deactivateUser(), listUsersBySector()
-- `AuthService` / `AuthServiceImpl` — login(), refreshToken()
-- `UserDetailsServiceImpl` (@Component, implements UserDetailsService) — separado de UserService para evitar dependência circular
+- `AuthService` (@Service, **sem interface**) — login(username, password), refreshToken(dto)
+- `MainUserDetailsService` (@Service, implements UserDetailsService) — loadUserByUsername(); separado de UserService para evitar dependência circular
 - `PermissionSeeder` (@Component, implements ApplicationRunner) — popula matriz padrão se vazia
 
 ### Security
-- `UserPrincipal` (implements UserDetails) — objeto no SecurityContext, criado via `UserPrincipal.from(User)`
-- `JwtService` — generateToken(), extractEmail(), isTokenValid() — claims: id, email, role, sector
-- `JwtAuthFilter` (extends OncePerRequestFilter) — extrai Bearer token → valida → popula SecurityContext
+- `MainUser` (implements UserDetails) — objeto no SecurityContext, criado via `MainUser.form(User)`; carrega `clinicId` (ADR-022)
+- `JwtUtil` — generateToken(), extractUsername(), extractClinicId(), isValid() — claims: id, role, sector, clinicId (subject = username)
+- `JwtAuthenticationFilter` (extends OncePerRequestFilter) — extrai Bearer token → valida → popula SecurityContext
+- `SecurityUtils` — getCurrentUser() / getCurrentUserId() a partir do SecurityContext
 
 ---
 
@@ -231,7 +232,7 @@ getGlobalDashboard(period) → apenas ADMIN/MANAGER — agrega tudo
 | Decisão | Padrão |
 |---|---|
 | Interfaces de serviço | `UserService` + `UserServiceImpl` em **todos** os serviços — sem prefixo `I` |
-| Exceção a Interface+Impl | `RecycleJob`, `UserDetailsServiceImpl`, `PermissionSeeder` (implementam interfaces Spring) |
+| Exceção a Interface+Impl | `RecycleJob`, `MainUserDetailsService`, `AuthService`, `PermissionSeeder` |
 | Prefixo de repositórios | sem prefixo `I` — `UserRepository`, `DealRepository` etc |
 | Mapeamento | MapStruct com `@Mapper(componentModel = "spring")` |
 | Campos monetários | sempre `BigDecimal`, banco `NUMERIC(15,2)` |
@@ -257,13 +258,52 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 
 ---
 
+## Índice de ADRs (`.claude/adr/`)
+
+| ADR | Título | Status |
+|---|---|---|
+| [001](../adr/ADR-001-api-search-lookup-pattern.md) | API search/lookup pattern (`{uniqueKey}` vs `?filtro`) | Aceito |
+| [002](../adr/ADR-002-interface-vs-impl-encapsulamento.md) | Interface vs Impl — encapsulamento de service | Aceito |
+| [003](../adr/ADR-003-contactlog-imutabilidade-delete-proibido.md) | ContactLog imutável — DELETE proibido | Aceito |
+| [004](../adr/ADR-004-rbac-padrao-checkorThrow-funnel.md) | RBAC — padrão `checkOrThrow` no funnel | Aceito |
+| [005](../adr/ADR-005-refresh-token-single-token-strategy.md) | Refresh token — single-token strategy (JWT) | Aceito |
+| [006](../adr/ADR-006-customer-anonimizacao-lgpd-delete-ticket-removido.md) | Customer — anonimização LGPD, delete de ticket removido | Aceito |
+| [007](../adr/ADR-007-config-get-endpoints-recycle-global-bonus-result-dto.md) | Config GET endpoints — recycle global + bonus Result DTO | Aceito |
+| [008](../adr/ADR-008-payment-method-enum-conversion-factor.md) | PaymentMethod enum — conversionFactor | Aceito |
+| [009](../adr/ADR-009-timezone-jvm-brasilia.md) | Timezone JVM — Brasília | Aceito |
+| [011](../adr/ADR-011-intake-scope-cross-sector-acesso.md) | Intake scope — acesso cross-sector | Aceito |
+| [012](../adr/ADR-012-rbac-fase3-padrao-list-vs-single-resource.md) | RBAC fase 3 — padrão list vs single resource | Aceito |
+| [013](../adr/ADR-013-jpa-specifications-listagens-scope-aware.md) | JPA Specifications — listagens scope-aware | Aceito |
+| [014](../adr/ADR-014-ferramenta-de-migracao-flyway.md) | Ferramenta de migração — Flyway | Aceito |
+| [015](../adr/ADR-015-analytics-scope-aware-queries.md) | Analytics — scope-aware queries | Aceito |
+| [016](../adr/ADR-016-bonus-mensal-vs-metricas-por-range-user-performance.md) | Bônus mensal vs métricas por range (user performance) | Aceito |
+| [017](../adr/ADR-017-dashboard-global-range-livre-desacoplado-do-bonus.md) | Dashboard global — range livre, desacoplado do bônus | Aceito |
+| [018](../adr/ADR-018-customer-anonimizado-excluido-da-listagem.md) | Customer anonimizado — excluído da listagem | Aceito |
+| [019](../adr/ADR-019-contactlog-username-resolvido-no-backend.md) | ContactLog — username resolvido no backend | Aceito |
+| [020](../adr/ADR-020-virtual-threads-tomcat-executor.md) | Virtual Threads — Tomcat executor | Aceito |
+| [021](../adr/ADR-021-ads-investment-overlap-query.md) | AdsInvestment — overlap query (ROI) | Aceito |
+| [022](../adr/ADR-022-multitenant-clinicid-foundation.md) | Multi-tenancy foundation — `clinicId` em User + JWT | Aceito (enforcement → ADR-024) |
+| [023](../adr/ADR-023-ticket-won-event-contract.md) | TicketWonEvent — contrato do evento de fechamento | Aceito |
+| [024](../adr/ADR-024-tenant-isolation-enforcement-tenantid.md) | Tenant isolation enforcement — `@TenantId` + `TenantContext` | Aceito |
+| [025](../adr/ADR-025-rls-postgresql-defense-in-depth.md) | Row Level Security (PostgreSQL) — defesa em profundidade | Proposto (futuro) |
+
+> **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, já implementado); 024 substitui o enforcement manual por `@TenantId` + `TenantContext` (isolamento automático no ORM); 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`).
+
+### Specs (`.claude/specs/`)
+
+| Spec | Título | Status |
+|---|---|---|
+| [spec-redis-cache](../specs/spec-redis-cache.md) | Cache com Redis — chaves multi-tenant por `clinicId` | Backlog (pós ADR-022/024) |
+
+---
+
 ## Ordem de implementação
 
 1. `core/enums` — sem dependências
 2. `identity` domain + repositories
-3. `identity` security (UserPrincipal, JwtService, JwtAuthFilter, UserDetailsServiceImpl)
+3. `identity` security (MainUser, JwtUtil, JwtAuthenticationFilter, MainUserDetailsService)
 4. `identity` service (PermissionServiceImpl, PermissionSeeder)
-5. `identity` service (UserServiceImpl, AuthServiceImpl) + SecurityConfig
+5. `identity` service (UserServiceImpl, AuthService) + SecurityConfig
 6. `funnel` domain + repositories
 7. `funnel` service (TicketServiceImpl primeiro, depois CustomerServiceImpl, ContactLogServiceImpl)
 8. `commercial` domain + repositories

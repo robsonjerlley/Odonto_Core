@@ -1,10 +1,28 @@
 # ADR-022: Multi-tenancy Foundation — clinicId em User + JWT
 
-**Status**: Aceito
-**Data**: 2026-06-17
+**Status**: Aceito — fundação implementada. **Enforcement substituído pela ADR-024**
+**Data**: 2026-06-17 (revisado 2026-06-22)
 **Autores**: Arquiteto-Agent
 **Impacto**: `User`, `JwtService`, `JwtAuthFilter`, `UserPrincipal`
-**Relaciona**: ADR-005 (JWT strategy), ADR-023 (TicketWonEvent), spec-redis-cache.md
+**Relaciona**: ADR-005 (JWT strategy), ADR-023 (TicketWonEvent), ADR-024 (enforcement `@TenantId`), ADR-025 (RLS futura), spec-redis-cache.md
+
+---
+
+> ## ⚠️ Revisão 2026-06-22 — enforcement movido para ADR-024
+>
+> A **fundação** desta ADR está implementada e válida: `clinicId` em `User`, claim no JWT
+> (`JwtUtil.generateToken` + `extractClinicId`), e `MainUser.getClinicId()`.
+>
+> A **estratégia de enforcement** descrita nas seções "5" e "Regra mandatória para código novo"
+> abaixo — filtrar manualmente por `findByIdAndClinicId(...)` e setar `entity.setClinicId(...)`
+> em cada service — foi considerada frágil (depende de disciplina humana; um `findById` esquecido
+> = vazamento entre clínicas). Ela foi **substituída** pelo enforcement arquitetural via
+> Hibernate `@TenantId` + `TenantContext` na **[ADR-024](ADR-024-tenant-isolation-enforcement-tenantid.md)**.
+>
+> A camada de defesa em profundidade no banco (RLS PostgreSQL) está documentada como evolução
+> futura na **[ADR-025](ADR-025-rls-postgresql-defense-in-depth.md)**.
+>
+> As seções marcadas com 🔄 abaixo permanecem como registro histórico do raciocínio original.
 
 ---
 
@@ -101,7 +119,7 @@ UUID clinicId = jwtService.extractClinicId(token);
 
 ---
 
-### 5. `PermissionService` não muda nesta ADR
+### 5. `PermissionService` não muda nesta ADR  🔄 *(o filtro de tenant por query foi substituído pela ADR-024)*
 
 O `checkOrThrow()` mantém a assinatura atual. O filtro de tenant (`clinicId`) é ortogonal ao scope (GLOBAL/SECTOR/OWN): RBAC resolve *o que* o usuário pode fazer; o filtro de tenant resolve *de qual clínica* são os dados. São camadas independentes.
 
@@ -109,7 +127,12 @@ O filtro de tenant é aplicado diretamente nas queries dos services, não no RBA
 
 ---
 
-## Regra mandatória para código novo
+## Regra mandatória para código novo  🔄 *SUBSTITUÍDA pela ADR-024*
+
+> 🔄 **Esta seção foi substituída.** Com o `@TenantId` da ADR-024, o Hibernate preenche o
+> `clinicId` no INSERT e injeta o `WHERE clinic_id = ?` em toda query automaticamente. Os
+> `setClinicId(...)` e `findByIdAndClinicId(...)` manuais descritos abaixo **devem ser removidos**
+> dos services — não escreva código novo seguindo este padrão. Mantido como registro histórico.
 
 Todo service que **escreve** em `crm_db` deve propagar `clinicId` do `UserPrincipal`:
 
