@@ -1,6 +1,6 @@
 # ADR-024: Tenant Isolation Enforcement — `@TenantId` + `TenantContext`
 
-**Status**: Aceito
+**Status**: Implementado
 **Data**: 2026-06-22
 **Autores**: Arquiteto-Agent
 **Impacto**: todas as entidades multi-tenant, `JwtAuthenticationFilter`, listeners da ADR-023, jobs `@Scheduled`, `AnalyticsServiceImpl`, Flyway

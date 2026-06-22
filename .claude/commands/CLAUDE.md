@@ -64,7 +64,8 @@ Nenhuma FK cross-db com `@ManyToOne`. Clientes, tickets e deals referenciam `Use
 - Java 21 + Spring Boot 4
 - PostgreSQL (dois schemas: `identity_db` e `crm_db`)
 - Spring Security + JWT (jjwt / io.jsonwebtoken)
-- Spring Data JPA + Hibernate
+- Spring Data JPA + Hibernate 7 (`@TenantId` discriminator multi-tenant — ADR-024)
+- Flyway (versionamento de schema — migrations em `src/main/resources/db/migration/`)
 - MapStruct (mapeamento Entity ↔ DTO)
 - `@Scheduled` para job noturno de reciclo
 
@@ -152,7 +153,7 @@ Resolução: busca regra (role+sector+resource+action) → fallback (role+resour
 ### Security
 - `MainUser` (implements UserDetails) — objeto no SecurityContext, criado via `MainUser.form(User)`; carrega `clinicId` (ADR-022)
 - `JwtUtil` — generateToken(), extractUsername(), extractClinicId(), isValid() — claims: id, role, sector, clinicId (subject = username)
-- `JwtAuthenticationFilter` (extends OncePerRequestFilter) — extrai Bearer token → valida → popula SecurityContext
+- `JwtAuthenticationFilter` (extends OncePerRequestFilter) — extrai Bearer token → valida → popula SecurityContext → popula `TenantContext` via `jwtUtil.extractClinicId(token)` + `try/finally clear()` (ADR-024)
 - `SecurityUtils` — getCurrentUser() / getCurrentUserId() a partir do SecurityContext
 
 ---
@@ -160,9 +161,9 @@ Resolução: busca regra (role+sector+resource+action) → fallback (role+resour
 ## Módulo funnel
 
 ### Entidades (`crm_db`)
-- **Customer**: id, name, phone, email?, cpf?(unique), source, adChannel?, adCampaign?, referredBy?(FK self), createdBy(UUID), createdAt, updatedAt
-- **LeadTicket**: id, customerId, status, currentSector, assignedTo?, previousTicketId?(FK self), scheduledAt?, closedAt?, pendingAt?, recycledAt?, createdBy(UUID), createdAt, updatedAt
-- **ContactLog**: id, ticketId, userId(UUID), channel, note(TEXT), statusBefore?, statusAfter?, occurredAt, createdAt — **imutável, sem UPDATE**
+- **Customer**: id, `@TenantId` clinicId, name, phone, email?, cpf?(unique), source, adChannel?, adCampaign?, referredBy?(FK self), createdBy(UUID), createdAt, updatedAt
+- **LeadTicket**: id, `@TenantId` clinicId, customerId, status, currentSector, assignedTo?, previousTicketId?(FK self), scheduledAt?, closedAt?, pendingAt?, recycledAt?, createdBy(UUID), createdAt, updatedAt
+- **ContactLog**: id, `@TenantId` clinicId, ticketId, userId(UUID), channel, note(TEXT), statusBefore?, statusAfter?, occurredAt, createdAt — **imutável, sem UPDATE**
 
 ### Serviços
 - `CustomerService` / `CustomerServiceImpl` — create() abre LeadTicket automaticamente
@@ -284,10 +285,10 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [021](../adr/ADR-021-ads-investment-overlap-query.md) | AdsInvestment — overlap query (ROI) | Aceito |
 | [022](../adr/ADR-022-multitenant-clinicid-foundation.md) | Multi-tenancy foundation — `clinicId` em User + JWT | Aceito (enforcement → ADR-024) |
 | [023](../adr/ADR-023-ticket-won-event-contract.md) | TicketWonEvent — contrato do evento de fechamento | Aceito |
-| [024](../adr/ADR-024-tenant-isolation-enforcement-tenantid.md) | Tenant isolation enforcement — `@TenantId` + `TenantContext` | Aceito |
+| [024](../adr/ADR-024-tenant-isolation-enforcement-tenantid.md) | Tenant isolation enforcement — `@TenantId` + `TenantContext` | Implementado |
 | [025](../adr/ADR-025-rls-postgresql-defense-in-depth.md) | Row Level Security (PostgreSQL) — defesa em profundidade | Proposto (futuro) |
 
-> **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, já implementado); 024 substitui o enforcement manual por `@TenantId` + `TenantContext` (isolamento automático no ORM); 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`).
+> **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, implementado); 024 implementado — `@TenantId` + `TenantContext` + Flyway V1 (`customers`, `lead_tickets`, `contact_logs`) — isolamento automático no ORM ativo; 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`).
 
 ### Specs (`.claude/specs/`)
 
