@@ -19,7 +19,7 @@ import java.util.UUID;
 @Setter
 @EqualsAndHashCode(of = "id")
 @Builder
-@Table(name = "customers",
+@Table(name = "customers",schema = "crm_db",
       uniqueConstraints =  @UniqueConstraint(name = "uq_customer_cpf", columnNames = "cpf")
 )
 public class Customer {

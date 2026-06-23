@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tb_permission_rules",
+@Table(name = "tb_permission_rules", schema = "identity_db",
         uniqueConstraints = @UniqueConstraint(columnNames = {"role", "sector", "resource", "action"})
 )
 @NoArgsConstructor

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "recycle_config")
+@Table(name = "recycle_config", schema = "crm_db")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
