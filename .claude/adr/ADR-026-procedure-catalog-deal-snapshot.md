@@ -1,6 +1,6 @@
 # ADR-026: Catálogo de Procedimentos (`Procedure`) + Snapshot em `DealProcedure`
 
-**Status**: Proposto  
+**Status**: Aceito  
 **Data**: 2026-06-23  
 **Autores**: Arquiteto-Agent  
 **Impacto**: módulo `commercial` (Deal, DealProcedure), novo módulo `catalog` (Procedure), `DealCreateRequestDTO`, `DealUpdateRequestDTO`, `DealServiceImpl`, CLAUDE.md  
@@ -117,6 +117,24 @@ O `priceOverride` permite que o avaliador negocie um valor diferente do padrão 
 
 > Padrão ADR-001: `GET /api/procedures/{id}` retorna único ou 404. `GET /api/procedures?name=X` retorna lista, pode ser vazia.
 
+### Catálogo — `ProcedureService` (API interna do módulo, consumida por `commercial` / `scheduling`)
+
+Além do CRUD, o `catalog` expõe um método para consumidores que precisam **operar sobre um conjunto** de procedimentos. É por aqui que `commercial` entra — nunca pelo `ProcedureRepository`.
+
+```java
+/**
+ * Resolve os procedimentos ATIVOS do tenant atual para os IDs informados.
+ * Pré-condição : ids não vazio.
+ * Pós-condição : retorna exatamente um Procedure por id, todos active = true.
+ * Fail-fast    : ResourceNotFoundException se algum id não existir (ou for de
+ *                outro tenant — o @TenantId já o exclui do SELECT);
+ *                IllegalStateException se algum existir porém inativo.
+ */
+List<Procedure> resolveActiveByIds(List<UUID> ids);
+```
+
+> **Nome domínio-neutro de propósito.** O `catalog` não conhece `Deal`. Nomear o método `getForDeal(...)` vazaria o domínio do `commercial` para dentro do `catalog` — acoplamento na direção errada. `scheduling` (ADR-023) reusa o mesmo `resolveActiveByIds` para montar slots de agenda.
+
 ### DTOs modificados
 
 **`DealItemRequestDTO`** — substitui `DealProcedureDTO`:
@@ -157,25 +175,41 @@ public record DealProcedureResponseDTO(
 
 ## Lógica modificada em `DealServiceImpl`
 
+> 📐 **Decisão de fronteira de módulo (revisão 2026-06-23):** `commercial` **não** injeta `ProcedureRepository`. A busca em batch e a validação (existe / `active` / tenant) são responsabilidade do módulo `catalog`, expostas pela sua interface pública `ProcedureService`. O `DealServiceImpl` depende da abstração do catálogo, não da sua persistência (Dependency Inversion — ADR-002). Assim, a regra "o que é um `Procedure` válido" mora onde o `Procedure` mora: se ela evoluir (ex.: validade por data), só o `catalog` muda. A versão anterior desta ADR colocava carga + validação dentro do `create()` — isso violava Single Responsibility e vazava regra do `catalog` para o `commercial`.
+
+O `create()` mantém **uma responsabilidade**: orquestrar o ciclo de vida do `Deal`. A carga + validação do catálogo é delegada; a montagem do snapshot e o cálculo do `totalValue` permanecem no `commercial`, porque são conceitos do *Deal* (`priceOverride`, `tableValue` snapshot, `totalValue`) que o `catalog` desconhece.
+
 ```
 create(ticketId, dto):
-  1. Carregar todos os Procedure por ID em batch (único SELECT IN)
-  2. Validar: todos existem, todos active = true, todos pertencem ao tenant atual
-  3. Para cada DealItemRequestDTO:
-       snapshot = new DealProcedure(
-           procedureId   = catalog.id,
-           name          = catalog.name,          // snapshot
-           code          = catalog.code,          // snapshot
-           tableValue    = catalog.defaultPrice,  // snapshot
-           priceOverride = item.priceOverride,    // nullable
-           quantity      = item.quantity,
-           note          = item.note
-       )
-  4. totalValue = Σ (priceOverride ?? tableValue) × quantity
-  5. Salvar Deal com snapshot JSONB
+  1. autorizar (PermissionService) + validar ticket (IN_EVALUATION → NEGOTIATION)
+  2. procedures = procedureService.resolveActiveByIds(ids)    ← delega ao catalog (fail-fast)
+  3. snapshot   = buildSnapshot(dto.items(), procedures)      ← privado, no commercial
+  4. totalValue = calcTotal(snapshot)                         ← privado, no commercial
+  5. salvar Deal com snapshot JSONB
+
+buildSnapshot(items, procedures):
+  byId = procedures indexados por id
+  para cada item:
+      catalog = byId[item.procedureId]
+      new DealProcedure(
+          procedureId   = catalog.id,
+          name          = catalog.name,          // snapshot
+          code          = catalog.code,          // snapshot
+          tableValue    = catalog.defaultPrice,  // snapshot do preço de tabela
+          priceOverride = item.priceOverride,    // nullable — valor negociado
+          quantity      = item.quantity,
+          note          = item.note
+      )
+
+calcTotal(snapshot):
+  Σ (priceOverride ?? tableValue) × quantity
 ```
 
-A validação de `active = true` impede que procedimentos desativados sejam incluídos em novos deals, sem impactar deals históricos que já carregam o snapshot.
+`buildSnapshot` e `calcTotal` ficam em métodos privados do `DealServiceImpl` (ou como métodos de domínio em `Deal`/`DealProcedure`). O `Deal` é montado no `commercial`, não fora dele.
+
+`update()` segue a mesma estrutura: delega `resolveActiveByIds` ao `catalog`, reconstrói snapshot + `totalValue` pelos mesmos privados e registra `DealHistory`.
+
+A validação de `active = true` (feita no `catalog`) impede que procedimentos desativados entrem em novos deals, sem impactar deals históricos que já carregam o snapshot.
 
 ---
 
@@ -200,6 +234,8 @@ modules/
 
 Dependência unidirecional: `commercial` → `catalog` ← `scheduling`. O catálogo não conhece nenhum dos dois.
 
+**Regra de acoplamento entre módulos:** a dependência atravessa apenas a **interface pública** `ProcedureService`. Nenhum módulo externo injeta `ProcedureRepository` — a persistência do `catalog` é detalhe interno. Isso preserva Dependency Inversion (ADR-002) e mantém as regras de invariante do `Procedure` (o que é "ativo", como buscar) dentro do próprio módulo.
+
 ---
 
 ## Arquivos atingidos
@@ -209,9 +245,9 @@ Dependência unidirecional: `commercial` → `catalog` ← `scheduling`. O catá
 | Arquivo | Responsabilidade |
 |---|---|
 | `modules/catalog/domain/model/Procedure.java` | Entidade catálogo com `@TenantId` |
-| `modules/catalog/repository/ProcedureRepository.java` | JPA + Specifications (busca por nome/código) |
-| `modules/catalog/service/ProcedureService.java` | Interface pública |
-| `modules/catalog/service/impl/ProcedureServiceImpl.java` | Implementação com validação de soft delete |
+| `modules/catalog/repository/ProcedureRepository.java` | JPA + `findAllById` (batch) + Specifications (busca por nome/código) |
+| `modules/catalog/service/ProcedureService.java` | Interface pública: CRUD + `resolveActiveByIds` (consumo cross-módulo) |
+| `modules/catalog/service/impl/ProcedureServiceImpl.java` | Implementação com soft delete e validação fail-fast de `resolveActiveByIds` |
 | `modules/catalog/api/controller/ProcedureController.java` | CRUD REST |
 | `modules/catalog/api/dto/request/ProcedureCreateRequestDTO.java` | |
 | `modules/catalog/api/dto/request/ProcedureUpdateRequestDTO.java` | |
@@ -226,7 +262,7 @@ Dependência unidirecional: `commercial` → `catalog` ← `scheduling`. O catá
 | `shared/DealProcedureDTO.java` | Substitui por `DealItemRequestDTO` (campos: `procedureId`, `priceOverride`, `quantity`, `note`) |
 | `modules/commercial/api/dto/request/deal/DealCreateRequestDTO.java` | `procedures` → `items` do tipo `DealItemRequestDTO` |
 | `modules/commercial/api/dto/request/deal/DealUpdateRequestDTO.java` | idem |
-| `modules/commercial/service/impl/DealServiceImpl.java` | Carrega catálogo antes de construir snapshot; novo cálculo de `totalValue` com `priceOverride` |
+| `modules/commercial/service/impl/DealServiceImpl.java` | Injeta `ProcedureService` (não `ProcedureRepository`); delega validação a `resolveActiveByIds`; `buildSnapshot` + cálculo de `totalValue` (com `priceOverride`) em métodos privados |
 | `modules/commercial/mapper/DealMapper.java` | Mapear snapshot para `DealProcedureResponseDTO` com campos calculados |
 | `CLAUDE.md` | Atualizar descrição de `DealProcedure`, adicionar módulo `catalog` na estrutura, atualizar índice ADRs |
 
@@ -245,12 +281,12 @@ Dependência unidirecional: `commercial` → `catalog` ← `scheduling`. O catá
 
 ```
 1. Migration V[n]__create_procedures.sql         → CREATE TABLE crm_db.procedures
-2. Procedure.java + ProcedureRepository.java     → entidade com @TenantId
-3. ProcedureService + ProcedureServiceImpl       → CRUD com soft delete
+2. Procedure.java + ProcedureRepository.java     → entidade com @TenantId + findAllById
+3. ProcedureService + ProcedureServiceImpl       → CRUD com soft delete + resolveActiveByIds (fail-fast)
 4. ProcedureController                           → endpoints REST
 5. DealProcedure.java                            → adicionar procedureId + priceOverride
 6. DealItemRequestDTO                            → substituir DealProcedureDTO
-7. DealServiceImpl.create() + update()           → carregar catálogo + construir snapshot
+7. DealServiceImpl.create() + update()           → injetar ProcedureService; delegar resolveActiveByIds + buildSnapshot privado
 8. DealMapper                                    → mapear para DealProcedureResponseDTO
 9. CLAUDE.md                                     → sincronizar contexto
 ```
