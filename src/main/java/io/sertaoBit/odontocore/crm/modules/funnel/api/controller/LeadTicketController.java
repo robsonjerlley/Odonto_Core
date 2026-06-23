@@ -5,6 +5,7 @@ import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.Lea
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.leadTicket.LeadTicketCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.LeadTicketResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.LeadTicketService;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -56,7 +57,7 @@ public class LeadTicketController {
             @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false) UUID assignedTo,
-            @PageableDefault(size = 20) Pageable pageable
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseEntity.ok(ticketService.search(customerId, status, assignedTo, pageable));
     }

@@ -7,6 +7,7 @@ import io.sertaoBit.odontocore.crm.modules.identity.api.dto.request.UserPassword
 import io.sertaoBit.odontocore.crm.modules.identity.api.dto.response.UserResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.identity.service.UserService;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -52,7 +53,7 @@ public class UserController {
     public ResponseEntity<Page<UserResponseDTO>> search(
             @RequestParam(required = false) Sector sector,
             @RequestParam(required = false) Role role,
-            @PageableDefault(size = 20) Pageable pageable
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseEntity.ok(userService.search(sector, role, pageable));
     }

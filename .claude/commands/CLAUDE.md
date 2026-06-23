@@ -241,7 +241,8 @@ getGlobalDashboard(period) → apenas ADMIN/MANAGER — agrega tudo
 | Enums no banco | sempre `@Enumerated(EnumType.STRING)` |
 | Entidades imutáveis | `ContactLog`, `DealHistory` — sem `@Setter`, apenas INSERT |
 | Cross-db | FKs para User em crm_db são `UUID` simples, sem `@ManyToOne` |
-| Erros HTTP | 403 AccessDeniedException · 404 ResourceNotFoundException · 409 ResourceAlreadyExistsException · 422 IllegalStateException |
+| Erros HTTP | 403 AccessDeniedException · 404 ResourceNotFoundException · 405 HttpRequestMethodNotSupportedException · 409 ResourceAlreadyExistsException · 422 IllegalStateException |
+| Pageable em controllers | sempre `@ParameterObject @PageableDefault(size = 20) Pageable pageable` — `@ParameterObject` expande os params no Swagger UI evitando erro de sort com array vazio |
 | Busca por identificador único | `GET /resource/{uniqueKey}` — retorna objeto único ou 404 (ver `.claude/adr/ADR-001`) |
 | Busca por filtros | `GET /resource?param=value` — retorna `List<DTO>` sempre, pode ser vazia (ver `.claude/adr/ADR-001`) |
 | Nomes de rotas | sem prefixos semânticos (`findBy`, `search`, `get`) em URLs — proibido (ver `.claude/adr/ADR-001`) |

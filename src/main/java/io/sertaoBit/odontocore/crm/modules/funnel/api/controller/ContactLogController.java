@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.api.controller;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.contactLog.ContactLogCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.ContactLogResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.ContactLogService;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -44,7 +45,7 @@ public class ContactLogController {
     @GetMapping
     public ResponseEntity<Page<ContactLogResponseDTO>> search(
             @RequestParam(required = false) UUID ticketId,
-            @PageableDefault(size = 20) Pageable pageable
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable
     ) {
         return ResponseEntity.ok(contactLogService.search(ticketId, pageable));
     }
