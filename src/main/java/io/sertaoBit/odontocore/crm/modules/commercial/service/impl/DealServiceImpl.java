@@ -3,8 +3,11 @@ package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
+import io.sertaoBit.odontocore.crm.modules.catalog.domain.model.Procedure;
+import io.sertaoBit.odontocore.crm.modules.catalog.repository.ProcedureRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealItemRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal.DealDetailResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal.DealResponseDTO;
@@ -39,6 +42,7 @@ public class DealServiceImpl implements DealService {
 
     private final DealRepository dealRepository;
     private final LeadTicketRepository ticketRepository;
+    private final ProcedureRepository procedureRepository;
     private final SecurityUtils securityUtils;
     private final PermissionService permissionService;
     private final DealMapper dealMapper;
@@ -47,6 +51,7 @@ public class DealServiceImpl implements DealService {
     public DealServiceImpl(
             DealRepository dealRepository,
             LeadTicketRepository ticketRepository,
+            ProcedureRepository procedureRepository,
             SecurityUtils securityUtils,
             PermissionService permissionService,
             DealMapper dealMapper,
@@ -54,6 +59,7 @@ public class DealServiceImpl implements DealService {
     ) {
         this.dealRepository = dealRepository;
         this.ticketRepository = ticketRepository;
+        this.procedureRepository = procedureRepository;
         this.securityUtils = securityUtils;
         this.permissionService = permissionService;
         this.dealMapper = dealMapper;
@@ -75,7 +81,6 @@ public class DealServiceImpl implements DealService {
         LeadTicket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket Not Found"));
 
-
         permissionService.checkOrThrow(
                 user,
                 DEAL,
@@ -83,7 +88,6 @@ public class DealServiceImpl implements DealService {
                 user.getSector(),
                 user.getId()
         );
-
 
         if (ticket.getStatus() != IN_EVALUATION) {
             throw new IllegalStateException("O status atual do ticket não permite realizar a operação");
@@ -93,7 +97,22 @@ public class DealServiceImpl implements DealService {
         ticket.setCurrentSector(COMMERCIAL);
         ticketRepository.save(ticket);
 
-        List<DealProcedure> procedures = dto.procedures().stream()
+        List<UUID> ids = dto.items().stream()
+                .map(DealItemRequestDTO::procedureId).toList();
+
+        List<Procedure> catalog = procedureRepository.findAllById(ids);
+
+        if(catalog.size() != ids.size()) {
+            throw new ResourceNotFoundException("Procedures Not Found. Our does not belong to the clinic");
+        }
+
+       List<Boolean> isActive = catalog.stream()
+               .map(Procedure::isActive).toList();
+        if(!isActive.contains(true)) {
+            throw new IllegalStateException("Procedures Is Inactive");
+        }
+
+        List<DealProcedure> procedures = dto.items().stream()
                 .map(p -> new DealProcedure(
                         p.name(), p.code(),
                         p.tableValue(), p.quantity(),
@@ -137,7 +156,7 @@ public class DealServiceImpl implements DealService {
 
         var proceduresBefore = deal.getProcedures();
 
-        List<DealProcedure> procedures = dto.procedures().stream()
+        List<DealProcedure> procedures = dto.items().stream()
                 .map(p -> new DealProcedure(
                         p.name(), p.code(),
                         p.tableValue(), p.quantity(),

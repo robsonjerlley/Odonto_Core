@@ -7,6 +7,7 @@ import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealItemRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.mapper.DealMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;
@@ -15,7 +16,6 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
-import io.sertaoBit.odontocore.crm.shared.DealProcedureDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -76,8 +76,8 @@ public class DealServiceTest {
         LeadTicket ticket = LeadTicket.builder().id(ticketId).status(IN_EVALUATION).build();
 
         DealCreateRequestDTO dto = new DealCreateRequestDTO(List.of(
-                new DealProcedureDTO("Implante", null, new BigDecimal("1000.00"), 2, null),
-                new DealProcedureDTO("Consulta", null, new BigDecimal("200.00"), 1, null)
+                new DealItemRequestDTO("Implante", null, new BigDecimal("1000.00"), 2, null),
+                new DealItemRequestDTO("Consulta", null, new BigDecimal("200.00"), 1, null)
         ));
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));

@@ -6,6 +6,7 @@ public enum Resource {
     TICKET,
     CONTACT_LOG,
     DEAL,
+    PROCEDURE,
     ANALYTICS,
     CONFIG
 
