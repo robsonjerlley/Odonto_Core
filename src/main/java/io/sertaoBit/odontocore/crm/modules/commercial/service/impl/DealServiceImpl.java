@@ -97,20 +97,7 @@ public class DealServiceImpl implements DealService {
         ticket.setCurrentSector(COMMERCIAL);
         ticketRepository.save(ticket);
 
-        List<UUID> ids = dto.items().stream()
-                .map(DealItemRequestDTO::procedureId).toList();
 
-        List<Procedure> catalog = procedureRepository.findAllById(ids);
-
-        if(catalog.size() != ids.size()) {
-            throw new ResourceNotFoundException("Procedures Not Found. Our does not belong to the clinic");
-        }
-
-       List<Boolean> isActive = catalog.stream()
-               .map(Procedure::isActive).toList();
-        if(!isActive.contains(true)) {
-            throw new IllegalStateException("Procedures Is Inactive");
-        }
 
         List<DealProcedure> procedures = dto.items().stream()
                 .map(p -> new DealProcedure(

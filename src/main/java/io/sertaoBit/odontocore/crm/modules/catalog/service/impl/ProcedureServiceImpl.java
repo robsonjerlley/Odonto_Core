@@ -1,16 +1,23 @@
 package io.sertaoBit.odontocore.crm.modules.catalog.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
+import io.sertaoBit.odontocore.crm.core.enums.PermissionScope;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.request.ProcedureCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.request.ProcedureUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response.ProcedureResponseDTO;
+import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response.ProcedureView;
 import io.sertaoBit.odontocore.crm.modules.catalog.domain.model.Procedure;
 import io.sertaoBit.odontocore.crm.modules.catalog.mapper.ProcedureMapper;
 import io.sertaoBit.odontocore.crm.modules.catalog.repository.ProcedureRepository;
+import io.sertaoBit.odontocore.crm.modules.catalog.service.ProcedureProvider;
 import io.sertaoBit.odontocore.crm.modules.catalog.service.ProcedureService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +27,10 @@ import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.PROCEDURE;
+import static io.sertaoBit.odontocore.crm.modules.catalog.repository.ProcedureSpecifications.*;
 
 @Service
-public class ProcedureServiceImpl implements ProcedureService {
+public class ProcedureServiceImpl implements ProcedureService, ProcedureProvider {
 
     private final ProcedureRepository procedureRepository;
     private final ProcedureMapper procedureMapper;
@@ -57,7 +65,7 @@ public class ProcedureServiceImpl implements ProcedureService {
                 .clinicId(user.getClinicId())
                 .name(dto.name())
                 .code(dto.code())
-                .active(dto.active())
+                .active(true)
                 .estimatedDuration(dto.estimatedDuration())
                 .defaultPrice(dto.defaultPrice())
                 .createdBy(user.getId())
@@ -95,33 +103,29 @@ public class ProcedureServiceImpl implements ProcedureService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProcedureResponseDTO findByName(String name) {
+    public Page<ProcedureResponseDTO> search(String name, String code, Pageable pageable) {
         User user = securityUtils.getCurrentUser();
 
-        Procedure procedure = procedureRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Procedure not found"));
-
-        permissionService.checkOrThrow(
+        PermissionScope scope = permissionService.getScope(
                 user,
                 PROCEDURE,
-                READ,
-                user.getSector(),
-                user.getId()
-        );
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
-        return procedureMapper.toResponseDTO(procedure);
+        Specification<Procedure> spec = Specification
+                .where(byScope(scope, user))
+                .and(hasName(name))
+                .and(hasCode(code))
+                .and(isActive());
+
+        return procedureRepository.findAll(spec, pageable)
+                .map(procedureMapper::toResponseDTO);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public ProcedureResponseDTO isActive(List<UUID> procedureId) {
-
-        return null;
-    }
 
     @Override
     @Transactional
-    public void delete(UUID procedureId) {
+    public void softDelete(UUID procedureId) {
         User user = securityUtils.getCurrentUser();
 
         permissionService.checkOrThrow(
@@ -132,9 +136,30 @@ public class ProcedureServiceImpl implements ProcedureService {
                 null
         );
 
-        Procedure procedure =  procedureRepository.findById(procedureId)
+        Procedure procedure = procedureRepository.findById(procedureId)
                 .orElseThrow(() -> new ResourceNotFoundException("Procedure not found"));
 
-        procedureRepository.delete(procedure);
+        procedure.setActive(false);
+        procedureRepository.save(procedure);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProcedureView> resolveActiveByIds(List<UUID> ids) {
+
+        List<Procedure> catalog = procedureRepository.findAllById(ids);
+
+        if (catalog.size() != ids.size()) {
+            throw new ResourceNotFoundException("Procedures Not Found. Our does not belong to the clinic");
+        }
+
+
+        return catalog.stream()
+                .map(p -> {
+                    if (!p.isActive()) {
+                        throw new IllegalStateException("Procedures " + p.getId() + " Is Inactive");
+                    }
+                    return procedureMapper.toView(p);
+                }).toList();
     }
 }

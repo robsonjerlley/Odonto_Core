@@ -8,8 +8,8 @@ public record ProcedureCreateRequestDTO(
         @NotNull String name,
         String code,
         @NotNull BigDecimal defaultPrice,
-        int estimatedDuration,
-        boolean active
+        Integer estimatedDuration
+
 
 ) {
 }

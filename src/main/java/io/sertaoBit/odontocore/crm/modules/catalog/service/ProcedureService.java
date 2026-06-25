@@ -4,8 +4,9 @@ package io.sertaoBit.odontocore.crm.modules.catalog.service;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.request.ProcedureCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.request.ProcedureUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response.ProcedureResponseDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface ProcedureService {
@@ -14,9 +15,7 @@ public interface ProcedureService {
 
     ProcedureResponseDTO update(UUID procedureId, ProcedureUpdateRequestDTO dto);
 
-    ProcedureResponseDTO findByName(String name);
+    Page<ProcedureResponseDTO> search(String name, String code, Pageable pageable);
 
-    ProcedureResponseDTO isActive(List<UUID> procedureId);
-
-    void delete(UUID procedureId);
+    void softDelete(UUID procedureId);
 }

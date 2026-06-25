@@ -9,7 +9,7 @@ public record ProcedureUpdateRequestDTO(
         @NotNull String name,
         String code,
         @NotNull BigDecimal defaultPrice,
-        int estimatedDuration,
+        Integer estimatedDuration,
         boolean active
 ) {
 }

@@ -16,7 +16,6 @@ import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
 import io.sertaoBit.odontocore.crm.modules.funnel.mapper.CustomerMapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.ContactLogRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerRepository;
-import io.sertaoBit.odontocore.crm.modules.funnel.repository.CustomerSpecifications;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.funnel.service.CustomerService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
