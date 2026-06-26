@@ -3,8 +3,8 @@ package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
-import io.sertaoBit.odontocore.crm.modules.catalog.domain.model.Procedure;
-import io.sertaoBit.odontocore.crm.modules.catalog.repository.ProcedureRepository;
+import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureProvider;
+import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureView;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealItemRequestDTO;
@@ -27,9 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.*;
 import static io.sertaoBit.odontocore.crm.core.enums.Resource.DEAL;
@@ -42,7 +42,7 @@ public class DealServiceImpl implements DealService {
 
     private final DealRepository dealRepository;
     private final LeadTicketRepository ticketRepository;
-    private final ProcedureRepository procedureRepository;
+    private final ProcedureProvider procedureProvider;
     private final SecurityUtils securityUtils;
     private final PermissionService permissionService;
     private final DealMapper dealMapper;
@@ -51,7 +51,7 @@ public class DealServiceImpl implements DealService {
     public DealServiceImpl(
             DealRepository dealRepository,
             LeadTicketRepository ticketRepository,
-            ProcedureRepository procedureRepository,
+            ProcedureProvider procedureProvider,
             SecurityUtils securityUtils,
             PermissionService permissionService,
             DealMapper dealMapper,
@@ -59,7 +59,7 @@ public class DealServiceImpl implements DealService {
     ) {
         this.dealRepository = dealRepository;
         this.ticketRepository = ticketRepository;
-        this.procedureRepository = procedureRepository;
+        this.procedureProvider = procedureProvider;
         this.securityUtils = securityUtils;
         this.permissionService = permissionService;
         this.dealMapper = dealMapper;
@@ -97,30 +97,19 @@ public class DealServiceImpl implements DealService {
         ticket.setCurrentSector(COMMERCIAL);
         ticketRepository.save(ticket);
 
-
-
-        List<DealProcedure> procedures = dto.items().stream()
-                .map(p -> new DealProcedure(
-                        p.name(), p.code(),
-                        p.tableValue(), p.quantity(),
-                        p.note()
-                ))
-                .toList();
-
-        var totalValue = procedures.stream()
-                .map(p -> p.tableValue().multiply(BigDecimal.valueOf(p.quantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        List<DealProcedure> procedures = buildSnapshots(dto.items(),false);
 
         Deal deal = Deal.builder()
                 .ticketId(ticketId)
                 .procedures(procedures)
                 .createdBySector(EVALUATOR)
                 .createdBy(user.getId())
-                .totalValue(totalValue)
+                .totalValue(calculateTotal(procedures))
                 .build();
 
         return dealRepository.save(deal);
     }
+
 
     @Override
     @Transactional
@@ -138,25 +127,16 @@ public class DealServiceImpl implements DealService {
         );
 
         if (deal.isArchived()) {
-            throw new IllegalStateException("O status arquivado não permite alterações");
+            throw new IllegalStateException("Status archived does not allow changes");
         }
 
         var proceduresBefore = deal.getProcedures();
 
-        List<DealProcedure> procedures = dto.items().stream()
-                .map(p -> new DealProcedure(
-                        p.name(), p.code(),
-                        p.tableValue(), p.quantity(),
-                        p.note()
-                ))
-                .toList();
+        List<DealProcedure> procedures = buildSnapshots(dto.items(),true);
 
-        var newValue = procedures.stream()
-                .map(p -> p.tableValue().multiply(BigDecimal.valueOf(p.quantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         deal.setProcedures(procedures);
-        deal.setTotalValue(newValue);
+        deal.setTotalValue(calculateTotal(procedures));
 
         Deal saved = dealRepository.save(deal);
         dealHistoryService.record(
@@ -277,6 +257,46 @@ public class DealServiceImpl implements DealService {
                         .map(dealMapper::toResponseDTO)
                         .toList()
         );
+    }
+
+
+    // PRICEOVERRIDE É FUNÇÃO DE COMMERCIAL POR ISSO SETADO APENAS EM UPDATE.
+    private List<DealProcedure> buildSnapshots(List<DealItemRequestDTO> items, boolean withOverride) {
+        List<UUID> ids = items.stream().map(DealItemRequestDTO::procedureId)
+                .toList();
+
+        if (ids.size() != Set.copyOf(ids).size()) {
+            throw new IllegalArgumentException("Repeated procedure on the Deal - use quantity ");
+        }
+
+        Map<UUID, ProcedureView> byId = procedureProvider.resolveActiveByIds(ids)
+                .stream().collect(Collectors.toMap(ProcedureView::id, Function.identity()));
+
+        return items.stream()
+                .map(item -> {
+                    ProcedureView view = byId.get(item.procedureId());
+                    return  DealProcedure.builder()
+                            .procedureId(view.id())
+                            .name(view.name())
+                            .code(view.code())
+                            .tableValue(view.defaultPrice())
+                            .priceOverride(withOverride ? item.priceOverride() : null)
+                            .quantity(item.quantity())
+                            .note(item.note())
+                            .build();
+
+                }).toList();
+
+    }
+
+
+    private BigDecimal calculateTotal(List<DealProcedure> procedures) {
+        return procedures.stream()
+                .map(p ->{
+                    BigDecimal price = p.priceOverride() != null ? p.priceOverride() : p.tableValue();
+                    return price.multiply(BigDecimal.valueOf(p.quantity()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
 
