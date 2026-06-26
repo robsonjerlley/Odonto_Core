@@ -1,7 +1,7 @@
 package io.sertaoBit.odontocore.crm.modules.catalog.mapper;
 
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response.ProcedureResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response.ProcedureView;
+import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureView;
 import io.sertaoBit.odontocore.crm.modules.catalog.domain.model.Procedure;
 import org.mapstruct.Mapper;
 

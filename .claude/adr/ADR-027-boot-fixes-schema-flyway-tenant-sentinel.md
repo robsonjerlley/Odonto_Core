@@ -1,4 +1,4 @@
-# ADR-027: Correções de boot — schema, Flyway (PG18), sentinela de tenant e seed do admin
+''''''''''# ADR-027: Correções de boot — schema, Flyway (PG18), sentinela de tenant e seed do admin
 
 **Status**: Implementado
 **Data**: 2026-06-23
@@ -125,13 +125,15 @@ No boot de um prod limpo: Flyway executa V1 (`CREATE SCHEMA`), depois o Hibernat
 
 | Arquivo | Mudança |
 |---|---|
-| `db/migration/V1__add_clinic_id_to_crm_tables.sql` | `ALTER TABLE` → `CREATE SCHEMA IF NOT EXISTS` (crm_db, identity_db) |
+| `db/migration/V1__create_schemas.sql` | `ALTER TABLE` → `CREATE SCHEMA IF NOT EXISTS` (crm_db, identity_db). **Renomeado em 2026-06-26** de `V1__add_clinic_id_to_crm_tables.sql` — ver nota abaixo |
 | `application.properties` | `ddl-auto` `validate`→`update`; `+ app.admin.clinicId` |
 | `application-local.properties` (gitignored) | `+ spring.flyway.enabled=false` |
 | `application-prod.properties` | `+ spring.flyway.enabled=true` (blindagem explícita) |
 | `config/tenant/ClinicResolveTenant.java` | sentinela `NO_TENANT` em vez de `null` |
 
-> O nome do arquivo V1 (`...add_clinic_id...`) ficou desalinhado do novo conteúdo (CREATE SCHEMA). Não foi renomeado para não invalidar o checksum do Flyway em prod. Débito menor — registrado abaixo.
+> **Atualização 2026-06-26 — renomeado.** O projeto do Railway (e seu banco) foi apagado para corrigir o back ponta a ponta. Sem banco, não há `flyway_schema_history` → renomear a V1 deixou de ter risco de checksum. A V1 passou de `V1__add_clinic_id_to_crm_tables.sql` (nome fóssil, descrevia um backfill que o conteúdo não faz) para **`V1__create_schemas.sql`**, refletindo o que ela realmente é: o bootstrap de schemas do greenfield. Conteúdo inalterado (os dois `CREATE SCHEMA IF NOT EXISTS`).
+>
+> 🔑 **Regra para mudanças futuras no Flyway:** renomear/alterar uma migration só é seguro **antes** dela rodar num banco que persista o `flyway_schema_history`. Depois que prod subir e gravar o history, alterar V1 (nome, conteúdo) quebra o boot por checksum mismatch — aí o caminho é uma migration nova (V2+), nunca editar a V1.
 
 ---
 
@@ -147,7 +149,8 @@ No boot de um prod limpo: Flyway executa V1 (`CREATE SCHEMA`), depois o Hibernat
 | Débito / risco | Mitigação / plano |
 |---|---|
 | `ddl-auto=update` em prod não é auditável a longo prazo | **Migração futura**: quando o schema estabilizar, escrever migrações Flyway com o DDL completo (CREATE TABLE por schema) e voltar `ddl-auto=validate`. Abrir ADR específica |
-| Nome do arquivo V1 não reflete o conteúdo | Renomear/recriar quando a trilha de migrações for reescrita para o modelo Flyway-owned |
+| ~~Nome do arquivo V1 não reflete o conteúdo~~ | ✅ **Resolvido (2026-06-26)**: renomeado para `V1__create_schemas.sql` na janela sem banco (sem history → sem risco de checksum) |
+| Módulos futuros (Deal, agendamento…) podem ser implementados achando que precisam de migration própria | **Não precisam** enquanto `ddl-auto=update` for o dono do DDL de tabelas. A V1 (schemas) é a única migration que deve existir nesta fase. DDL de tabela no Flyway só entra na migração para `validate` (ver "Migração futura" acima) |
 | Dois UUIDs mágicos: `...000` (NO_TENANT) e `...001` (clínica padrão) espalhados | Centralizar como constantes (`TenantConstants`) numa próxima refatoração |
 | `app.admin.clinicId` fixo pressupõe clínica única | Quando o cadastro multi-clínica entrar, o seed do admin deve criar a clínica e derivar o ID, não usar constante. Reabrir no ADR de onboarding de clínica |
 | Flyway preso à versão que não suporta PG18 | Atualizar o Flyway quando houver release com suporte a PG18, e então remover o disable local |

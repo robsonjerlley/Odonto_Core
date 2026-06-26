@@ -33,7 +33,7 @@ public final class ProcedureSpecifications {
 
     public static Specification<Procedure> isActive() {
         return (root, criteriaQuery, cb)
-                -> cb.isFalse(root.get("active"));
+                -> cb.isTrue(root.get("active"));
     }
 
     public static Specification<Procedure> byScope(PermissionScope scope, User user) {

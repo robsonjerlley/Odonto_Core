@@ -135,6 +135,8 @@ List<Procedure> resolveActiveByIds(List<UUID> ids);
 
 > **Nome domínio-neutro de propósito.** O `catalog` não conhece `Deal`. Nomear o método `getForDeal(...)` vazaria o domínio do `commercial` para dentro do `catalog` — acoplamento na direção errada. `scheduling` (ADR-023) reusa o mesmo `resolveActiveByIds` para montar slots de agenda.
 
+> ⚠️ **Revisado pela ADR-028 (2026-06-24).** Este método foi movido para uma interface dedicada `ProcedureProvider` (ISP — ADR-002) e seu retorno mudou de `List<Procedure>` (entidade JPA) para `List<ProcedureView>` (read-model imutável), evitando o vazamento da persistência do `catalog` para o `commercial`. A mesma ADR-028 troca `findByName` por um `search(name, code, Pageable)` paginado (ADR-001). Ver ADR-028 para o contrato vigente.
+
 ### DTOs modificados
 
 **`DealItemRequestDTO`** — substitui `DealProcedureDTO`:

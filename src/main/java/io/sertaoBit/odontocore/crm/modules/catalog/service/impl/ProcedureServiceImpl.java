@@ -6,11 +6,11 @@ import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.request.ProcedureCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.request.ProcedureUpdateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response.ProcedureResponseDTO;
-import io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response.ProcedureView;
 import io.sertaoBit.odontocore.crm.modules.catalog.domain.model.Procedure;
 import io.sertaoBit.odontocore.crm.modules.catalog.mapper.ProcedureMapper;
+import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureProvider;
+import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureView;
 import io.sertaoBit.odontocore.crm.modules.catalog.repository.ProcedureRepository;
-import io.sertaoBit.odontocore.crm.modules.catalog.service.ProcedureProvider;
 import io.sertaoBit.odontocore.crm.modules.catalog.service.ProcedureService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
@@ -21,7 +21,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -96,7 +95,6 @@ public class ProcedureServiceImpl implements ProcedureService, ProcedureProvider
         procedure.setEstimatedDuration(dto.estimatedDuration());
         procedure.setDefaultPrice(dto.defaultPrice());
         procedure.setCreatedBy(user.getId());
-        procedure.setUpdatedAt(LocalDateTime.now());
 
         return procedureMapper.toResponseDTO(procedureRepository.save(procedure));
     }
@@ -148,6 +146,10 @@ public class ProcedureServiceImpl implements ProcedureService, ProcedureProvider
     public List<ProcedureView> resolveActiveByIds(List<UUID> ids) {
 
         List<Procedure> catalog = procedureRepository.findAllById(ids);
+
+        if (catalog.isEmpty()) {
+            throw new IllegalArgumentException("Invalid ids provided");
+        }
 
         if (catalog.size() != ids.size()) {
             throw new ResourceNotFoundException("Procedures Not Found. Our does not belong to the clinic");

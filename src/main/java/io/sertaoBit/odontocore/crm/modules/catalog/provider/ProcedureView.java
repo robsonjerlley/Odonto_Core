@@ -1,4 +1,4 @@
-package io.sertaoBit.odontocore.crm.modules.catalog.api.dto.response;
+package io.sertaoBit.odontocore.crm.modules.catalog.provider;
 
 import java.math.BigDecimal;
 import java.util.UUID;
