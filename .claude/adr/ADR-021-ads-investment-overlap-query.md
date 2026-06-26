@@ -1,6 +1,6 @@
 # ADR-021 — AdsInvestment: query de overlap para cálculo de ROI
 
-**Status:** aceito  
+**Status:** Implementado  
 **Data:** 2026-06-17  
 **Afeta:** `AdsInvestmentRepository`, `ConfigServiceImpl`, `AnalyticsServiceImpl`
 

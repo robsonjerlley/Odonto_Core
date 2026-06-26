@@ -279,14 +279,14 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [011](../adr/ADR-011-intake-scope-cross-sector-acesso.md) | Intake scope — acesso cross-sector | Aceito |
 | [012](../adr/ADR-012-rbac-fase3-padrao-list-vs-single-resource.md) | RBAC fase 3 — padrão list vs single resource | Aceito |
 | [013](../adr/ADR-013-jpa-specifications-listagens-scope-aware.md) | JPA Specifications — listagens scope-aware | Aceito |
-| [014](../adr/ADR-014-ferramenta-de-migracao-flyway.md) | Ferramenta de migração — Flyway | Aceito |
+| [014](../adr/ADR-014-ferramenta-de-migracao-flyway.md) | Ferramenta de migração — Flyway | Implementado |
 | [015](../adr/ADR-015-analytics-scope-aware-queries.md) | Analytics — scope-aware queries | Aceito |
 | [016](../adr/ADR-016-bonus-mensal-vs-metricas-por-range-user-performance.md) | Bônus mensal vs métricas por range (user performance) | Aceito |
 | [017](../adr/ADR-017-dashboard-global-range-livre-desacoplado-do-bonus.md) | Dashboard global — range livre, desacoplado do bônus | Aceito |
 | [018](../adr/ADR-018-customer-anonimizado-excluido-da-listagem.md) | Customer anonimizado — excluído da listagem | Aceito |
 | [019](../adr/ADR-019-contactlog-username-resolvido-no-backend.md) | ContactLog — username resolvido no backend | Aceito |
 | [020](../adr/ADR-020-virtual-threads-tomcat-executor.md) | Virtual Threads — Tomcat executor | Aceito |
-| [021](../adr/ADR-021-ads-investment-overlap-query.md) | AdsInvestment — overlap query (ROI) | Aceito |
+| [021](../adr/ADR-021-ads-investment-overlap-query.md) | AdsInvestment — overlap query (ROI) | Implementado |
 | [022](../adr/ADR-022-multitenant-clinicid-foundation.md) | Multi-tenancy foundation — `clinicId` em User + JWT | Aceito (enforcement → ADR-024) |
 | [023](../adr/ADR-023-ticket-won-event-contract.md) | TicketWonEvent — contrato do evento de fechamento | Aceito |
 | [024](../adr/ADR-024-tenant-isolation-enforcement-tenantid.md) | Tenant isolation enforcement — `@TenantId` + `TenantContext` | Implementado |

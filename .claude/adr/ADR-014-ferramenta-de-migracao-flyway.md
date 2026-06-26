@@ -1,6 +1,6 @@
 # ADR-014: Adotar ferramenta de migração de schema (Flyway)
 
-**Status**: Proposto
+**Status**: Implementado
 **Data**: 2026-06-06
 **Autores**: Arquiteto-Agent
 **Impacto**: `pom.xml`, `application*.properties`, `src/main/resources/db/migration/`, processo de deploy
