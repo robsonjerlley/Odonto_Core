@@ -1,6 +1,6 @@
 # ADR-026: Catálogo de Procedimentos (`Procedure`) + Snapshot em `DealProcedure`
 
-**Status**: Aceito  
+**Status**: Implementado — 2026-06-27  
 **Data**: 2026-06-23  
 **Autores**: Arquiteto-Agent  
 **Impacto**: módulo `commercial` (Deal, DealProcedure), novo módulo `catalog` (Procedure), `DealCreateRequestDTO`, `DealUpdateRequestDTO`, `DealServiceImpl`, CLAUDE.md  

@@ -97,7 +97,7 @@ public class DealServiceImpl implements DealService {
         ticket.setCurrentSector(COMMERCIAL);
         ticketRepository.save(ticket);
 
-        List<DealProcedure> procedures = buildSnapshots(dto.items(),false);
+        List<DealProcedure> procedures = buildSnapshots(dto.items(), false);
 
         Deal deal = Deal.builder()
                 .ticketId(ticketId)
@@ -132,7 +132,7 @@ public class DealServiceImpl implements DealService {
 
         var proceduresBefore = deal.getProcedures();
 
-        List<DealProcedure> procedures = buildSnapshots(dto.items(),true);
+        List<DealProcedure> procedures = buildSnapshots(dto.items(), true);
 
 
         deal.setProcedures(procedures);
@@ -275,7 +275,7 @@ public class DealServiceImpl implements DealService {
         return items.stream()
                 .map(item -> {
                     ProcedureView view = byId.get(item.procedureId());
-                    return  DealProcedure.builder()
+                    return DealProcedure.builder()
                             .procedureId(view.id())
                             .name(view.name())
                             .code(view.code())
@@ -292,7 +292,7 @@ public class DealServiceImpl implements DealService {
 
     private BigDecimal calculateTotal(List<DealProcedure> procedures) {
         return procedures.stream()
-                .map(p ->{
+                .map(p -> {
                     BigDecimal price = p.priceOverride() != null ? p.priceOverride() : p.tableValue();
                     return price.multiply(BigDecimal.valueOf(p.quantity()));
                 })

@@ -22,7 +22,8 @@ public interface LeadTicketMapper {
             @Mapping(target = "status", ignore = true),
             @Mapping(target = "updatedAt", ignore = true),
             @Mapping(target = "procedurePerformedAt", ignore = true),
-            @Mapping(target = "returnScheduledAt", ignore = true)
+            @Mapping(target = "returnScheduledAt", ignore = true),
+            @Mapping(target = "clinicId", ignore = true)
     })
     LeadTicket toEntity(LeadTicketCreateRequestDTO dto);
 

@@ -22,7 +22,7 @@ public interface ContactLogMapper {
     ContactLog toEntity(ContactLogCreateRequestDTO dto);
 
 
-    ContactLogResponseDTO toResponseDTO(ContactLog entity);
+    ContactLogResponseDTO toResponseDTO(ContactLog contactLog);
 
 
 

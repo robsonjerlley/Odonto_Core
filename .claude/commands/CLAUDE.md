@@ -291,9 +291,9 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [023](../adr/ADR-023-ticket-won-event-contract.md) | TicketWonEvent — contrato do evento de fechamento | Aceito |
 | [024](../adr/ADR-024-tenant-isolation-enforcement-tenantid.md) | Tenant isolation enforcement — `@TenantId` + `TenantContext` | Implementado |
 | [025](../adr/ADR-025-rls-postgresql-defense-in-depth.md) | Row Level Security (PostgreSQL) — defesa em profundidade | Proposto (futuro) |
-| [026](../adr/ADR-026-procedure-catalog-deal-snapshot.md) | Catálogo de Procedimentos (`Procedure`) + snapshot em `DealProcedure` | Aceito |
+| [026](../adr/ADR-026-procedure-catalog-deal-snapshot.md) | Catálogo de Procedimentos (`Procedure`) + snapshot em `DealProcedure` | Implementado |
 | [027](../adr/ADR-027-boot-fixes-schema-flyway-tenant-sentinel.md) | Correções de boot — schema, Flyway (PG18), sentinela de tenant, seed admin | Implementado |
-| [028](../adr/ADR-028-catalog-read-boundary-provider-search.md) | Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model `ProcedureView`) + `search()` unificado (revisa 026) | Aceito |
+| [028](../adr/ADR-028-catalog-read-boundary-provider-search.md) | Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model `ProcedureView`) + `search()` unificado (revisa 026) | Implementado |
 
 > **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, implementado); 024 implementado — `@TenantId` + `TenantContext` — isolamento automático no ORM ativo; 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`). **Boot greenfield (027)**: V1 reescrita para `CREATE SCHEMA` (Hibernate `ddl-auto=update` cria as tabelas); Flyway desabilitado só no local (PG18); `ClinicResolveTenant` usa sentinela `NO_TENANT` fora de request.
 
@@ -301,7 +301,22 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 
 | Spec | Título | Status |
 |---|---|---|
-| [spec-redis-cache](../specs/spec-redis-cache.md) | Cache com Redis — chaves multi-tenant por `clinicId` | Backlog (pós ADR-022/024) |
+| [spec-redis-cache](../specs/spec-redis-cache.md) | Cache com Redis — chaves multi-tenant por `clinicId` | Backlog — desbloqueada (ADR-022/024 ✅), aguarda priorização |
+
+---
+
+## Roadmap de implementações pendentes
+
+> Atualizado em 2026-06-27. Catálogo de procedimentos (ADR-026/028) **concluído** — `Procedure` + `ProcedureProvider`/`ProcedureView` integrados ao `Deal`.
+
+| Prioridade | Item | Origem | Estado | Pré-requisitos |
+|---|---|---|---|---|
+| 1 | Módulo `scheduling` — consumir `TicketWonEvent` + slots por `Procedure.estimatedDuration` | ADR-023 | Aceito — não iniciado | ADR-026 ✅ (catálogo pronto) |
+| 2 | Cache Redis multi-tenant (chave por `clinicId`) | spec-redis-cache | Backlog — desbloqueada | ADR-022/024 ✅ |
+| 3 | Correções de backend sprint 1 | impl-backend-corrections-sprint1 | Backlog | — |
+| 4 | RBAC funnel — Fase 3 (Definition of Done) | security-gaps-funnel-permission | Críticos resolvidos; Fase 3 aberta | — |
+| 5 | US fundacionais / pós-procedimento | us-fundacional, us-pos-procedimento | Backlog | scheduling (item 1) |
+| — | Row Level Security (PostgreSQL) — defesa em profundidade | ADR-025 | Proposto — não agendado | ADR-024 ✅ |
 
 ---
 

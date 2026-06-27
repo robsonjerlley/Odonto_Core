@@ -1,6 +1,6 @@
 # ADR-028: Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model) + `search()` unificado
 
-**Status**: Aceito
+**Status**: Implementado — 2026-06-27
 **Data**: 2026-06-24
 **Autores**: Arquiteto-Agent
 **Impacto**: módulo `catalog` (`ProcedureService`, novo `ProcedureProvider`, novo `ProcedureView`), `commercial` (`DealServiceImpl`), `scheduling` (futuro, ADR-023)
