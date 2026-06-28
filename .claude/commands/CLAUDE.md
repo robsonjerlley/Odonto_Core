@@ -101,9 +101,9 @@ modules/
 | `AdsChannel` | GOOGLE, META, INSTAGRAM, TIKTOK, OUTER |
 | `ContactChannel` | ORGANIC, REFERRAL, FACEBOOK, INSTAGRAM, WHATSAPP, PHONE_CALL, WEBSITE_FROM, OTHER |
 | `PaymentMethod` | PIX(1.00), CASH(1.00), DEBIT_CARD(0.98), CREDIT_CARD(0.97), INSTALLMENT(0.85), DENTAL_INSURANCE(0.90) — cada valor carrega `conversionFactor` (BigDecimal) para cálculo de `expectedCash` em analytics |
-| `Resource` | CUSTOMER, USER, TICKET, CONTACT_LOG, DEAL, ANALYTICS, CONFIG |
+| `Resource` | CUSTOMER, USER, TICKET, CONTACT_LOG, DEAL, PROCEDURE, ANALYTICS, CONFIG |
 | `Action` | CREATE, READ, UPDATE, CLOSE, RECYCLE, CONFIGURE, DELETE |
-| `PermissionScope` | GLOBAL, SECTOR, OWN |
+| `PermissionScope` | GLOBAL, SECTOR, OWN, INTAKE |
 
 Regra: sempre `@Enumerated(EnumType.STRING)` nas entidades JPA.
 
@@ -294,6 +294,9 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [026](../adr/ADR-026-procedure-catalog-deal-snapshot.md) | Catálogo de Procedimentos (`Procedure`) + snapshot em `DealProcedure` | Implementado |
 | [027](../adr/ADR-027-boot-fixes-schema-flyway-tenant-sentinel.md) | Correções de boot — schema, Flyway (PG18), sentinela de tenant, seed admin | Implementado |
 | [028](../adr/ADR-028-catalog-read-boundary-provider-search.md) | Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model `ProcedureView`) + `search()` unificado (revisa 026) | Implementado |
+| [029](../adr/ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) | Módulo `scheduling` — agenda do Evaluator a partir do Deal fechado (`DealWonEvent` síncrono no `closeDeal`, fail-fast) | Aceito (pronta p/ implementação) |
+| [030](../adr/ADR-030-ux-scheduling-home-modo-operacao.md) | UX scheduling — Home "Modo Operação" + Sheet "Agendar" | Proposto (UX aceita; pendente implementação) |
+| [031](../adr/ADR-031-commercial-deal-payment-status.md) | Commercial — `Deal.paymentStatus` (feed de pagamentos da Home) | Proposto (modelagem fechada; pendente impl) |
 
 > **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, implementado); 024 implementado — `@TenantId` + `TenantContext` — isolamento automático no ORM ativo; 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`). **Boot greenfield (027)**: V1 reescrita para `CREATE SCHEMA` (Hibernate `ddl-auto=update` cria as tabelas); Flyway desabilitado só no local (PG18); `ClinicResolveTenant` usa sentinela `NO_TENANT` fora de request.
 
@@ -311,7 +314,7 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 
 | Prioridade | Item | Origem | Estado | Pré-requisitos |
 |---|---|---|---|---|
-| 1 | Módulo `scheduling` — consumir `TicketWonEvent` + slots por `Procedure.estimatedDuration` | ADR-023 | Aceito — não iniciado | ADR-026 ✅ (catálogo pronto) |
+| 1 | Módulo `scheduling` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Aceito) | ✅ Desenho fechado — pronto p/ implementar (entity `Appointment`, `DealWonEvent`, `CustomerProvider`, RBAC `Resource.APPOINTMENT`) | ADR-026 ✅, ADR-030/031 (UX/pagamento, paralelos) |
 | 2 | Cache Redis multi-tenant (chave por `clinicId`) | spec-redis-cache | Backlog — desbloqueada | ADR-022/024 ✅ |
 | 3 | Correções de backend sprint 1 | impl-backend-corrections-sprint1 | Backlog | — |
 | 4 | RBAC funnel — Fase 3 (Definition of Done) | security-gaps-funnel-permission | Críticos resolvidos; Fase 3 aberta | — |
