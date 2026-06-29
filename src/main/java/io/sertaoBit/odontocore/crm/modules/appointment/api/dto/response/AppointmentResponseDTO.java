@@ -11,7 +11,7 @@ public record AppointmentResponseDTO(
         UUID clinicId,
         UUID dealId,
         UUID procedureId,
-        String ProcedureName,
+        String procedureName,
         AppointmentType type,
         UUID customerId,
         String customerName,
@@ -20,7 +20,7 @@ public record AppointmentResponseDTO(
         AppointmentStatus status,
         LocalDateTime scheduledAt,
         Integer sessionIndex,
-        Integer plannedSession,
+        Integer plannedSessions,
         String note,
         String cancelReason
 

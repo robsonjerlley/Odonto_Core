@@ -78,6 +78,9 @@ public class PermissionSeeder implements ApplicationRunner {
 
         rules.add(rule(ADM_SYSTEM, null, ANALYTICS, READ, GLOBAL));
 
+        rules.add(rule(ADM_SYSTEM, null, APPOINTMENT, READ, GLOBAL));
+        rules.add(rule(ADM_SYSTEM, null, APPOINTMENT, UPDATE, GLOBAL));
+
         rules.add(rule(ADM_SYSTEM, null, CONFIG, CONFIGURE, GLOBAL));
 
         //ADM_LEADS
@@ -93,7 +96,7 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, READ, INTAKE));
 
         rules.add(rule(ADM_LEADS, LEADS, ANALYTICS, READ, SECTOR));
-        
+
 
         //USER_LEADS
         rules.add(rule(USER_LEADS, LEADS, CUSTOMER, CREATE, OWN));
@@ -122,6 +125,9 @@ public class PermissionSeeder implements ApplicationRunner {
 
         rules.add(rule(USER_ATTENDANT, ATTENDANT, ANALYTICS, READ, OWN));
 
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, APPOINTMENT, READ, GLOBAL));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, APPOINTMENT, UPDATE, GLOBAL));
+
         //ADM_EVALUATOR
         rules.add(rule(ADM_EVALUATOR, EVALUATOR, CUSTOMER, READ, SECTOR));
 
@@ -136,6 +142,8 @@ public class PermissionSeeder implements ApplicationRunner {
 
         rules.add(rule(ADM_EVALUATOR, EVALUATOR, ANALYTICS, READ, SECTOR));
 
+        rules.add(rule(ADM_EVALUATOR, EVALUATOR, APPOINTMENT, READ, SECTOR));
+        rules.add(rule(ADM_EVALUATOR, EVALUATOR, APPOINTMENT, UPDATE, SECTOR));
 
         //USER_EVALUATOR
         rules.add(rule(USER_EVALUATOR, EVALUATOR, CUSTOMER, READ, GLOBAL));
@@ -150,6 +158,9 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_EVALUATOR, EVALUATOR, CONTACT_LOG, READ, GLOBAL));
 
         rules.add(rule(USER_EVALUATOR, EVALUATOR, ANALYTICS, READ, OWN));
+
+        rules.add(rule(USER_EVALUATOR, EVALUATOR, APPOINTMENT, READ, OWN));
+        rules.add(rule(USER_EVALUATOR, EVALUATOR, APPOINTMENT, UPDATE, OWN));
 
 
         //ADM_COMMERCIAL
@@ -172,7 +183,7 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, DEAL, CLOSE, OWN));
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, READ, SECTOR));
-        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, UPDATE, OWN ));
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, UPDATE, OWN));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, TICKET, CLOSE, OWN));
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));

@@ -51,7 +51,7 @@ public class Appointment {
     @Column(columnDefinition = "TEXT")
     private String note;
     @Column(columnDefinition = "TEXT")
-    private String canceledReason;
+    private String cancelReason;
     @Column(nullable = false)
     private UUID createdBy;
     @Column(nullable = false)

@@ -8,6 +8,7 @@ public enum Resource {
     DEAL,
     PROCEDURE,
     ANALYTICS,
+    APPOINTMENT,
     CONFIG
 
 }

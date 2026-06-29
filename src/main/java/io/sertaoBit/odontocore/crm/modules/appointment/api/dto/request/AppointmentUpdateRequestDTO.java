@@ -20,6 +20,6 @@ public record AppointmentUpdateRequestDTO(
         Integer sessionIndex,
         Integer plannedSessions,
         String note,
-        String canceledReason
+        String cancelReason
 ) {
 }
