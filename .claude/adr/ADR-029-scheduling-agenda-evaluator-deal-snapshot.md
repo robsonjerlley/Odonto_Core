@@ -23,7 +23,7 @@
 >
 > **Checklist:**
 > 1. `core/events/DealWonEvent.java` — record (conferir contrato na seção "Modelo de dados").
-> 2. `appointment/domain/model/Appointment.java` — `@Entity` + `@TenantId`, `@Table(name="appointments", schema="crm_db", indexes={status; (assignedTo, scheduledAt)})`. Tabela nasce do entity (`ddl-auto=update`) — **sem migration** (ADR-027).
+> 2. `appointment/domain/model/Appointment.java` — `@Entity` + `@TenantId`, `@Table(name="appointments", schema="crm_db", indexes={status; (clinicId, assignedTo, scheduledAt)})`. Índice composto liderado por tenant — ver "schedule-batch: conflito + performance" (Trava 2). Tabela nasce do entity (`ddl-auto=update`) — **sem migration** (ADR-027).
 > 3. `appointment/repository/AppointmentRepository.java` + Specifications scope-aware (ADR-013).
 > 4. `appointment/event/AppointmentEventListener.java` — síncrono; cria N appointments `AWAITING_SCHEDULE`.
 > 5. `commercial/DealServiceImpl.closeDeal` — publica `DealWonEvent` (resolve `customerName` via `CustomerProvider`; `procedures` direto do snapshot `deal.getProcedures()` — **não toca o catálogo**).
@@ -220,13 +220,38 @@ AppointmentResponseDTO(
 | `GET /appointments?status=AWAITING_SCHEDULE` | — | worklist "A agendar"; N linhas chapadas | 200 | `READ` |
 | `GET /appointments?assignedTo=&from=&to=` | — | agenda por executor/dia — **só PROCEDURE** (EVALUATION vem do funnel; front funde) | 200 | `READ` |
 | `PATCH /appointments/{id}/schedule` | `{scheduledAt, assignedTo?}` | `AWAITING_SCHEDULE → SCHEDULED` | 200 · **422** se data no passado ou status≠AWAITING | `UPDATE` |
-| `PATCH /appointments/schedule-batch` | `{items:[{appointmentId, scheduledAt, assignedTo?}]}` | atômico tudo-ou-nada; conflito de horário = `warnings[]` (não bloqueia) | 200 · **422** (nada aplicado) | `UPDATE` |
+| `PATCH /appointments/schedule-batch` | `{items:[{appointmentId, scheduledAt, assignedTo?}]}` | atômico tudo-ou-nada; conflito de horário = `warnings[]` (não bloqueia) — **ver "schedule-batch: conflito + performance" abaixo** | 200 · **422** (nada aplicado) | `UPDATE` |
 | `PATCH /appointments/{id}/reschedule` | `{scheduledAt}` | `SCHEDULED → SCHEDULED` (update + trilha leve ADR-003) | 200 · **422** se status≠SCHEDULED | `UPDATE` |
 | `PATCH /appointments/{id}/assignee` | `{assignedTo}` | reatribui executor (`assigned_to` mutável) | 200 | `UPDATE` |
 | `PATCH /appointments/{id}/cancel` | `{cancelReason}` | `→ CANCELLED`; reason **obrigatório** | 200 · **422** sem reason | `UPDATE` |
 | `PATCH /appointments/{id}/complete` | — | `SCHEDULED → DONE` | 200 · **422** se status≠SCHEDULED | `UPDATE` |
 
 > **Tudo é `UPDATE` de propósito** (não há `CLOSE` separado p/ `complete`): a operação exige flexibilidade — recepção (`USER_ATTENDANT`) também marca/remarca/conclui. A diferença entre papéis fica **no scope**, não na action.
+
+### `schedule-batch`: detecção de conflito + travas de performance (FECHADO 2026-06-29)
+
+> Todas as decisões do `scheduleBatch` ficam **aqui**, num bloco só — não espalhar pela ADR. Estende o Travamento C (histórico) sem reabri-lo.
+
+**Resposta — wrapper, não `AppointmentResponseDTO` cru.** Os avisos são da **operação em lote**, não de um appointment; meter `warnings` no `AppointmentResponseDTO` poluiria os outros 7 endpoints com um campo sempre vazio (anti-pattern god-DTO). Contrato:
+```java
+record BatchScheduleResultDTO(
+    List<AppointmentResponseDTO> scheduled,
+    List<ConflictWarning>        warnings
+) {}
+record ConflictWarning(UUID assignedTo, LocalDateTime slot, List<UUID> appointmentIds) {}
+```
+⚠️ `warnings` **estruturado** (não `List<String>`): o front precisa acionar/destacar as linhas em choque. String livre → breaking change depois. Nasce estruturado.
+
+**Atomicidade (estratégia A — pré-validar, depois mutar).** Dois passos no service: (1) carrega via `findAllById` + valida TODOS (status `AWAITING_SCHEDULE`, data não-passada) **sem mutar**; qualquer falha → **422, nada aplicado**. (2) só então muta + `saveAll`. Os `warnings` são montados na fase de decisão, antes do commit.
+
+**Conflito = igualdade `(assignedTo, scheduledAt)` — escopo B (união).** Appointment é instante (sem `estimatedDuration`), então não há janela de overlap: conflito é mesmo executor + mesmo horário. Compara-se sobre `{itens do batch} ∪ {appointments SCHEDULED já no banco}`. **Nunca bloqueia** — aplica e devolve `warnings[]`; o usuário decide (flexível ao padrão da clínica: 3 às 11:00 é válido). B engloba o conflito intra-batch (A) naturalmente.
+- ⚠️ Agrupar pelo `assignedTo` **efetivo** (`item.assignedTo ?? appointment.assignedTo`), não o cru — senão o aviso mente.
+
+**🔒 Trava 1 — query set-based, NUNCA N+1.** A busca dos `SCHEDULED` existentes é **uma** query sobre o conjunto de pares `(assignedTo, scheduledAt)` do batch (`IN`/`OR`), jamais um loop chamando o repository por item. 🚫 Loop por item = N queries/batch = degrada com a carga. Isso é o que mantém o custo em `N · log(T)` com N limitado pelo domínio (sessões de 1 procedimento) e `@TenantId` isolando cada query a 1 clínica.
+
+**🔒 Trava 2 — índice composto `(clinic_id, assigned_to, scheduled_at)`.** O `@TenantId` injeta `clinic_id = ?` em toda query; o índice deve **liderar pelo discriminador de tenant** p/ seletividade em alta cardinalidade de clínicas. Substitui o `(assigned_to, scheduled_at)` antes previsto. Declarado via `@Table(indexes=…)` no entity (nasce do `ddl-auto`).
+
+> 🔻 **Alavanca futura (não-MVP, não implementar):** a `appointments` cresce sem limite (soft-delete/histórico); por clínica fica pequena por anos. Se uma clínica de altíssimo volume acumular, arquivar `DONE`/`CANCELLED` antigos ou particionar por clínica. Over-engineering pro estágio atual — dívida só registrada.
 
 ### RBAC — seed `PermissionRule` (Resource=`APPOINTMENT`, **novo valor no enum**)
 | Role | Actions | Scope |
@@ -262,7 +287,7 @@ Princípio: **`appointment` é uma agenda que só CONSOME dos outros módulos.**
 3. ~~Resolver os Travamentos A–D~~ ✅ **todos resolvidos** (ver seção Travamentos).
 4. ~~Definir o contrato do **`DealWonEvent`**~~ ✅ — fechado (ver "Contrato `DealWonEvent`"). Publisher no `commercial.closeDeal` + `@EventListener` síncrono no `appointment`.
 5. ~~Contrato REST do `AppointmentController`~~ ✅ — fechado (ver "Contratos REST — FECHADO"). Tudo `UPDATE`, scope por papel; `Resource.APPOINTMENT` novo no enum.
-6. ~~Migration Flyway `V[n]__create_appointments.sql`~~ ❌ **não se aplica agora.** O projeto **não está em deploy — roda local**, com `ddl-auto=update` (Flyway desabilitado em local; `application-local.properties:7`). A tabela `appointments` **nasce do `@Entity Appointment`** (`@Table(name="appointments", schema="crm_db")` + `@TenantId clinicId`), igual a `deals`/`lead_tickets` — não há migration de tabela no projeto. **Índices dos hot paths** (`status`; `assigned_to, scheduled_at`) declarados via `@Table(indexes=…)` no entity, criados pelo `ddl-auto`. **Flyway fica para o primeiro deploy:** quando o schema estabilizar, migra-se tudo de uma vez para Flyway-owned DDL + `ddl-auto=validate` (dívida já registrada em `application-prod.properties:15`). ← **próximo: implementar o entity + módulo, não SQL**
+6. ~~Migration Flyway `V[n]__create_appointments.sql`~~ ❌ **não se aplica agora.** O projeto **não está em deploy — roda local**, com `ddl-auto=update` (Flyway desabilitado em local; `application-local.properties:7`). A tabela `appointments` **nasce do `@Entity Appointment`** (`@Table(name="appointments", schema="crm_db")` + `@TenantId clinicId`), igual a `deals`/`lead_tickets` — não há migration de tabela no projeto. **Índices dos hot paths** (`status`; `(clinic_id, assigned_to, scheduled_at)` — composto liderado por tenant, ver "schedule-batch: conflito + performance" Trava 2) declarados via `@Table(indexes=…)` no entity, criados pelo `ddl-auto`. **Flyway fica para o primeiro deploy:** quando o schema estabilizar, migra-se tudo de uma vez para Flyway-owned DDL + `ddl-auto=validate` (dívida já registrada em `application-prod.properties:15`). ← **próximo: implementar o entity + módulo, não SQL**
 7. ~~Promover esta ADR de RASCUNHO → Aceito.~~ ✅ **Aceito em 2026-06-27.** Próximo trabalho = implementação (entity + módulo `appointment`, `DealWonEvent`, `CustomerProvider`, RBAC seed).
 
 ## Travamentos (⚠️ decisões que bloqueiam fechar os contratos REST)
