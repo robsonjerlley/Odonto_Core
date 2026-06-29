@@ -98,6 +98,12 @@ Page<ContactLog> findByUserId(UUID userId, Pageable pageable);
 
 ### Módulos futuros: Financeiro e Agendamento
 
+> 🎯 **Atualização (2026-06-28):** o gatilho concreto desse "recebe dados por transição de estado"
+> foi fechado pela [ADR-029](ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) como **`DealWonEvent`
+> síncrono** no `DealServiceImpl.closeDeal` (não o `TicketWonEvent` async esboçado abaixo, que está
+> [substituído](ADR-023-ticket-won-event-contract.md)). O texto a seguir vale só como justificativa
+> histórica da escolha por `ApplicationEventPublisher` sobre Kafka/RabbitMQ — essa parte segue válida.
+
 Os próximos módulos são **independentes do CRM** e recebem dados por transição de estado:
 
 - **Financeiro**: recebe dados após `LeadTicket → WIN`

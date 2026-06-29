@@ -7,6 +7,12 @@
 **Relaciona**: ADR-022 (fundação clinicId — **refina o enforcement**), ADR-023 (TicketWonEvent), ADR-020 (Virtual Threads), ADR-005 (JWT), spec-redis-cache.md
 **Substitui**: a estratégia de filtro manual por query definida na ADR-022 ("Regra mandatória para código novo")
 
+> 🎯 **Nota (2026-06-28):** as menções a "listeners da ADR-023" / "módulos Financeiro/Consultas" abaixo
+> referem-se ao `TicketWonEvent` async, hoje [substituído pela ADR-029](ADR-029-scheduling-agenda-evaluator-deal-snapshot.md).
+> O consumidor real do fechamento (`AppointmentEventListener`, ADR-029) é **síncrono**, então **não**
+> precisa do `TenantContext.set/clear` do §6 — o tenant do request já está no contexto. A regra do §6
+> continua **obrigatória** para qualquer `@Async`/`@Scheduled` futuro; só não se aplica ao `appointment`.
+
 ---
 
 ## Contexto

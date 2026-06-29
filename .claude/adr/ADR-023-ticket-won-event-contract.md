@@ -1,11 +1,36 @@
 # ADR-023: TicketWonEvent — Contrato do Evento de Fechamento
 
-**Status**: Aceito
+**Status**: **Substituída pela ADR-029** (2026-06-28)
 **Data**: 2026-06-17
 **Autores**: Arquiteto-Agent
 **Impacto**: `LeadTicketServiceImpl`, Módulo Financeiro, Módulo Consultas, `AnalyticsServiceImpl`
 **Relaciona**: ADR-022 (clinicId foundation), ADR-024 (enforcement `@TenantId` + `TenantContext`), ADR-015 (analytics scope-aware), ADR-020 (Virtual Threads), ADR-003 (imutabilidade)
 **Pré-requisito**: ADR-022 implementado + **ADR-024 implementada** (`TenantContext` + `@TenantId`)
+
+---
+
+> # 🎯 NÃO IMPLEMENTAR ESTA ADR — substituída pela [ADR-029](ADR-029-scheduling-agenda-evaluator-deal-snapshot.md)
+>
+> O gatilho de fechamento → módulo downstream foi **fechado de forma diferente** na ADR-029 e é
+> esse o contrato vigente. O que mudou:
+>
+> | Dimensão | ADR-023 (esta — **morta**) | ADR-029 (vigente) |
+> |---|---|---|
+> | Evento | `TicketWonEvent` | **`DealWonEvent`** |
+> | Publicado em | `LeadTicketServiceImpl.updateStatus` (WIN) | **`DealServiceImpl.closeDeal`** |
+> | Mecanismo | `@Async` + `AFTER_COMMIT` | **síncrono, mesma transação (fail-fast)** |
+> | Consumidores | `FinancialEventListener` + `ClinicalEventListener` (módulos Financeiro/Consultas) | **`AppointmentEventListener`** (módulo `appointment`) |
+> | `TenantContext.set/clear` no listener | obrigatório (thread async) | **dispensável** (síncrono, tenant já no contexto) |
+>
+> Os módulos "Financeiro" e "Consultas" que esta ADR pressupõe **não foram criados** — o pedaço de
+> pagamento virou a [ADR-031](ADR-031-commercial-deal-payment-status.md) (`Deal.paymentStatus`, sem
+> evento), e a agenda virou o módulo `appointment` (ADR-029). Se um dia um módulo financeiro real
+> exigir entrega assíncrona pós-commit, **abrir uma ADR nova** — o padrão async + `TenantContext`
+> descrito abaixo continua sendo a referência técnica correta para esse caso, mas o contrato
+> `TicketWonEvent` em si está descontinuado.
+>
+> 📜 Tudo abaixo é **histórico** — preservado pelo raciocínio de design (event-carried state transfer,
+> AFTER_COMMIT, executor dedicado), não como instrução de implementação.
 
 ---
 

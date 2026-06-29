@@ -3,7 +3,7 @@
 **Status**: Implementado — 2026-06-27
 **Data**: 2026-06-24
 **Autores**: Arquiteto-Agent
-**Impacto**: módulo `catalog` (`ProcedureService`, novo `ProcedureProvider`, novo `ProcedureView`), `commercial` (`DealServiceImpl`), `scheduling` (futuro, ADR-023)
+**Impacto**: módulo `catalog` (`ProcedureService`, novo `ProcedureProvider`, novo `ProcedureView`), `commercial` (`DealServiceImpl`), `appointment` (ADR-029)
 **Revisa**: ADR-026 (substitui a prescrição `List<Procedure> resolveActiveByIds`); aplica ADR-002 (ISP), ADR-001 (search/lookup pattern), ADR-013 (Specifications)
 
 ---
@@ -54,11 +54,11 @@ public record ProcedureView(
     String name,
     String code,
     BigDecimal defaultPrice,    // vira tableValue no snapshot do Deal
-    Integer estimatedDuration   // consumido pelo scheduling (ADR-023)
+    Integer estimatedDuration   // consumido pelo appointment (ADR-029)
 ) {}
 ```
 
-- `ProcedureView` cobre `commercial` (id, name, code, defaultPrice) **e** `scheduling` (id, estimatedDuration) num único tipo.
+- `ProcedureView` cobre `commercial` (id, name, code, defaultPrice) **e** `appointment` (id, estimatedDuration) num único tipo.
 - **`active` é omitido de propósito.** O contrato já garante por fail-fast que todo `ProcedureView` retornado é ativo. Omitir o campo faz o *tipo* comunicar a invariante e remove qualquer `active` para o `commercial` checar — é o que mata a validação invertida das linhas 109-111 do `DealServiceImpl`.
 - **Nome:** `View` (não `Snapshot` — reservado ao `DealProcedure` histórico; nem `...DTO` — sufixo da superfície REST). Três superfícies distintas e nomeadas: `ProcedureResponseDTO` (REST), `ProcedureView` (cross-módulo), `DealProcedure` (snapshot congelado).
 
@@ -81,7 +81,7 @@ Page<ProcedureResponseDTO> search(String name, String code, Pageable pageable);
 | Caminho | Quem chama | Retorna | Interface | Propósito |
 |---|---|---|---|---|
 | `search(name, code, pageable)` | `ProcedureController` (humano escolhe) | `Page<ProcedureResponseDTO>` | `ProcedureService` | mostrar candidatos ao avaliador |
-| `resolveActiveByIds(ids)` | `commercial` / `scheduling` (máquina resolve) | `List<ProcedureView>` | `ProcedureProvider` | montar o snapshot do Deal / slots de agenda |
+| `resolveActiveByIds(ids)` | `commercial` / `appointment` (máquina resolve) | `List<ProcedureView>` | `ProcedureProvider` | montar o snapshot do Deal / slots de agenda |
 
 `search` **alimenta** `resolveActiveByIds` (o humano busca por texto → seleciona ids → a máquina resolve), mas são superfícies, tipos e interfaces distintos.
 
@@ -99,7 +99,7 @@ Page<ProcedureResponseDTO> search(String name, String code, Pageable pageable);
 | Complexidade | ✅ um arquivo | ⚠️ um arquivo a mais (mesma impl) | Médio |
 | Over-engineering | — | ⚠️ só seria risco se o 2º consumidor fosse especulativo | Médio |
 
-O risco de over-engineering **não se aplica**: diferente do `CustomerService` da ADR-002 (cujos métodos não tinham nenhum consumidor externo), aqui o segundo consumidor — `scheduling` — já está nomeado na ADR-023. Dois consumidores reais = contrato real.
+O risco de over-engineering **não se aplica**: diferente do `CustomerService` da ADR-002 (cujos métodos não tinham nenhum consumidor externo), aqui o segundo consumidor — `appointment` — já está nomeado na ADR-029. Dois consumidores reais = contrato real.
 
 ### (B) Entidade vs. read-model
 
@@ -110,17 +110,17 @@ O risco de over-engineering **não se aplica**: diferente do `CustomerService` d
 | Dependency Inversion | ⚠️ depende de concreção | ✅ depende de abstração estável | Alto |
 | Esforço | ✅ zero | ⚠️ um mapeamento de 5 campos no `catalog` | Baixo |
 
-🎯 **Recomendado e decidido:** duas interfaces (`ProcedureService` + `ProcedureProvider`), retorno `List<ProcedureView>`, e `search()` paginado no lugar de `findByName`. O custo é um arquivo de interface + um record + um mapeamento trivial; o ganho — fronteira de módulo defendida por tipo, sem vazamento de JPA e contrato de busca consistente com a ADR-001 — é estrutural e permanente, considerando que `scheduling` reusará a mesma porta.
+🎯 **Recomendado e decidido:** duas interfaces (`ProcedureService` + `ProcedureProvider`), retorno `List<ProcedureView>`, e `search()` paginado no lugar de `findByName`. O custo é um arquivo de interface + um record + um mapeamento trivial; o ganho — fronteira de módulo defendida por tipo, sem vazamento de JPA e contrato de busca consistente com a ADR-001 — é estrutural e permanente, considerando que `appointment` reusará a mesma porta.
 
 ---
 
 ## Consequências positivas
 
 - A regra "o que é um `Procedure` utilizável" vive só no `catalog`; `commercial` deleta a validação de `active` (linhas 109-111).
-- `commercial`/`scheduling` dependem de uma porta de 1 método, não da entidade JPA nem do CRUD — ISP e Dependency Inversion preservados por tipo.
+- `commercial`/`appointment` dependem de uma porta de 1 método, não da entidade JPA nem do CRUD — ISP e Dependency Inversion preservados por tipo.
 - Busca por texto parcial habilita o fluxo real do avaliador (candidatos → seleção por id).
 - Contrato de busca consistente com toda a API (ADR-001); filtros combináveis via Specification (ADR-013).
-- `ProcedureView` é reaproveitado pelo `scheduling` sem novo contrato.
+- `ProcedureView` é reaproveitado pelo `appointment` sem novo contrato.
 
 ## Consequências negativas / riscos
 
@@ -134,7 +134,7 @@ O risco de over-engineering **não se aplica**: diferente do `CustomerService` d
 
 ## Alternativas consideradas
 
-- **Uma interface só (`ProcedureService` com `resolveActiveByIds`)**: funciona e é YAGNI defensável, mas descartada porque o segundo consumidor (`scheduling`) já é certo, não eventual — o split paga por si.
+- **Uma interface só (`ProcedureService` com `resolveActiveByIds`)**: funciona e é YAGNI defensável, mas descartada porque o segundo consumidor (`appointment`) já é certo, não eventual — o split paga por si.
 - **Devolver a entidade `Procedure`** (como a ADR-026 escreveu): descartada — vaza JPA/domínio do `catalog` para o `commercial`, anulando a própria fronteira que a ADR-026 defende.
 - **Manter `findByName` com `Optional`/404/match exato**: descartada — viola a ADR-001 (`name` é filtro, não identificador) e inviabiliza a busca por candidatos.
 - **`search` retornando `List` em vez de `Page`**: descartada por ora — a ADR-026 pede paginação; reavaliar só se a UI virar autocomplete simples.
@@ -160,5 +160,5 @@ O risco de over-engineering **não se aplica**: diferente do `CustomerService` d
 - ADR-002 — Interface expõe apenas o contrato do consumidor (ISP aplicado ao split)
 - ADR-001 — Padrão de busca/lookup (`name`/`code` como filtros → `search`)
 - ADR-013 — Specifications para listagens (busca combinável `name`/`code`/`active`)
-- ADR-023 — TicketWonEvent / agendamento (consumidor futuro de `ProcedureProvider` via `estimatedDuration`)
+- ADR-029 — módulo `appointment` (consumidor de `ProcedureProvider` via `estimatedDuration`)
 - ADR-024 — `@TenantId` (o `@TenantId` exclui ids de outro tenant do SELECT no fail-fast)

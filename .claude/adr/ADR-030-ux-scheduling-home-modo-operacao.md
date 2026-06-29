@@ -3,7 +3,7 @@
 **Status:** Proposto (decisões de UX aceitas; pendente implementação)
 **Data:** 2026-06-27
 **Autoria:** Carla (UI/UX Agent) + Robson
-**Relaciona:** ADR-029 (módulo `scheduling`), ADR-023 (TicketWonEvent — promovido ao MVP)
+**Relaciona:** ADR-029 (módulo `appointment`), ADR-031 (`Deal.paymentStatus` — feed §4 "Pagamentos pendentes"). ⚠️ ADR-023 (TicketWonEvent) foi **substituída pela ADR-029** — o gatilho real é o `DealWonEvent` síncrono, não o evento async da 023
 **Natureza:** decisão de UX/produto com **impactos no backend** (ver seção 6). Esta é a master; cópia espelhada no frontend em `B:\projects\odontocore.crm.frontend\docs\adr-frontend-002-scheduling-home-modo-operacao.md` — manter as duas em sincronia.
 
 > ⚠️ **Não presumir o formato do backend.** Onde há dependência de dado novo ou endpoint que talvez não exista, está marcado **[IMPACTO BACKEND]**. Confirmar contra os fontes antes de implementar; se o contrato não existir, alinhar back/front.
@@ -120,6 +120,12 @@ Calculado / feedback:
 **A11y:** labels visíveis; foco inicial no campo de data; `Esc` fecha (confirma se houver edição).
 
 ## 6. Necessidades de dados / impactos no backend  ⚠️ NÃO PRESUMIR
+
+> ✅ **Atualização (2026-06-28):** os 10 `[IMPACTO BACKEND]` abaixo foram **fechados na ADR-029**
+> (contratos REST do `AppointmentController`, worklist com nomes via snapshot, batch `schedule-batch`,
+> RBAC `Resource.APPOINTMENT`). O item #9 (status de pagamento) virou a **ADR-031** (`Deal.paymentStatus`);
+> o #10 (perfil solo) é Travamento D da ADR-029 (atributo no onboarding). A tabela permanece como
+> registro da origem das necessidades — o contrato vigente está na ADR-029, não aqui.
 
 | # | Necessidade do frontend | Provável estado no backend | Ação |
 |---|---|---|---|

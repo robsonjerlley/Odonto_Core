@@ -1,10 +1,37 @@
-# ADR-029: Módulo `scheduling` — Agenda do Evaluator a partir do Deal fechado
+# ADR-029: Módulo `appointment` — Agenda do Evaluator a partir do Deal fechado
 
 **Status**: **Aceito** (2026-06-27) — decisões + formalização FECHADAS (Q1/Q2/Q3 + Travamentos A–D + contrato `DealWonEvent` + REST `AppointmentController`). Migration **não se aplica** (projeto roda local, `ddl-auto=update`; tabela nasce do entity — Flyway só no 1º deploy). Pronta para implementação.
 **Data**: 2026-06-27
 **Autores**: Arquiteto-Agent + Robson
-**Impacto**: novo módulo `scheduling`; `commercial` (publica `DealWonEvent` no `closeDeal`); reuso de `catalog` (`ProcedureProvider`), `identity` (role `Evaluator`)
-**Relaciona**: ADR-023 (TicketWonEvent — fica como hook futuro, NÃO no MVP), ADR-026/028 (catálogo + read-model pattern), ADR-024 (`@TenantId`), ADR-003 (imutabilidade/trilha), ADR-002 (interface vs impl)
+**Impacto**: novo módulo `appointment`; `commercial` (publica `DealWonEvent` no `closeDeal`); reuso de `catalog` (`ProcedureProvider`), `identity` (role `Evaluator`)
+**Relaciona**: ADR-023 (TicketWonEvent — **substituída por esta ADR**; o gatilho vigente é o `DealWonEvent` síncrono), ADR-026/028 (catálogo + read-model pattern), ADR-024 (`@TenantId`), ADR-031 (`Deal.paymentStatus` — consumido no feed, não definido aqui), ADR-003 (imutabilidade/trilha), ADR-002 (interface vs impl)
+
+---
+
+> # 🎯 Direcionamento de Implementação — leia isto para codar
+>
+> Módulo **`appointment`** (`modules/appointment`) — agenda do Evaluator. Decisões abaixo estão **fechadas**; o histórico de como se chegou nelas está no rodapé (📜). Esta ADR **substitui a ADR-023** quanto ao gatilho de fechamento.
+>
+> **Modelo (essencial):**
+> - Tabela `appointments` é **PROCEDURE-only**. `EVALUATION` é projeção de leitura do ticket (`funnel`) — **não vira linha**.
+> - 1 `Appointment` = 1 slot (1 data/hora). `DealProcedure.quantity = N` → **N appointments** (`session_index 1..N`, `planned_sessions = N`).
+> - Estados: `AWAITING_SCHEDULE → SCHEDULED → DONE | CANCELLED`. **Remarcar = update de `scheduled_at`** (não cria registro novo).
+> - `evaluator_id` imutável (= `deal.createdBy`); `assigned_to` mutável (default = `evaluator_id`).
+> - Snapshot no WIN: `customer_name`, `procedure_name`, `estimated_min` (nullable).
+>
+> **Gatilho (NÃO é a ADR-023):** `DealWonEvent` publicado em `DealServiceImpl.closeDeal`, **síncrono / mesma transação**, consumido por `AppointmentEventListener` (`@EventListener` — NÃO `@Async`, NÃO `AFTER_COMMIT`). Throw → **rollback do `closeDeal`** (fail-fast). Tenant já está no contexto → **sem** `TenantContext.set`.
+>
+> **Checklist:**
+> 1. `core/events/DealWonEvent.java` — record (conferir contrato na seção "Modelo de dados").
+> 2. `appointment/domain/model/Appointment.java` — `@Entity` + `@TenantId`, `@Table(name="appointments", schema="crm_db", indexes={status; (assignedTo, scheduledAt)})`. Tabela nasce do entity (`ddl-auto=update`) — **sem migration** (ADR-027).
+> 3. `appointment/repository/AppointmentRepository.java` + Specifications scope-aware (ADR-013).
+> 4. `appointment/event/AppointmentEventListener.java` — síncrono; cria N appointments `AWAITING_SCHEDULE`.
+> 5. `commercial/DealServiceImpl.closeDeal` — publica `DealWonEvent` (resolve `customerName` via `CustomerProvider`; `estimatedDuration` via `ProcedureProvider.resolveActiveByIds`).
+> 6. `funnel/provider/CustomerProvider` + `CustomerView` — read-boundary do nome do paciente (padrão ADR-028).
+> 7. `AppointmentService`/`Impl` + `AppointmentController` (REST na seção "Contratos REST") + DTOs.
+> 8. RBAC: `Resource.APPOINTMENT` (novo valor no enum) + seed `PermissionRule` (tabela na seção RBAC).
+>
+> **Fronteira:** `appointment` só CONSOME — não injeta `DealRepository`/`ProcedureRepository`, **nunca importa `funnel`**. ⚠️ `Deal` **não tem `@TenantId`** — verificar isolamento antes de montar o evento.
 
 ---
 
@@ -30,15 +57,15 @@ Proposta do dono do produto: contexto enxuto — pegar os procedimentos do Deal 
 ## Decisões de fronteira / arquitetura (📐)
 
 ### Fronteira de módulo (read-boundary, padrão ADR-028)
-`scheduling` **não** injeta `DealRepository` nem `ProcedureRepository`.
+`appointment` **não** injeta `DealRepository` nem `ProcedureRepository`.
 
 ```
-scheduling ◀──── commercial   (DealWonEvent — push, event-carried state transfer; ver "Modelo de dados")
-scheduling ──▶ catalog        (ProcedureProvider — estimatedDuration; já existe)
-scheduling ──▶ identity       (role Evaluator)
+appointment ◀──── commercial   (DealWonEvent — push, event-carried state transfer; ver "Modelo de dados")
+appointment ──▶ catalog        (ProcedureProvider — estimatedDuration; já existe)
+appointment ──▶ identity       (role Evaluator)
 ```
 
-Dependência unidirecional. A fonte dos procedimentos agendáveis é o **`DealWonEvent`** (push síncrono), não um read-pull — o `scheduling` recebe o estado completo no evento e não chama de volta o `commercial`. **Não há `DealProvider`/`WonDealView` de procedimentos** (ver decisão abaixo).
+Dependência unidirecional. A fonte dos procedimentos agendáveis é o **`DealWonEvent`** (push síncrono), não um read-pull — o `appointment` recebe o estado completo no evento e não chama de volta o `commercial`. **Não há `DealProvider`/`WonDealView` de procedimentos** (ver decisão abaixo).
 
 > 🔻 O único read do `commercial` que sobrevive é o `Deal.paymentStatus` consumido pela Home "Pagamentos pendentes" (Travamento B) — **escopo da ADR-031**, não desta ADR, e não toca o agregado `Appointment`.
 
@@ -46,7 +73,7 @@ Dependência unidirecional. A fonte dos procedimentos agendáveis é o **`DealWo
 > **Esta seção foi revertida.** A decisão fechada na mesma sessão (ver "Modelo de dados" e "Modelo consolidado") é **PUSH via `DealWonEvent`** síncrono, in-process, na **mesma transação** do `closeDeal` (fail-fast). Promove a ADR-023 ao MVP. O texto abaixo fica só como registro histórico do que foi considerado e descartado.
 
 ~~O fluxo descrito é **pull**: o usuário abre a agenda, escolhe os procedimentos do deal won e marca. Não exige o `TicketWonEvent`.~~
-- ~~**MVP**: `scheduling` lê won-deals via `DealProvider` sob demanda.~~
+- ~~**MVP**: `appointment` lê won-deals via `DealProvider` sob demanda.~~
 - ~~**Futuro**: `TicketWonEvent` (ADR-023) vira hook para comportamento proativo.~~
 
 **Por que o push venceu:** o agendamento precisa que as N sessões já existam como `AWAITING_SCHEDULE` no instante do WIN (worklist "A agendar"), e o evento carrega o estado completo — elimina o read-pull e a necessidade de um `DealProvider` de procedimentos. ADR-023 deixa de ser "futuro" e entra no MVP.
@@ -104,7 +131,7 @@ updated_at      : TIMESTAMP     NOT NULL
 - `PROCEDURE` nasce no **WIN do Deal**, via `DealWonEvent` (in-process, síncrono, **mesma transação** do `closeDeal` — fail-fast). Promove a ADR-023 ao MVP. `DealProcedure.quantity = N` → N appointments em `AWAITING_SCHEDULE`.
 - `EVALUATION` **não é linha persistida** — é **projeção de leitura** do ticket (`funnel`): para o Evaluator, o `ticketStatus` agendado **já é** o agendamento. A agenda consome o ticket; a tabela `appointments` é **PROCEDURE-only**.
 
-**Contrato `DealWonEvent` (event-carried state transfer — evento sai completo, `scheduling` não faz callback):**
+**Contrato `DealWonEvent` (event-carried state transfer — evento sai completo, `appointment` não faz callback):**
 ```java
 // core/events/DealWonEvent.java
 public record DealWonEvent(
@@ -127,7 +154,7 @@ public record DealWonEvent(
 ```java
 applicationEventPublisher.publishEvent(/* DealWonEvent montado com customerName + durations */);
 ```
-**Consumo** — `AppointmentEventListener` no `scheduling`, `@EventListener` **síncrono** (NÃO `@Async`, NÃO `AFTER_COMMIT`): cria `quantity` appointments `AWAITING_SCHEDULE` por procedimento (`session_index = 1..N`, `planned_sessions = N`), na **mesma transação**; throw → **rollback do `closeDeal`** (fail-fast). O `scheduling` **nunca importa `funnel`** — só consome o evento.
+**Consumo** — `AppointmentEventListener` no `appointment`, `@EventListener` **síncrono** (NÃO `@Async`, NÃO `AFTER_COMMIT`): cria `quantity` appointments `AWAITING_SCHEDULE` por procedimento (`session_index = 1..N`, `planned_sessions = N`), na **mesma transação**; throw → **rollback do `closeDeal`** (fail-fast). O `appointment` **nunca importa `funnel`** — só consome o evento.
 
 > 📐 Por ser síncrono na thread/transação do request, o `TenantContext` já está setado — o `@TenantId` preenche o `clinicId` dos appointments sozinho, **sem** o `TenantContext.set/clear` que a ADR-023 exige nos seus listeners `@Async` pós-commit.
 
@@ -148,7 +175,7 @@ AWAITING_SCHEDULE ──schedule(data/hora)──▶ SCHEDULED ──concluir─
 modules/
   core/events/
     DealWonEvent.java           ← NOVO: contrato do evento (record, transporte-agnóstico)
-  scheduling/                 ← novo módulo
+  appointment/                 ← novo módulo
     domain/model/Appointment.java          (@TenantId)
     repository/AppointmentRepository.java  + Specifications (ADR-013)
     service/AppointmentService.java        (interface — ADR-002)
@@ -208,11 +235,11 @@ AppointmentResponseDTO(
 | `USER_ATTENDANT` | READ, UPDATE | `GLOBAL` (recepção; tenant-bound pelo `@TenantId`) |
 | `ADM_SYSTEM` | READ, UPDATE | `GLOBAL` |
 
-> **Fora do escopo do `scheduling`:** o feed de pagamentos (ADR-030 #9) é da Home/financeiro (→ ADR-031) — não expõe endpoint aqui. O atributo de perfil "solo/equipe" (ADR-030 #10) é do onboarding da clínica (Travamento D), não do `scheduling`.
+> **Fora do escopo do `appointment`:** o feed de pagamentos (ADR-030 #9) é da Home/financeiro (→ ADR-031) — não expõe endpoint aqui. O atributo de perfil "solo/equipe" (ADR-030 #10) é do onboarding da clínica (Travamento D), não do `appointment`.
 
 ## Modelo consolidado (fechamento da sessão 2026-06-27)
 
-Princípio: **`scheduling` é uma agenda que só CONSOME dos outros módulos.** Não cria conceito novo, não escreve fora do seu agregado.
+Princípio: **`appointment` é uma agenda que só CONSOME dos outros módulos.** Não cria conceito novo, não escreve fora do seu agregado.
 
 - **Dono da agenda = o profissional (Evaluator/executor), não o Deal nem o Customer.** Ciclo do appointment é **independente do Deal**: falta/desmarque não toca o Deal. Mudança de Deal (compra parcelada, abandono, cancelamento) é `commercial`/financeiro — fora daqui.
 - **Duas fontes, uma view unificada:**
@@ -222,14 +249,20 @@ Princípio: **`scheduling` é uma agenda que só CONSOME dos outros módulos.** 
 - **RBAC** (roles reais): `USER_EVALUATOR` = própria agenda; `ADM_EVALUATOR` = setor EVALUATOR; `USER_ATTENDANT` = recepção marca/remarca; `ADM_SYSTEM` = global.
 - **Travamentos A–D**: todos resolvidos (A snapshot via `DealWonEvent`; B → ADR-031; C batch; D perfil no onboarding).
 
-## Próximo passo (retomar aqui)
+---
+
+## 📜 Histórico de Decisão
+
+> Tudo abaixo é **registro** de como as decisões foram fechadas (checklist de fechamento + Travamentos A–D, todos resolvidos) e o caminho pull-vs-push considerado e descartado. Para **implementar**, use o bloco 🎯 do topo + as seções "Modelo de dados" e "Contratos REST". **Não há ação pendente aqui.**
+
+### Fechamento (checklist original — tudo ✅)
 1. ~~Responder Q1, Q2, Q3~~ ✅ — fechadas acima.
 2. ~~Modelo de dados + máquina de estados~~ ✅ — fechados acima (remarcar = update).
 3. ~~Resolver os Travamentos A–D~~ ✅ **todos resolvidos** (ver seção Travamentos).
-4. ~~Definir o contrato do **`DealWonEvent`**~~ ✅ — fechado (ver "Contrato `DealWonEvent`"). Publisher no `commercial.closeDeal` + `@EventListener` síncrono no `scheduling`.
+4. ~~Definir o contrato do **`DealWonEvent`**~~ ✅ — fechado (ver "Contrato `DealWonEvent`"). Publisher no `commercial.closeDeal` + `@EventListener` síncrono no `appointment`.
 5. ~~Contrato REST do `AppointmentController`~~ ✅ — fechado (ver "Contratos REST — FECHADO"). Tudo `UPDATE`, scope por papel; `Resource.APPOINTMENT` novo no enum.
 6. ~~Migration Flyway `V[n]__create_appointments.sql`~~ ❌ **não se aplica agora.** O projeto **não está em deploy — roda local**, com `ddl-auto=update` (Flyway desabilitado em local; `application-local.properties:7`). A tabela `appointments` **nasce do `@Entity Appointment`** (`@Table(name="appointments", schema="crm_db")` + `@TenantId clinicId`), igual a `deals`/`lead_tickets` — não há migration de tabela no projeto. **Índices dos hot paths** (`status`; `assigned_to, scheduled_at`) declarados via `@Table(indexes=…)` no entity, criados pelo `ddl-auto`. **Flyway fica para o primeiro deploy:** quando o schema estabilizar, migra-se tudo de uma vez para Flyway-owned DDL + `ddl-auto=validate` (dívida já registrada em `application-prod.properties:15`). ← **próximo: implementar o entity + módulo, não SQL**
-7. ~~Promover esta ADR de RASCUNHO → Aceito.~~ ✅ **Aceito em 2026-06-27.** Próximo trabalho = implementação (entity + módulo `scheduling`, `DealWonEvent`, `CustomerProvider`, RBAC seed).
+7. ~~Promover esta ADR de RASCUNHO → Aceito.~~ ✅ **Aceito em 2026-06-27.** Próximo trabalho = implementação (entity + módulo `appointment`, `DealWonEvent`, `CustomerProvider`, RBAC seed).
 
 ## Travamentos (⚠️ decisões que bloqueiam fechar os contratos REST)
 
@@ -245,13 +278,13 @@ Princípio: **`scheduling` é uma agenda que só CONSOME dos outros módulos.** 
 
 **Decisão (a) — snapshot no WIN, via `DealWonEvent` completo:** denormaliza `customer_name` e `procedure_name` no `Appointment`, congelados no `closeDeal`. Mantém `customer_id`/`procedure_id` como ponteiro p/ deep-link ao cadastro canônico.
 - ✅ Worklist/agenda (hot path da Home) = query single-table, sem N joins nem chamadas a provider por linha.
-- ✅ `scheduling` autônomo no read; acoplamento cross-módulo só no write (1x, no WIN). `scheduling` nunca importa `funnel`.
+- ✅ `appointment` autônomo no read; acoplamento cross-módulo só no write (1x, no WIN). `appointment` nunca importa `funnel`.
 - ✅ Consistente com ADR-003 e com o snapshot que `commercial` já faz.
 - ⚠️ Rename de paciente não propaga a appointments já criados. Aceito: raro; `customer_id` permite deep-link ao canônico. (b) "resolver no read" só se justificaria se "nome sempre canônico na agenda" fosse requisito duro — não é.
 
 **Como o `commercial` obtém o `customerName` (sub-decisão de fronteira):**
 - O nome é **read novo** → fazer **limpo**: novo `CustomerProvider` read-only no `funnel` (padrão ADR-028). Barato (1 interface + impl) e **não** adiciona dívida. Injetar `CustomerRepository` direto foi descartado: aumentaria a superfície suja.
-- 🔻 **DÍVIDA REGISTRADA (não refatorar agora):** o `commercial` já acopla o `funnel` por **write-coupling** — `DealServiceImpl.create`/`closeDeal` mutam o `LeadTicket` e o `RecycleJob` faz `new LeadTicket()` (cria agregado do funnel). Isso fura a ADR-028, mas é **write**, não read, e **não tem relação com scheduling**. Refatorar (inverter p/ eventos/comandos donos no funnel) é pesado e off-scope desta feature. Fica como débito técnico separado.
+- 🔻 **DÍVIDA REGISTRADA (não refatorar agora):** o `commercial` já acopla o `funnel` por **write-coupling** — `DealServiceImpl.create`/`closeDeal` mutam o `LeadTicket` e o `RecycleJob` faz `new LeadTicket()` (cria agregado do funnel). Isso fura a ADR-028, mas é **write**, não read, e **não tem relação com appointment**. Refatorar (inverter p/ eventos/comandos donos no funnel) é pesado e off-scope desta feature. Fica como débito técnico separado.
 
 ### Travamento B — Status de pagamento no feed ✅ RESOLVIDO (2026-06-27)
 **Fora do escopo:** agendamento não tem nada a ver com financeiro/commercial. A tabela `appointments` não ganha campo de pagamento; o feed "Pagamentos pendentes" (ADR-030 §4) é da Home e a decisão do `paymentStatus` mora no `commercial` → **ver ADR-031.**

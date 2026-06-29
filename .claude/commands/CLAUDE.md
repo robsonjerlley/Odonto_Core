@@ -85,8 +85,10 @@ modules/
   funnel/            → clientes, tickets, histórico de contato  → crm_db
   catalog/           → catálogo de procedimentos por clínica  → crm_db  (ADR-026)
   commercial/        → deals, negociação, configs do gestor  → crm_db  (depende de catalog)
+  appointment/       → agenda do Evaluator; consome DealWonEvent (commercial) + catalog  → crm_db  (ADR-029, em implementação)
   analytics/         → métricas read-only cross-db  → lê os dois bancos
 ```
+> ⚠️ O módulo da agenda chama-se **`appointment`** (nome do agregado). As ADRs 029/030 e arquivos com "scheduling" no nome referem-se a este módulo — "scheduling" é a capability, `appointment` é o pacote.
 
 ---
 
@@ -270,14 +272,14 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [001](../adr/ADR-001-api-search-lookup-pattern.md) | API search/lookup pattern (`{uniqueKey}` vs `?filtro`) | Aceito |
 | [002](../adr/ADR-002-interface-vs-impl-encapsulamento.md) | Interface vs Impl — encapsulamento de service | Aceito |
 | [003](../adr/ADR-003-contactlog-imutabilidade-delete-proibido.md) | ContactLog imutável — DELETE proibido | Aceito |
-| [004](../adr/ADR-004-rbac-padrao-checkorThrow-funnel.md) | RBAC — padrão `checkOrThrow` no funnel | Aceito |
+| [004](../adr/ADR-004-rbac-padrao-checkorThrow-funnel.md) | RBAC — padrão `checkOrThrow` no funnel | Aceito (Padrão 3 SEARCH → revisado pela ADR-012) |
 | [005](../adr/ADR-005-refresh-token-single-token-strategy.md) | Refresh token — single-token strategy (JWT) | Aceito |
 | [006](../adr/ADR-006-customer-anonimizacao-lgpd-delete-ticket-removido.md) | Customer — anonimização LGPD, delete de ticket removido | Aceito |
 | [007](../adr/ADR-007-config-get-endpoints-recycle-global-bonus-result-dto.md) | Config GET endpoints — recycle global + bonus Result DTO | Aceito |
 | [008](../adr/ADR-008-payment-method-enum-conversion-factor.md) | PaymentMethod enum — conversionFactor | Aceito |
 | [009](../adr/ADR-009-timezone-jvm-brasilia.md) | Timezone JVM — Brasília | Aceito |
 | [011](../adr/ADR-011-intake-scope-cross-sector-acesso.md) | Intake scope — acesso cross-sector | Aceito |
-| [012](../adr/ADR-012-rbac-fase3-padrao-list-vs-single-resource.md) | RBAC fase 3 — padrão list vs single resource | Aceito |
+| [012](../adr/ADR-012-rbac-fase3-padrao-list-vs-single-resource.md) | RBAC fase 3 — padrão list vs single resource | Aceito (Padrão B list/filtro → substituído pela ADR-013) |
 | [013](../adr/ADR-013-jpa-specifications-listagens-scope-aware.md) | JPA Specifications — listagens scope-aware | Aceito |
 | [014](../adr/ADR-014-ferramenta-de-migracao-flyway.md) | Ferramenta de migração — Flyway | Implementado |
 | [015](../adr/ADR-015-analytics-scope-aware-queries.md) | Analytics — scope-aware queries | Aceito |
@@ -288,14 +290,14 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [020](../adr/ADR-020-virtual-threads-tomcat-executor.md) | Virtual Threads — Tomcat executor | Aceito |
 | [021](../adr/ADR-021-ads-investment-overlap-query.md) | AdsInvestment — overlap query (ROI) | Implementado |
 | [022](../adr/ADR-022-multitenant-clinicid-foundation.md) | Multi-tenancy foundation — `clinicId` em User + JWT | Aceito (enforcement → ADR-024) |
-| [023](../adr/ADR-023-ticket-won-event-contract.md) | TicketWonEvent — contrato do evento de fechamento | Aceito |
+| [023](../adr/ADR-023-ticket-won-event-contract.md) | ~~TicketWonEvent — contrato do evento de fechamento~~ | **Substituída pela ADR-029** (gatilho real = `DealWonEvent` síncrono) |
 | [024](../adr/ADR-024-tenant-isolation-enforcement-tenantid.md) | Tenant isolation enforcement — `@TenantId` + `TenantContext` | Implementado |
 | [025](../adr/ADR-025-rls-postgresql-defense-in-depth.md) | Row Level Security (PostgreSQL) — defesa em profundidade | Proposto (futuro) |
 | [026](../adr/ADR-026-procedure-catalog-deal-snapshot.md) | Catálogo de Procedimentos (`Procedure`) + snapshot em `DealProcedure` | Implementado |
 | [027](../adr/ADR-027-boot-fixes-schema-flyway-tenant-sentinel.md) | Correções de boot — schema, Flyway (PG18), sentinela de tenant, seed admin | Implementado |
 | [028](../adr/ADR-028-catalog-read-boundary-provider-search.md) | Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model `ProcedureView`) + `search()` unificado (revisa 026) | Implementado |
-| [029](../adr/ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) | Módulo `scheduling` — agenda do Evaluator a partir do Deal fechado (`DealWonEvent` síncrono no `closeDeal`, fail-fast) | Aceito (pronta p/ implementação) |
-| [030](../adr/ADR-030-ux-scheduling-home-modo-operacao.md) | UX scheduling — Home "Modo Operação" + Sheet "Agendar" | Proposto (UX aceita; pendente implementação) |
+| [029](../adr/ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) | Módulo `appointment` — agenda do Evaluator a partir do Deal fechado (`DealWonEvent` síncrono no `closeDeal`, fail-fast) | Aceito (pronta p/ implementação) |
+| [030](../adr/ADR-030-ux-scheduling-home-modo-operacao.md) | UX da agenda (`appointment`) — Home "Modo Operação" + Sheet "Agendar" | Proposto (UX aceita; pendente implementação) |
 | [031](../adr/ADR-031-commercial-deal-payment-status.md) | Commercial — `Deal.paymentStatus` (feed de pagamentos da Home) | Proposto (modelagem fechada; pendente impl) |
 
 > **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, implementado); 024 implementado — `@TenantId` + `TenantContext` — isolamento automático no ORM ativo; 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`). **Boot greenfield (027)**: V1 reescrita para `CREATE SCHEMA` (Hibernate `ddl-auto=update` cria as tabelas); Flyway desabilitado só no local (PG18); `ClinicResolveTenant` usa sentinela `NO_TENANT` fora de request.
@@ -314,11 +316,11 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 
 | Prioridade | Item | Origem | Estado | Pré-requisitos |
 |---|---|---|---|---|
-| 1 | Módulo `scheduling` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Aceito) | ✅ Desenho fechado — pronto p/ implementar (entity `Appointment`, `DealWonEvent`, `CustomerProvider`, RBAC `Resource.APPOINTMENT`) | ADR-026 ✅, ADR-030/031 (UX/pagamento, paralelos) |
+| 1 | Módulo `appointment` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Aceito) | ✅ Desenho fechado — pronto p/ implementar (entity `Appointment`, `DealWonEvent`, `CustomerProvider`, RBAC `Resource.APPOINTMENT`) | ADR-026 ✅, ADR-030/031 (UX/pagamento, paralelos) |
 | 2 | Cache Redis multi-tenant (chave por `clinicId`) | spec-redis-cache | Backlog — desbloqueada | ADR-022/024 ✅ |
 | 3 | Correções de backend sprint 1 | impl-backend-corrections-sprint1 | Backlog | — |
 | 4 | RBAC funnel — Fase 3 (Definition of Done) | security-gaps-funnel-permission | Críticos resolvidos; Fase 3 aberta | — |
-| 5 | US fundacionais / pós-procedimento | us-fundacional, us-pos-procedimento | Backlog | scheduling (item 1) |
+| 5 | US fundacionais / pós-procedimento | us-fundacional, us-pos-procedimento | Backlog | appointment (item 1) |
 | — | Row Level Security (PostgreSQL) — defesa em profundidade | ADR-025 | Proposto — não agendado | ADR-024 ✅ |
 
 ---

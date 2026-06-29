@@ -1,4 +1,4 @@
-# ADR-019: Pacientes anonimizados excluídos da listagem padrão de clientes
+# ADR-018: Pacientes anonimizados excluídos da listagem padrão de clientes
 
 **Status**: Implementado  
 **Data**: 2026-06-15  

@@ -4,7 +4,7 @@
 **Data**: 2026-06-23  
 **Autores**: Arquiteto-Agent  
 **Impacto**: módulo `commercial` (Deal, DealProcedure), novo módulo `catalog` (Procedure), `DealCreateRequestDTO`, `DealUpdateRequestDTO`, `DealServiceImpl`, CLAUDE.md  
-**Relaciona**: ADR-023 (TicketWonEvent — módulo de agendamento depende de `Procedure.estimatedDuration`), ADR-024 (`@TenantId` — `Procedure` é multi-tenant por `clinicId`)
+**Relaciona**: ADR-029 (módulo `appointment` — consome `Procedure.estimatedDuration` via `ProcedureProvider`; substitui a referência original à ADR-023), ADR-024 (`@TenantId` — `Procedure` é multi-tenant por `clinicId`)
 
 ---
 
@@ -25,7 +25,7 @@ public record DealProcedure(
 O avaliador digita nome e valor de cada procedimento manualmente no momento de criar o Deal. Isso gera três problemas concretos:
 
 1. **Inconsistência de dados**: "Clareamento", "clareamento dental" e "CLAREAMENTO A LASER" são tratados como procedimentos distintos em relatórios de receita, impossibilitando agrupamento confiável por tipo.
-2. **Bloqueio para agendamento**: o módulo de agendamento (ADR-023) precisará agendar por *tipo de procedimento* com duração estimada (`estimatedDuration`). Sem um catálogo, não há referência canônica para criar slots de agenda.
+2. **Bloqueio para agendamento**: o módulo `appointment` (ADR-029) precisará agendar por *tipo de procedimento* com duração estimada (`estimatedDuration`). Sem um catálogo, não há referência canônica para criar slots de agenda.
 3. **Sem referência histórica rastreável**: não é possível responder "qual procedimento X foi realizado em quantos pacientes?" — o texto livre não é indexável de forma confiável.
 
 ---
@@ -117,7 +117,7 @@ O `priceOverride` permite que o avaliador negocie um valor diferente do padrão 
 
 > Padrão ADR-001: `GET /api/procedures/{id}` retorna único ou 404. `GET /api/procedures?name=X` retorna lista, pode ser vazia.
 
-### Catálogo — `ProcedureService` (API interna do módulo, consumida por `commercial` / `scheduling`)
+### Catálogo — `ProcedureService` (API interna do módulo, consumida por `commercial` / `appointment`)
 
 Além do CRUD, o `catalog` expõe um método para consumidores que precisam **operar sobre um conjunto** de procedimentos. É por aqui que `commercial` entra — nunca pelo `ProcedureRepository`.
 
@@ -133,7 +133,7 @@ Além do CRUD, o `catalog` expõe um método para consumidores que precisam **op
 List<Procedure> resolveActiveByIds(List<UUID> ids);
 ```
 
-> **Nome domínio-neutro de propósito.** O `catalog` não conhece `Deal`. Nomear o método `getForDeal(...)` vazaria o domínio do `commercial` para dentro do `catalog` — acoplamento na direção errada. `scheduling` (ADR-023) reusa o mesmo `resolveActiveByIds` para montar slots de agenda.
+> **Nome domínio-neutro de propósito.** O `catalog` não conhece `Deal`. Nomear o método `getForDeal(...)` vazaria o domínio do `commercial` para dentro do `catalog` — acoplamento na direção errada. `appointment` (ADR-029) reusa o mesmo `resolveActiveByIds` para montar slots de agenda.
 
 > ⚠️ **Revisado pela ADR-028 (2026-06-24).** Este método foi movido para uma interface dedicada `ProcedureProvider` (ISP — ADR-002) e seu retorno mudou de `List<Procedure>` (entidade JPA) para `List<ProcedureView>` (read-model imutável), evitando o vazamento da persistência do `catalog` para o `commercial`. A mesma ADR-028 troca `findByName` por um `search(name, code, Pageable)` paginado (ADR-001). Ver ADR-028 para o contrato vigente.
 
@@ -231,10 +231,10 @@ modules/
     api/dto/request/ProcedureUpdateRequestDTO.java
     api/dto/response/ProcedureResponseDTO.java
   commercial/                     ← depende de catalog (lê Procedure por ID)
-  scheduling/                     ← também dependerá de catalog (futuro, ADR-023)
+  appointment/                     ← também dependerá de catalog (futuro, ADR-023)
 ```
 
-Dependência unidirecional: `commercial` → `catalog` ← `scheduling`. O catálogo não conhece nenhum dos dois.
+Dependência unidirecional: `commercial` → `catalog` ← `appointment`. O catálogo não conhece nenhum dos dois.
 
 **Regra de acoplamento entre módulos:** a dependência atravessa apenas a **interface pública** `ProcedureService`. Nenhum módulo externo injeta `ProcedureRepository` — a persistência do `catalog` é detalhe interno. Isso preserva Dependency Inversion (ADR-002) e mantém as regras de invariante do `Procedure` (o que é "ativo", como buscar) dentro do próprio módulo.
 
@@ -325,7 +325,7 @@ Dependência unidirecional: `commercial` → `catalog` ← `scheduling`. O catá
 
 ## Referências
 
-- ADR-023 — TicketWonEvent (agendamento precisará de `Procedure.estimatedDuration`)
+- ADR-029 — módulo `appointment` (consome `Procedure.estimatedDuration` via `ProcedureProvider`)
 - ADR-024 — `@TenantId` enforcement (`Procedure` nasce com `@TenantId`)
 - ADR-001 — API search/lookup pattern (aplicado ao `ProcedureController`)
 - ADR-002 — Interface vs Impl (aplicado a `ProcedureService`)
