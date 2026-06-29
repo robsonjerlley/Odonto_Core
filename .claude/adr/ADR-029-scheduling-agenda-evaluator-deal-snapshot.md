@@ -17,7 +17,7 @@
 > - 1 `Appointment` = 1 slot (1 data/hora). `DealProcedure.quantity = N` → **N appointments** (`session_index 1..N`, `planned_sessions = N`).
 > - Estados: `AWAITING_SCHEDULE → SCHEDULED → DONE | CANCELLED`. **Remarcar = update de `scheduled_at`** (não cria registro novo).
 > - `evaluator_id` imutável (= `deal.createdBy`); `assigned_to` mutável (default = `evaluator_id`).
-> - Snapshot no WIN: `customer_name`, `procedure_name`, `estimated_min` (nullable).
+> - Snapshot no WIN: `customer_name`, `procedure_name`. (⚠️ `estimatedDuration` **removido em 2026-06-28** — data/hora basta; sem leitura de catálogo no close.)
 >
 > **Gatilho (NÃO é a ADR-023):** `DealWonEvent` publicado em `DealServiceImpl.closeDeal`, **síncrono / mesma transação**, consumido por `AppointmentEventListener` (`@EventListener` — NÃO `@Async`, NÃO `AFTER_COMMIT`). Throw → **rollback do `closeDeal`** (fail-fast). Tenant já está no contexto → **sem** `TenantContext.set`.
 >
@@ -26,7 +26,7 @@
 > 2. `appointment/domain/model/Appointment.java` — `@Entity` + `@TenantId`, `@Table(name="appointments", schema="crm_db", indexes={status; (assignedTo, scheduledAt)})`. Tabela nasce do entity (`ddl-auto=update`) — **sem migration** (ADR-027).
 > 3. `appointment/repository/AppointmentRepository.java` + Specifications scope-aware (ADR-013).
 > 4. `appointment/event/AppointmentEventListener.java` — síncrono; cria N appointments `AWAITING_SCHEDULE`.
-> 5. `commercial/DealServiceImpl.closeDeal` — publica `DealWonEvent` (resolve `customerName` via `CustomerProvider`; `estimatedDuration` via `ProcedureProvider.resolveActiveByIds`).
+> 5. `commercial/DealServiceImpl.closeDeal` — publica `DealWonEvent` (resolve `customerName` via `CustomerProvider`; `procedures` direto do snapshot `deal.getProcedures()` — **não toca o catálogo**).
 > 6. `funnel/provider/CustomerProvider` + `CustomerView` — read-boundary do nome do paciente (padrão ADR-028).
 > 7. `AppointmentService`/`Impl` + `AppointmentController` (REST na seção "Contratos REST") + DTOs.
 > 8. RBAC: `Resource.APPOINTMENT` (novo valor no enum) + seed `PermissionRule` (tabela na seção RBAC).
@@ -116,7 +116,6 @@ customer_name   : VARCHAR       NOT NULL — snapshot do nome no WIN; deep-link 
 evaluator_id    : UUID          NOT NULL — imutável; quem fechou/avaliou (auditoria)   (Q2)
 assigned_to     : UUID          NOT NULL — executor, MUTÁVEL; default = evaluator_id    (Q2)
 scheduled_at    : TIMESTAMP     nullable — NULL enquanto AWAITING_SCHEDULE; setado no schedule
-estimated_min   : INTEGER       nullable — snapshot de Procedure.estimatedDuration (pode ser NULL)
 status          : VARCHAR       AWAITING_SCHEDULE | SCHEDULED | DONE | CANCELLED
 session_index   : INTEGER       nullable — "X" em "Sessão X de N" (Q3)
 planned_sessions: INTEGER       nullable — "N" de exibição; NÃO é cardinalidade
@@ -143,12 +142,14 @@ public record DealWonEvent(
     List<WonProcedure> procedures
 ) {
     public record WonProcedure(UUID procedureId, String name, String code,
-                               int quantity, Integer estimatedDuration) {}
+                               int quantity) {}   // estimatedDuration removido (2026-06-28)
 }
 ```
 - `evaluatorId = deal.createdBy` — o `Deal` só é criado por **Evaluator** ou **ADM_SYSTEM**, então `createdBy` é sempre o dono natural da agenda (default de `evaluator_id` e `assigned_to`). `closedBy` (commercial — quem fechou o contrato) **não entra**: não tem relação com a execução.
 - `customerName` → lido via **novo `CustomerProvider`** read-only no `funnel` (padrão ADR-028; o nome só existe em `Customer`).
-- `estimatedDuration` por procedimento → resolvido via `ProcedureProvider.resolveActiveByIds(...)` (já injetado no `DealServiceImpl`); procedimento desativado desde a venda → `null` (aceito — `estimated_min` é nullable).
+- `procedures` → montados **direto do snapshot `deal.getProcedures()`** (`procedureId`, `name`, `code`, `quantity`). O `closeDeal` **não chama o catálogo**.
+
+> ⚠️ **Revisão 2026-06-28 — `estimatedDuration` removido.** A versão anterior resolvia `estimatedDuration` no close via `ProcedureProvider.resolveActiveByIds`, mas esse método é fail-fast em inativo (ADR-028) e não conseguia entregar o "desativado → null" que esta ADR pedia — inconsistência interna. Decisão do dono do produto: **agendamento por data/hora basta**; o campo foi removido do `Appointment`, do `DealWonEvent` e do catálogo (ver notas em ADR-026/028). Some o round-trip ao catálogo no close.
 
 **Publicação** — `DealServiceImpl.closeDeal`, dentro do `@Transactional`, após o save do ticket WIN + deal, antes do `return`:
 ```java

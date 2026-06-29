@@ -10,7 +10,6 @@ public record ProcedureResponseDTO(
         String name,
         String code,
         boolean active,
-        Integer estimatedDuration,
         BigDecimal defaultPrice,
         UUID createdBy,
         LocalDateTime createdAt,

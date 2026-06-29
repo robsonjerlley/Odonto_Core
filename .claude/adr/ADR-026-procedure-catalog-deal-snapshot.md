@@ -8,6 +8,8 @@
 
 ---
 
+> ⚠️ **Revisão 2026-06-28 — `estimatedDuration` removido.** O campo `estimated_duration` (entity `Procedure`, `ProcedureView`, DTOs do catálogo) foi **removido**: o módulo `appointment` — seu único consumidor — deixou de usar duração (agendamento por data/hora basta; ver ADR-029). As menções a `estimatedDuration`/`estimated_duration`/slots de agenda abaixo são **históricas**.
+
 ## Contexto
 
 `DealProcedure` é hoje um `record` sem persistência própria, armazenado como JSONB dentro de `Deal`:

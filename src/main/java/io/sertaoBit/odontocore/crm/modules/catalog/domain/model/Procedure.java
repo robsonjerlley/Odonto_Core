@@ -31,7 +31,6 @@ public class Procedure {
     private String code;
     @Column(nullable = false)
     private boolean active;
-    private Integer estimatedDuration;
     @Column(nullable = false)
     private BigDecimal defaultPrice;
     @Column(nullable = false)

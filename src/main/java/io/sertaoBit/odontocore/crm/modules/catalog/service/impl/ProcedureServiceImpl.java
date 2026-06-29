@@ -65,7 +65,6 @@ public class ProcedureServiceImpl implements ProcedureService, ProcedureProvider
                 .name(dto.name())
                 .code(dto.code())
                 .active(true)
-                .estimatedDuration(dto.estimatedDuration())
                 .defaultPrice(dto.defaultPrice())
                 .createdBy(user.getId())
                 .build();
@@ -92,7 +91,6 @@ public class ProcedureServiceImpl implements ProcedureService, ProcedureProvider
         procedure.setName(dto.name());
         procedure.setCode(dto.code());
         procedure.setActive(dto.active());
-        procedure.setEstimatedDuration(dto.estimatedDuration());
         procedure.setDefaultPrice(dto.defaultPrice());
         procedure.setCreatedBy(user.getId());
 

@@ -8,6 +8,8 @@
 
 ---
 
+> ⚠️ **Revisão 2026-06-28:** `estimatedDuration` foi **removido** do `ProcedureView` (e do catálogo) — o `appointment` não consome mais duração (ADR-029). As menções a `estimatedDuration` abaixo são históricas; o `ProcedureView` vigente é `(id, name, code, defaultPrice)`.
+
 ## Contexto
 
 A ADR-026 estruturou o catálogo (`Procedure`) e a fronteira `commercial → catalog`, mas deixou dois pontos do contrato de **leitura** imprecisos. A implementação evidenciou os dois problemas:

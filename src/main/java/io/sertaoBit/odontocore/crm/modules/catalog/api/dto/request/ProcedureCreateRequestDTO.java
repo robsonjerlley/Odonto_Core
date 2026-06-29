@@ -7,9 +7,6 @@ import java.math.BigDecimal;
 public record ProcedureCreateRequestDTO(
         @NotNull String name,
         String code,
-        @NotNull BigDecimal defaultPrice,
-        Integer estimatedDuration
-
-
+        @NotNull BigDecimal defaultPrice
 ) {
 }

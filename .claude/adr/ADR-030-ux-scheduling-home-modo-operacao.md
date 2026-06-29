@@ -97,7 +97,7 @@ Acessibilidade:
 ```
 Read-only (snapshot):
   Paciente       (deal → ticket → customer)
-  Procedimento + duração estimada (snapshot + catálogo)
+  Procedimento (snapshot)
   Plano: "Sessão X de N" (DealProcedure.quantity)
 
 Inputs:
@@ -107,14 +107,14 @@ Inputs:
   ☐ Planejar as N sessões de uma vez → a cada [k] dias, mesmo horário (opt-in)
 
 Calculado / feedback:
-  "Termina HH:MM · N min" (de estimatedDuration)
   Conflito inline se o executor já tiver atendimento na janela (aviso, não bloqueio)
 ```
 
 **Decisões:**
 - Default = agendar **só a sessão 1**. "Planejar N de uma vez" é opt-in → botão vira "Agendar N sessões" + lista de datas propostas **editáveis** antes de confirmar.
 - Conflito = **warning, não bloqueio** (clínica encaixa).
-- `estimatedDuration` nulo → "duração não definida" + campo manual; não trava.
+
+> ⚠️ **Revisão 2026-06-28:** `estimatedDuration` removido do escopo (ADR-029). O Sheet não exibe duração estimada nem "Termina HH:MM"; o agendamento é só por data/hora.
 
 **Estados:** validando · conflito · data no passado (erro inline) · salvando · sucesso (fecha, item sai da worklist, toast) · erro (mantém dados, msg humana).
 **A11y:** labels visíveis; foco inicial no campo de data; `Esc` fecha (confirma se houver edição).
@@ -129,7 +129,7 @@ Calculado / feedback:
 
 | # | Necessidade do frontend | Provável estado no backend | Ação |
 |---|---|---|---|
-| 1 | Worklist "A agendar": `appointmentId, paciente(nome), procedimento(nome), duraçãoEstimada, sessão X/N, executorPadrão, dealId, ticketId` | Appointment nasce no WIN (ADR-029); **listagem da worklist não existe** | **[IMPACTO BACKEND]** `GET /appointments?status=AWAITING_SCHEDULE` (scope-aware) com nomes resolvidos |
+| 1 | Worklist "A agendar": `appointmentId, paciente(nome), procedimento(nome), sessão X/N, executorPadrão, dealId, ticketId` | Appointment nasce no WIN (ADR-029); **listagem da worklist não existe** | **[IMPACTO BACKEND]** `GET /appointments?status=AWAITING_SCHEDULE` (scope-aware) com nomes resolvidos |
 | 2 | Nomes de paciente/procedimento prontos p/ exibir | Appointment guarda IDs; nomes via snapshot do deal | **[IMPACTO BACKEND]** resposta já trazer nomes (preferível) ou front resolve |
 | 3 | Agenda do dia por executor + período | scope-aware previsto (ADR-013/015); **endpoint a definir** | **[IMPACTO BACKEND]** `GET /appointments?assignedTo&from&to` |
 | 4 | Conflito de horário do executor | não existe | **[IMPACTO BACKEND]** endpoint de disponibilidade OU front deriva da agenda já carregada (preferir derivar) |

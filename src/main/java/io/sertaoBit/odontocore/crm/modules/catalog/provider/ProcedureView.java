@@ -8,8 +8,7 @@ public record ProcedureView (
         UUID id,
         String name,
         String code,
-        BigDecimal defaultPrice,
-        Integer estimatedDuration
+        BigDecimal defaultPrice
 
 ) {
 }

@@ -2,6 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
+import io.sertaoBit.odontocore.crm.core.events.DealWonEvent;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureProvider;
 import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureView;
@@ -18,9 +19,11 @@ import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.DealHistoryService;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.DealService;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
+import io.sertaoBit.odontocore.crm.modules.funnel.provider.CustomerProvider;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,28 +45,35 @@ public class DealServiceImpl implements DealService {
 
     private final DealRepository dealRepository;
     private final LeadTicketRepository ticketRepository;
+    private final CustomerProvider customerProvider;
     private final ProcedureProvider procedureProvider;
     private final SecurityUtils securityUtils;
     private final PermissionService permissionService;
     private final DealMapper dealMapper;
     private final DealHistoryService dealHistoryService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
 
     public DealServiceImpl(
             DealRepository dealRepository,
             LeadTicketRepository ticketRepository,
+            CustomerProvider customerProvider,
             ProcedureProvider procedureProvider,
             SecurityUtils securityUtils,
             PermissionService permissionService,
             DealMapper dealMapper,
-            DealHistoryService dealHistoryService
+            DealHistoryService dealHistoryService,
+            ApplicationEventPublisher applicationEventPublisher
     ) {
         this.dealRepository = dealRepository;
         this.ticketRepository = ticketRepository;
+        this.customerProvider = customerProvider;
         this.procedureProvider = procedureProvider;
         this.securityUtils = securityUtils;
         this.permissionService = permissionService;
         this.dealMapper = dealMapper;
         this.dealHistoryService = dealHistoryService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -233,6 +243,32 @@ public class DealServiceImpl implements DealService {
                 user,
                 null, saved.getClosedAt());
 
+        var customerView = customerProvider.resolveById(ticket.getCustomerId());
+
+
+        applicationEventPublisher.publishEvent(
+                new DealWonEvent(
+                        user.getClinicId(),
+                        dealId,
+                        ticket.getId(),
+                        customerView.id(),
+                        customerView.name(),
+                        deal.getCreatedBy(),
+                        deal.getClosedAt(),
+                        deal.getProcedures().stream()
+                                .map(p ->
+                                    new DealWonEvent.WonProcedure(
+                                            p.procedureId(),
+                                            p.name(),
+                                            p.code(),
+                                            p.quantity()
+
+                                    )).toList()
+
+
+                )
+        );
+
         return saved;
     }
 
@@ -298,5 +334,6 @@ public class DealServiceImpl implements DealService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
 }
 

@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.modules.funnel.mapper;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.request.customer.CustomerCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.api.dto.response.CustomerResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.Customer;
+import io.sertaoBit.odontocore.crm.modules.funnel.provider.CustomerView;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -23,4 +24,6 @@ public interface CustomerMapper {
 
 
     CustomerResponseDTO toResponseDTO(Customer customer);
+
+    CustomerView toView(Customer customer);
 }

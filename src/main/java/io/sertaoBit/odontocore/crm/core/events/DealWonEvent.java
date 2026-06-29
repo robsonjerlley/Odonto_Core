@@ -1,9 +1,12 @@
 package io.sertaoBit.odontocore.crm.core.events;
 
+import lombok.Builder;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Builder
 public record DealWonEvent(
         UUID clinicId,
         UUID dealId,
@@ -24,8 +27,7 @@ public record DealWonEvent(
             UUID procedureId,
             String name,
             String code,
-            int quantity,
-            Integer estimatedDuration
+            int quantity
             ) {}
 
 }

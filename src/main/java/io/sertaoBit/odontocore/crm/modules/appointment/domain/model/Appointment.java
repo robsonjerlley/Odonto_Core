@@ -43,7 +43,6 @@ public class Appointment {
     @Column(nullable = false)
     private UUID assignedTo;
     private LocalDateTime scheduledAt;
-    private Integer estimatedDuration;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AppointmentStatus status;
