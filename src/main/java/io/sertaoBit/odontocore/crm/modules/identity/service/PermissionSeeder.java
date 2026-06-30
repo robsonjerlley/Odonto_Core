@@ -81,6 +81,9 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(ADM_SYSTEM, null, APPOINTMENT, READ, GLOBAL));
         rules.add(rule(ADM_SYSTEM, null, APPOINTMENT, UPDATE, GLOBAL));
 
+        rules.add(rule(ADM_SYSTEM, null, INSTALLMENT, READ, GLOBAL));
+        rules.add(rule(ADM_SYSTEM, null, INSTALLMENT, UPDATE, GLOBAL));
+
         rules.add(rule(ADM_SYSTEM, null, CONFIG, CONFIGURE, GLOBAL));
 
         //ADM_LEADS
@@ -175,6 +178,9 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, CONTACT_LOG, READ, SECTOR));
 
+        rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, INSTALLMENT, READ, GLOBAL));
+        rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, INSTALLMENT, UPDATE, GLOBAL));
+
         rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, ANALYTICS, READ, SECTOR));
 
         //USER_COMMERCIAL
@@ -188,6 +194,9 @@ public class PermissionSeeder implements ApplicationRunner {
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CUSTOMER, READ, SECTOR));
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, CONTACT_LOG, READ, GLOBAL));
+
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, INSTALLMENT, READ, SECTOR));
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, INSTALLMENT, UPDATE, SECTOR));
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, ANALYTICS, READ, OWN));
 
