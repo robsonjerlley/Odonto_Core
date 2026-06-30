@@ -125,6 +125,18 @@
 			</exclusions>
 		</dependency>
 
+		<!-- ====== TESTES - @DataJpaTest slice (Boot 4 modularizou o autoconfigure) ====== -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-jdbc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- ====== TESTES - WebTestClient (para testes de integração) ====== -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
