@@ -244,6 +244,13 @@ record ConflictWarning(UUID assignedTo, LocalDateTime slot, List<UUID> appointme
 
 **Atomicidade (estratégia A — pré-validar, depois mutar).** Dois passos no service: (1) carrega via `findAllById` + valida TODOS (status `AWAITING_SCHEDULE`, data não-passada) **sem mutar**; qualquer falha → **422, nada aplicado**. (2) só então muta + `saveAll`. Os `warnings` são montados na fase de decisão, antes do commit.
 
+**Estrutura interna do service (SRP — refatorado 2026-06-29).** O `scheduleBatch` é **orquestrador**; cada fase é um método privado, com o `byId` carregado **uma vez** (`findAllById`) e passado adiante — sem refetch. Fronteira de dados: só `items`/`byId`/`user` entram nas fases; só `warnings`/`scheduled` saem.
+- **Orquestrador** — dedupe de `appointmentId` (`distinctIds.size() != ids.size()` → 422) + carga única + checagem de existência (`byId.size() != ids.size()` → 422); depois encadeia as 3 fases e monta o resultado.
+- `validateItems(items, byId, user)` — por item: `checkOrThrow`, status `AWAITING_SCHEDULE`, data não-passada; throw aborta **antes** de qualquer mutação (estratégia A).
+- `getConflictWarnings(items, byId)` — **função pura, não muta**; monta os `warnings` sobre `{batch} ∪ {SCHEDULED no banco}` (record `Slot` local como chave de agrupamento).
+- `applyAndSave(items, byId)` — muta (`status`/`scheduledAt`/`assignedTo`) + `saveAll`; devolve `List<AppointmentResponseDTO>`.
+- A montagem do `BatchScheduleResultDTO(applyAndSave(...), warnings)` é do **orquestrador** — `warnings` não vaza pra dentro de `applyAndSave` (a fase de persistência não conhece a saída da detecção de conflito).
+
 **Conflito = igualdade `(assignedTo, scheduledAt)` — escopo B (união).** Appointment é instante (sem `estimatedDuration`), então não há janela de overlap: conflito é mesmo executor + mesmo horário. Compara-se sobre `{itens do batch} ∪ {appointments SCHEDULED já no banco}`. **Nunca bloqueia** — aplica e devolve `warnings[]`; o usuário decide (flexível ao padrão da clínica: 3 às 11:00 é válido). B engloba o conflito intra-batch (A) naturalmente.
 - ⚠️ Agrupar pelo `assignedTo` **efetivo** (`item.assignedTo ?? appointment.assignedTo`), não o cru — senão o aviso mente.
 

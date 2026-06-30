@@ -15,6 +15,7 @@ import io.sertaoBit.odontocore.crm.modules.appointment.repository.AppointmentSpe
 import io.sertaoBit.odontocore.crm.modules.appointment.service.AppointmentService;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -191,17 +192,33 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new IllegalArgumentException("Appointment not found");
         }
 
+        validateItems(items, byId, user);
+
+        List<ConflictWarning> warnings = getConflictWarnings(items, byId);
+
+        return new BatchScheduleResultDTO(applyAndSave(items, byId), warnings);
+    }
+
+
+
+    private @NonNull List<AppointmentResponseDTO> applyAndSave(List<BatchItem> items, Map<UUID, Appointment> byId) {
         for (BatchItem item : items) {
             Appointment ap = byId.get(item.appointmentId());
-            permissionService.checkOrThrow(user, APPOINTMENT, UPDATE, EVALUATOR, ap.getAssignedTo());
-            if (ap.getStatus() != AWAITING_SCHEDULE) {
-                throw new IllegalStateException("Appointment is not awaiting schedule");
-            }
-            if (item.scheduledAt().isBefore(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Invalid scheduled at");
+            ap.setStatus(SCHEDULED);
+            ap.setScheduledAt(item.scheduledAt());
+            if (item.assignedTo() != null) {
+                ap.setAssignedTo(item.assignedTo());
             }
         }
 
+        List<Appointment> saved = appointmentRepository.saveAll(
+                items.stream().map(i -> byId.get(i.appointmentId())).toList());
+
+        return saved.stream()
+                .map(appointmentMapper::toResponseDTO).toList();
+    }
+
+    private @NonNull List<ConflictWarning> getConflictWarnings(List<BatchItem> items, Map<UUID, Appointment> byId) {
         record Slot(UUID assignedTo, LocalDateTime at) {}
 
         Map<UUID, UUID> effective = new HashMap<>();
@@ -225,32 +242,28 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
         for (Appointment ap : existing) {
             Slot key = new Slot(ap.getAssignedTo(), ap.getScheduledAt());
-            if (bySlot.containsKey(key)) {          // só pares que o batch toca (filtra over-fetch do IN×IN)
+            if (bySlot.containsKey(key)) {
                 bySlot.get(key).add(ap.getId());
             }
         }
 
-        List<ConflictWarning> warnings = bySlot.entrySet().stream()
+        return bySlot.entrySet().stream()
                 .filter(e -> e.getValue().size() > 1)   // 2+ no mesmo (executor, horário) = aviso
                 .map(e -> new ConflictWarning(e.getKey().assignedTo(), e.getKey().at(), e.getValue()))
                 .toList();
+    }
 
+    private void validateItems(List<BatchItem> items, Map<UUID, Appointment> byId, User user) {
         for (BatchItem item : items) {
             Appointment ap = byId.get(item.appointmentId());
-            ap.setStatus(SCHEDULED);
-            ap.setScheduledAt(item.scheduledAt());
-            if (item.assignedTo() != null) {
-                ap.setAssignedTo(item.assignedTo());
+            permissionService.checkOrThrow(user, APPOINTMENT, UPDATE, EVALUATOR, ap.getAssignedTo());
+            if (ap.getStatus() != AWAITING_SCHEDULE) {
+                throw new IllegalStateException("Appointment is not awaiting schedule");
+            }
+            if (item.scheduledAt().isBefore(LocalDateTime.now())) {
+                throw new IllegalArgumentException("Invalid scheduled at");
             }
         }
-
-        List<Appointment> saved = appointmentRepository.saveAll(
-                items.stream().map(i -> byId.get(i.appointmentId())).toList());
-
-        List<AppointmentResponseDTO> scheduled = saved.stream()
-                .map(appointmentMapper::toResponseDTO).toList();
-
-        return new BatchScheduleResultDTO(scheduled, warnings);
     }
 
     @Override
