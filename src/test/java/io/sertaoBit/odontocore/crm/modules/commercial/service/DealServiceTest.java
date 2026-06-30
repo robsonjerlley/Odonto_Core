@@ -4,15 +4,21 @@ import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
+import io.sertaoBit.odontocore.crm.core.events.DealWonEvent;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
+import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureProvider;
+import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureView;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealItemRequestDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.mapper.DealMapper;
 import io.sertaoBit.odontocore.crm.modules.commercial.model.Deal;
+import io.sertaoBit.odontocore.crm.modules.commercial.model.DealProcedure;
 import io.sertaoBit.odontocore.crm.modules.commercial.repository.DealRepository;
 import io.sertaoBit.odontocore.crm.modules.commercial.service.impl.DealServiceImpl;
 import io.sertaoBit.odontocore.crm.modules.funnel.domain.model.LeadTicket;
+import io.sertaoBit.odontocore.crm.modules.funnel.provider.CustomerProvider;
+import io.sertaoBit.odontocore.crm.modules.funnel.provider.CustomerView;
 import io.sertaoBit.odontocore.crm.modules.funnel.repository.LeadTicketRepository;
 import io.sertaoBit.odontocore.crm.modules.identity.domain.model.User;
 import io.sertaoBit.odontocore.crm.modules.identity.service.PermissionService;
@@ -20,8 +26,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
@@ -42,17 +50,22 @@ public class DealServiceTest {
     private DealService dealService;
     @Mock private DealRepository dealRepository;
     @Mock private LeadTicketRepository ticketRepository;
+    @Mock private CustomerProvider customerProvider;
+    @Mock private ProcedureProvider procedureProvider;
     @Mock private SecurityUtils securityUtils;
     @Mock private PermissionService permissionService;
     @Mock private DealMapper dealMapper;
     @Mock private DealHistoryService dealHistoryService;
+    @Mock private ApplicationEventPublisher applicationEventPublisher;
 
     @BeforeEach
     void setUp() {
         dealService = new DealServiceImpl(
                 dealRepository, ticketRepository,
+                customerProvider, procedureProvider,
                 securityUtils, permissionService,
-                dealMapper, dealHistoryService);
+                dealMapper, dealHistoryService,
+                applicationEventPublisher);
     }
 
     private User buildUser() {
@@ -71,18 +84,24 @@ public class DealServiceTest {
     @DisplayName("Deve criar deal com totalValue calculado corretamente e ticket → NEGOTIATION")
     void create_success() {
         UUID ticketId = UUID.randomUUID();
+        UUID implanteId = UUID.randomUUID();
+        UUID consultaId = UUID.randomUUID();
         User user = buildUser();
 
         LeadTicket ticket = LeadTicket.builder().id(ticketId).status(IN_EVALUATION).build();
 
         DealCreateRequestDTO dto = new DealCreateRequestDTO(List.of(
-                new DealItemRequestDTO("Implante", null, new BigDecimal("1000.00"), 2, null),
-                new DealItemRequestDTO("Consulta", null, new BigDecimal("200.00"), 1, null)
+                new DealItemRequestDTO(implanteId, null, 2, null),
+                new DealItemRequestDTO(consultaId, null, 1, null)
         ));
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(securityUtils.getCurrentUser()).thenReturn(user);
         when(ticketRepository.save(any())).thenReturn(ticket);
+        when(procedureProvider.resolveActiveByIds(any())).thenReturn(List.of(
+                new ProcedureView(implanteId, "Implante", "IMP", new BigDecimal("1000.00")),
+                new ProcedureView(consultaId, "Consulta", "CON", new BigDecimal("200.00"))
+        ));
         when(dealRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Deal result = dealService.create(ticketId, dto);
@@ -180,30 +199,55 @@ public class DealServiceTest {
     }
 
     @Test
-    @DisplayName("Deve fechar deal, setar closedAt e mover ticket para WIN")
+    @DisplayName("Deve fechar deal, setar closedAt, mover ticket para WIN e publicar DealWonEvent")
     void closeDeal_success() {
         UUID dealId = UUID.randomUUID();
         UUID ticketId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+        UUID procedureId = UUID.randomUUID();
 
         Deal deal = Deal.builder()
                 .id(dealId)
                 .ticketId(ticketId)
                 .archived(false)
+                .procedures(List.of(
+                        DealProcedure.builder()
+                                .procedureId(procedureId)
+                                .name("Implante")
+                                .code("IMP")
+                                .quantity(2)
+                                .build()
+                ))
                 .build();
 
-        LeadTicket ticket = LeadTicket.builder().id(ticketId).status(NEGOTIATION).build();
+        LeadTicket ticket = LeadTicket.builder()
+                .id(ticketId).customerId(customerId).status(NEGOTIATION).build();
 
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any())).thenReturn(ticket);
         when(dealRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(customerProvider.resolveById(customerId))
+                .thenReturn(new CustomerView(customerId, "João da Silva"));
 
         Deal result = dealService.closeDeal(dealId, PaymentMethod.PIX);
 
         assertNotNull(result.getClosedAt());
+        assertEquals(PaymentMethod.PIX, result.getPaymentMethod());
         assertEquals(WIN, ticket.getStatus());
         assertNotNull(ticket.getClosedAt());
+
+        ArgumentCaptor<DealWonEvent> eventCaptor = ArgumentCaptor.forClass(DealWonEvent.class);
+        verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
+
+        DealWonEvent event = eventCaptor.getValue();
+        assertEquals(dealId, event.dealId());
+        assertEquals(ticketId, event.ticketId());
+        assertEquals(customerId, event.customerId());
+        assertEquals("João da Silva", event.customerName());
+        assertEquals(1, event.procedures().size());
+        assertEquals(2, event.procedures().get(0).quantity());
     }
 
     @Test
