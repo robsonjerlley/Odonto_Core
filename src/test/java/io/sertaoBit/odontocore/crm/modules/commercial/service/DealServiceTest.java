@@ -2,6 +2,7 @@ package io.sertaoBit.odontocore.crm.modules.commercial.service;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
 import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.CloseDealRequestDTO;
 import io.sertaoBit.odontocore.crm.core.enums.Role;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
 import io.sertaoBit.odontocore.crm.core.events.DealWonEvent;
@@ -231,10 +232,11 @@ public class DealServiceTest {
         when(customerProvider.resolveById(customerId))
                 .thenReturn(new CustomerView(customerId, "João da Silva"));
 
-        Deal result = dealService.closeDeal(dealId, PaymentMethod.PIX);
+        Deal result = dealService.closeDeal(dealId, new CloseDealRequestDTO(PaymentMethod.PIX, 3));
 
         assertNotNull(result.getClosedAt());
         assertEquals(PaymentMethod.PIX, result.getPaymentMethod());
+        assertEquals(3, result.getInstallmentCount());
         assertEquals(WIN, ticket.getStatus());
         assertNotNull(ticket.getClosedAt());
 
@@ -263,7 +265,8 @@ public class DealServiceTest {
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
 
-        assertThrows(IllegalStateException.class, () -> dealService.closeDeal(dealId, PaymentMethod.PIX));
+        assertThrows(IllegalStateException.class,
+                () -> dealService.closeDeal(dealId, new CloseDealRequestDTO(PaymentMethod.PIX, 1)));
     }
 
     @Test
@@ -275,6 +278,7 @@ public class DealServiceTest {
         when(dealRepository.findById(dealId)).thenReturn(Optional.of(deal));
         when(securityUtils.getCurrentUser()).thenReturn(buildUser());
 
-        assertThrows(IllegalStateException.class, () -> dealService.closeDeal(dealId, PaymentMethod.PIX));
+        assertThrows(IllegalStateException.class,
+                () -> dealService.closeDeal(dealId, new CloseDealRequestDTO(PaymentMethod.PIX, 1)));
     }
 }
