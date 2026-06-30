@@ -49,7 +49,7 @@ public class Installment {
     private PaymentStatus status;
     @Column(precision = 15, scale = 2)
     private BigDecimal paidAmount;
-    private LocalDateTime paidAt;
+    private LocalDate paidAt;
     private UUID paidBy;
     @Column(nullable = false)
     @CreationTimestamp
