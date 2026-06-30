@@ -4,6 +4,7 @@ import io.sertaoBit.odontocore.crm.core.enums.AppointmentStatus;
 import io.sertaoBit.odontocore.crm.modules.appointment.api.dto.request.*;
 import io.sertaoBit.odontocore.crm.modules.appointment.api.dto.response.AppointmentResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.appointment.service.AppointmentService;
+import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME;
-import static org.springframework.http.HttpStatusCode.valueOf;
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("api/v1/appointments")
@@ -60,7 +61,7 @@ public class AppointmentController {
 
     @PatchMapping("/schedule-batch")
     public ResponseEntity<io.sertaoBit.odontocore.crm.modules.appointment.api.dto.response.BatchScheduleResultDTO> scheduleBatch(
-            @RequestBody List<BatchItem> dto
+            @RequestBody @Valid List<BatchItem> dto
     ) {
         return ResponseEntity.ok(appointmentService.scheduleBatch(dto));
     }
@@ -70,7 +71,8 @@ public class AppointmentController {
     public ResponseEntity<Void> complete(
             @PathVariable UUID id
     ) {
-        return ResponseEntity.status(valueOf(200)).build();
+        appointmentService.complete(id);
+        return ResponseEntity.status(ACCEPTED).build();
     }
 
 

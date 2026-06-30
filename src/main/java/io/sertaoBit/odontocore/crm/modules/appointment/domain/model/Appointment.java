@@ -12,7 +12,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name= "appointments", schema = "crm_db")
+@Table(name= "appointments", schema = "crm_db" , indexes = {
+        @Index(name = "idx_appointments_status", columnList = "status"),
+        @Index(name = "idx_appointments_tenant_assignee_slot",
+                columnList = "clinic_id, assigned_to, scheduled_at")
+})
 @NoArgsConstructor @AllArgsConstructor
 @Getter
 @Setter
