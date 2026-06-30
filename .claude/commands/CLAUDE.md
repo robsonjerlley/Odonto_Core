@@ -85,7 +85,7 @@ modules/
   funnel/            → clientes, tickets, histórico de contato  → crm_db
   catalog/           → catálogo de procedimentos por clínica  → crm_db  (ADR-026)
   commercial/        → deals, negociação, configs do gestor  → crm_db  (depende de catalog)
-  appointment/       → agenda do Evaluator; consome DealWonEvent (commercial) + catalog  → crm_db  (ADR-029, em implementação)
+  appointment/       → agenda do Evaluator; consome DealWonEvent (commercial) + catalog  → crm_db  (ADR-029 ✅ implementado + testado)
   analytics/         → métricas read-only cross-db  → lê os dois bancos
 ```
 > ⚠️ O módulo da agenda chama-se **`appointment`** (nome do agregado). As ADRs 029/030 e arquivos com "scheduling" no nome referem-se a este módulo — "scheduling" é a capability, `appointment` é o pacote.
@@ -252,6 +252,21 @@ getGlobalDashboard(period) → apenas ADMIN/MANAGER — agrega tudo
 
 ---
 
+## Testes
+
+Stack: **JUnit 5 + Mockito** (unitário, camada de service) + **Testcontainers** (integração/contexto).
+
+| Tipo | Base / padrão | Cobertura atual |
+|---|---|---|
+| Unitário (service) | `@ExtendWith(MockitoExtension.class)` — mocks de repositórios/providers/`SecurityUtils`/`PermissionService`; assert sobre estado da entidade e `ArgumentCaptor` p/ eventos | **funnel** (`Customer`, `LeadTicket`, `ContactLog`) · **commercial** (`Deal`, `Config`) · **analytics** (`Analytics`) · **appointment** (`Appointment`) |
+| Integração / contexto | `AbstractTestcontainerTest` (PostgreSQL 16 via Testcontainers + `@DynamicPropertySource`) — **exige Docker** | `ApplicationTests.contextLoads` |
+
+- **`AppointmentServiceTest`** (24 casos): `schedule`/`reschedule`/`assignee`/`cancel`/`complete` + `scheduleBatch` (sucesso, warning de conflito `(assignedTo, scheduledAt)`, id duplicado, id inexistente, status inválido) + queries por escopo (`getStatus`/`getAssignedBetween`, incl. `AccessDeniedException` sem escopo de leitura).
+- **`DealServiceTest`** (10 casos): cobre `closeDeal` publicando `DealWonEvent` (verificado via `ArgumentCaptor`) e `create` resolvendo procedimentos via `ProcedureProvider`.
+- ⚠️ Testes que sobem contexto (`ApplicationTests`, Testcontainers) **falham sem Docker** — esperado. Para rodar só os unitários: `mvn test -Dtest='!ApplicationTests'`.
+
+---
+
 ## Separação de bancos
 
 ```
@@ -296,7 +311,7 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [026](../adr/ADR-026-procedure-catalog-deal-snapshot.md) | Catálogo de Procedimentos (`Procedure`) + snapshot em `DealProcedure` | Implementado |
 | [027](../adr/ADR-027-boot-fixes-schema-flyway-tenant-sentinel.md) | Correções de boot — schema, Flyway (PG18), sentinela de tenant, seed admin | Implementado |
 | [028](../adr/ADR-028-catalog-read-boundary-provider-search.md) | Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model `ProcedureView`) + `search()` unificado (revisa 026) | Implementado |
-| [029](../adr/ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) | Módulo `appointment` — agenda do Evaluator a partir do Deal fechado (`DealWonEvent` síncrono no `closeDeal`, fail-fast) | Aceito (pronta p/ implementação) |
+| [029](../adr/ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) | Módulo `appointment` — agenda do Evaluator a partir do Deal fechado (`DealWonEvent` síncrono no `closeDeal`, fail-fast) | **Implementado** (entity + listener + service + controller + RBAC; coberto por testes unitários) |
 | [030](../adr/ADR-030-ux-scheduling-home-modo-operacao.md) | UX da agenda (`appointment`) — Home "Modo Operação" + Sheet "Agendar" | Proposto (UX aceita; pendente implementação) |
 | [031](../adr/ADR-031-commercial-deal-payment-status.md) | Commercial — `Deal.paymentStatus` (feed de pagamentos da Home) | Proposto (modelagem fechada; pendente impl) |
 
@@ -312,11 +327,11 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 
 ## Roadmap de implementações pendentes
 
-> Atualizado em 2026-06-27. Catálogo de procedimentos (ADR-026/028) **concluído** — `Procedure` + `ProcedureProvider`/`ProcedureView` integrados ao `Deal`.
+> Atualizado em 2026-06-30. Catálogo de procedimentos (ADR-026/028) **concluído**. Módulo `appointment` (ADR-029) **concluído** — entity + `AppointmentEventListener` + service + controller + RBAC + testes unitários.
 
 | Prioridade | Item | Origem | Estado | Pré-requisitos |
 |---|---|---|---|---|
-| 1 | Módulo `appointment` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Aceito) | ✅ Desenho fechado — pronto p/ implementar (entity `Appointment`, `DealWonEvent`, `CustomerProvider`, RBAC `Resource.APPOINTMENT`) | ADR-026 ✅, ADR-030/031 (UX/pagamento, paralelos) |
+| ✅ | Módulo `appointment` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Implementado) | ✅ Implementado + testado (`AppointmentServiceTest`; `DealWonEvent` coberto em `DealServiceTest`) | ADR-026 ✅, ADR-030/031 (UX/pagamento, paralelos) |
 | 2 | Cache Redis multi-tenant (chave por `clinicId`) | spec-redis-cache | Backlog — desbloqueada | ADR-022/024 ✅ |
 | 3 | Correções de backend sprint 1 | impl-backend-corrections-sprint1 | Backlog | — |
 | 4 | RBAC funnel — Fase 3 (Definition of Done) | security-gaps-funnel-permission | Críticos resolvidos; Fase 3 aberta | — |

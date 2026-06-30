@@ -1,7 +1,7 @@
 # ADR-029: Módulo `appointment` — Agenda do Evaluator a partir do Deal fechado
 
-**Status**: **Aceito** (2026-06-27) — decisões + formalização FECHADAS (Q1/Q2/Q3 + Travamentos A–D + contrato `DealWonEvent` + REST `AppointmentController`). Migration **não se aplica** (projeto roda local, `ddl-auto=update`; tabela nasce do entity — Flyway só no 1º deploy). Pronta para implementação.
-**Data**: 2026-06-27
+**Status**: **Implementado** (2026-06-30) — módulo `appointment` codado e testado: `Appointment` (`@Entity` + `@TenantId` + índices), `AppointmentEventListener` (`@EventListener` síncrono do `DealWonEvent`, N appointments `AWAITING_SCHEDULE`), `AppointmentService`/`Impl` (máquina de estados + `scheduleBatch` SRP), `AppointmentController` (8 endpoints), `CustomerProvider`, RBAC `Resource.APPOINTMENT`. `DealServiceImpl.closeDeal` publica `DealWonEvent`. Coberto por `AppointmentServiceTest` (24 casos) + `DealServiceTest` (evento via `ArgumentCaptor`). Decisões + formalização FECHADAS (Q1/Q2/Q3 + Travamentos A–D + contrato `DealWonEvent` + REST). Migration **não se aplica** (projeto roda local, `ddl-auto=update`; tabela nasce do entity — Flyway só no 1º deploy).
+**Data**: 2026-06-27 (decisão) · 2026-06-30 (implementação concluída)
 **Autores**: Arquiteto-Agent + Robson
 **Impacto**: novo módulo `appointment`; `commercial` (publica `DealWonEvent` no `closeDeal`); reuso de `catalog` (`ProcedureProvider`), `identity` (role `Evaluator`)
 **Relaciona**: ADR-023 (TicketWonEvent — **substituída por esta ADR**; o gatilho vigente é o `DealWonEvent` síncrono), ADR-026/028 (catálogo + read-model pattern), ADR-024 (`@TenantId`), ADR-031 (`Deal.paymentStatus` — consumido no feed, não definido aqui), ADR-003 (imutabilidade/trilha), ADR-002 (interface vs impl)
