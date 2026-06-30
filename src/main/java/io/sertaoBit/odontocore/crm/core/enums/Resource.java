@@ -9,6 +9,7 @@ public enum Resource {
     PROCEDURE,
     ANALYTICS,
     APPOINTMENT,
+    INSTALLMENT,
     CONFIG
 
 }
