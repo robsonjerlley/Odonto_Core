@@ -28,7 +28,7 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @TenantId
-    @Column(nullable = false)
+    @Column(name = "clinic_id", nullable = false , updatable = false)
     private UUID clinicId;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

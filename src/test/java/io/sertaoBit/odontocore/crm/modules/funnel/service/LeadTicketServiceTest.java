@@ -222,7 +222,7 @@ public class LeadTicketServiceTest {
     }
 
     @Test
-    @DisplayName("Deve setar closedAt ao mover para WIN e pendingAt ao mover para PENDING")
+    @DisplayName("Deve setar closedAt ao mover para WIN e pendingAt ao mover para PAID")
     void changeStatus_setsAuditDates() {
         UUID ticketId = UUID.randomUUID();
         User user = buildUser(Role.USER_COMMERCIAL);
