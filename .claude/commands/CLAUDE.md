@@ -86,6 +86,7 @@ modules/
   catalog/           → catálogo de procedimentos por clínica  → crm_db  (ADR-026)
   commercial/        → deals, negociação, configs do gestor  → crm_db  (depende de catalog)
   appointment/       → agenda do Evaluator; consome DealWonEvent (commercial) + catalog  → crm_db  (ADR-029 ✅ implementado + testado)
+  financeiro/        → parcelas a receber (Installment); 2ª escuta do DealWonEvent + DealFinancialProvider  → crm_db  (ADR-032, proposto)
   analytics/         → métricas read-only cross-db  → lê os dois bancos
 ```
 > ⚠️ O módulo da agenda chama-se **`appointment`** (nome do agregado). As ADRs 029/030 e arquivos com "scheduling" no nome referem-se a este módulo — "scheduling" é a capability, `appointment` é o pacote.
@@ -313,7 +314,8 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [028](../adr/ADR-028-catalog-read-boundary-provider-search.md) | Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model `ProcedureView`) + `search()` unificado (revisa 026) | Implementado |
 | [029](../adr/ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) | Módulo `appointment` — agenda do Evaluator a partir do Deal fechado (`DealWonEvent` síncrono no `closeDeal`, fail-fast) | **Implementado** (entity + listener + service + controller + RBAC; coberto por testes unitários) |
 | [030](../adr/ADR-030-ux-scheduling-home-modo-operacao.md) | UX da agenda (`appointment`) — Home "Modo Operação" + Sheet "Agendar" | Proposto (UX aceita; pendente implementação) |
-| [031](../adr/ADR-031-commercial-deal-payment-status.md) | Commercial — `Deal.paymentStatus` (feed de pagamentos da Home) | Proposto (modelagem fechada; pendente impl) |
+| [031](../adr/ADR-031-commercial-deal-payment-status.md) | ~~Commercial — `Deal.paymentStatus` (feed de pagamentos da Home)~~ | **Substituída pela ADR-032** (binário → módulo `financeiro` com parcelas) |
+| [032](../adr/ADR-032-financeiro-installments-deal-won.md) | Módulo `financeiro` — parcelas a receber (`Installment`) via `DealWonEvent` (2ª escuta) + `DealFinancialProvider`; visão mês/cliente/caixa | Proposto (decisão fechada; pendente impl) |
 
 > **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, implementado); 024 implementado — `@TenantId` + `TenantContext` — isolamento automático no ORM ativo; 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`). **Boot greenfield (027)**: V1 reescrita para `CREATE SCHEMA` (Hibernate `ddl-auto=update` cria as tabelas); Flyway desabilitado só no local (PG18); `ClinicResolveTenant` usa sentinela `NO_TENANT` fora de request.
 
@@ -332,6 +334,7 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | Prioridade | Item | Origem | Estado | Pré-requisitos |
 |---|---|---|---|---|
 | ✅ | Módulo `appointment` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Implementado) | ✅ Implementado + testado (`AppointmentServiceTest`; `DealWonEvent` coberto em `DealServiceTest`) | ADR-026 ✅, ADR-030/031 (UX/pagamento, paralelos) |
+| 1 | Módulo `financeiro` — parcelas a receber (`Installment`) via 2ª escuta do `DealWonEvent` + `DealFinancialProvider`; visão mês/cliente/caixa + analytics preciso | ADR-032 (Proposto) | 🎯 Desenho fechado — pronto p/ implementar (`Deal.installmentCount`, `DealFinancialProvider`, `InstallmentEventListener`, RBAC `Resource.INSTALLMENT`) | ADR-029 ✅ (mesmo evento/padrão) |
 | 2 | Cache Redis multi-tenant (chave por `clinicId`) | spec-redis-cache | Backlog — desbloqueada | ADR-022/024 ✅ |
 | 3 | Correções de backend sprint 1 | impl-backend-corrections-sprint1 | Backlog | — |
 | 4 | RBAC funnel — Fase 3 (Definition of Done) | security-gaps-funnel-permission | Críticos resolvidos; Fase 3 aberta | — |

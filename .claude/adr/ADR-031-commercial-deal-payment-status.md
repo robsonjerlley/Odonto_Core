@@ -1,6 +1,6 @@
 # ADR-031: `commercial`/financeiro — `Deal.paymentStatus` (fato concreto de liquidação)
 
-**Status**: Proposto (decisão de modelagem fechada em 2026-06-27; pendente migration + integração no fechamento)
+**Status**: **Substituída pela ADR-032** (2026-06-30) — a decisão evoluiu de flag `paymentStatus` binário no `Deal` para um **módulo `financeiro` com parcelas (`Installment`)** via `DealWonEvent`. O recorte binário não resolvia a dor real (parcelamento mês a mês); o Analytics já projetava cego, então o flag agregava pouco. Mantida como registro histórico do caminho considerado.
 **Data**: 2026-06-27
 **Autores**: P.O.-Agent + Arquiteto-Agent + Robson
 **Impacto**: `commercial` (`Deal`); `analytics` (`totalExpectedCash`); semente do futuro módulo `financeiro`
