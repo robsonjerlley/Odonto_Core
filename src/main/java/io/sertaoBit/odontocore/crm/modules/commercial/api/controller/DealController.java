@@ -80,7 +80,7 @@ public class DealController {
             @PathVariable UUID id,
             @RequestBody @Validated CloseDealRequestDTO dto
     ) {
-        Deal deal = dealService.closeDeal(id, dto.paymentMethod());
+        Deal deal = dealService.closeDeal(id, dto);
         return ResponseEntity.ok(dealMapper.toResponseDTO(deal));
     }
 

@@ -10,7 +10,7 @@ public record DealFinancialView(
         UUID dealId,
         BigDecimal expectedAmount,
         PaymentMethod paymentMethod,
-        int installmentCount,
+        Integer installmentCount,
         LocalDateTime closedAt
 ) {
 }

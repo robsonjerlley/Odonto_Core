@@ -43,6 +43,7 @@ public class Deal {
     private UUID discountApprovedBy;
     @Column(precision = 15, scale = 2)
     private BigDecimal finalValue;
+    private Integer installmentCount;
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
     private UUID closedBy;

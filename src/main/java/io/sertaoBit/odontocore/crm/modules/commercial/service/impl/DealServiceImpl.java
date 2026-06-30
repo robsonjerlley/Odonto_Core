@@ -1,15 +1,11 @@
 package io.sertaoBit.odontocore.crm.modules.commercial.service.impl;
 
 import io.sertaoBit.odontocore.crm.config.security.SecurityUtils;
-import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.core.events.DealWonEvent;
 import io.sertaoBit.odontocore.crm.exception.ResourceNotFoundException;
 import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureProvider;
 import io.sertaoBit.odontocore.crm.modules.catalog.provider.ProcedureView;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.ApplyDiscountRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealCreateRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealItemRequestDTO;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealUpdateRequestDTO;
+import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.*;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal.DealDetailResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal.DealResponseDTO;
 import io.sertaoBit.odontocore.crm.modules.commercial.mapper.DealMapper;
@@ -204,7 +200,7 @@ public class DealServiceImpl implements DealService {
 
     @Override
     @Transactional
-    public Deal closeDeal(UUID dealId, PaymentMethod paymentMethod) {
+    public Deal closeDeal(UUID dealId, CloseDealRequestDTO dto) {
         User user = securityUtils.getCurrentUser();
 
         Deal deal = dealRepository.findById(dealId)
@@ -228,7 +224,8 @@ public class DealServiceImpl implements DealService {
 
         deal.setClosedAt(LocalDateTime.now());
         deal.setClosedBy(user.getId());
-        deal.setPaymentMethod(paymentMethod);
+        deal.setPaymentMethod(dto.paymentMethod());
+        deal.setInstallmentCount(dto.installmentCount() != null ? dto.installmentCount() : 1 );
 
         var ticket = ticketRepository.findById(deal.getTicketId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket Not Found"));
