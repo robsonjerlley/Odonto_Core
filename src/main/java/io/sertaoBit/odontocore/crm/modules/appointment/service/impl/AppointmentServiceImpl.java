@@ -24,13 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Action.READ;
@@ -85,7 +79,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appointment.setStatus(SCHEDULED);
-        if(dto.assignedTo() != null) {
+        if (dto.assignedTo() != null) {
             appointment.setAssignedTo(dto.assignedTo());
         }
         appointment.setScheduledAt(dto.scheduledAt());
@@ -108,7 +102,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 appointment.getAssignedTo()
         );
 
-        if(dto.scheduledAt().isBefore(LocalDateTime.now())) {
+        if (dto.scheduledAt().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Invalid scheduled at");
         }
 
@@ -138,7 +132,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         );
 
         // CASO CONTROLLER FALHE EM BARRAR POR MEIO DO @VALID
-        if(dto.assignedTo() == null) {
+        if (dto.assignedTo() == null) {
             throw new IllegalArgumentException("Invalid assigned user");
         }
 
@@ -163,7 +157,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 appointment.getAssignedTo()
         );
 
-        if(dto.cancelReason().isBlank()) {
+        if (dto.cancelReason().isBlank()) {
             throw new IllegalArgumentException("Cancel reason is necessary");
         }
 
@@ -200,6 +194,66 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AppointmentResponseDTO> getStatus(AppointmentStatus status, Pageable page) {
+        User user = securityUtils.getCurrentUser();
+        PermissionScope scope = permissionService.getScope(
+                user,
+                APPOINTMENT,
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
+
+        Specification<Appointment> spec = Specification
+                .where(byScope(scope, user))
+                .and(AppointmentSpecifications.hasStatus(status));
+
+        return appointmentRepository.findAll(spec, page)
+                .map(appointmentMapper::toResponseDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AppointmentResponseDTO> getAssignedBetween(UUID assignedI, LocalDateTime from, LocalDateTime to, Pageable page) {
+        User user = securityUtils.getCurrentUser();
+        PermissionScope scope = permissionService.getScope(
+                user,
+                APPOINTMENT,
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
+
+        Specification<Appointment> spec = Specification
+                .where(byScope(scope, user))
+                .and(AppointmentSpecifications.assignedTo(assignedI))
+                .and(AppointmentSpecifications.scheduledBetween(from, to));
+
+        return appointmentRepository.findAll(spec, page)
+                .map(appointmentMapper::toResponseDTO);
+    }
+
+    @Override
+    @Transactional
+    public void complete(UUID id) {
+        User user = securityUtils.getCurrentUser();
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found"));
+
+        permissionService.checkOrThrow(
+                user,
+                APPOINTMENT,
+                UPDATE,
+                EVALUATOR,
+                appointment.getAssignedTo()
+        );
+
+        if (appointment.getStatus() != SCHEDULED) {
+            throw new IllegalStateException("Invalid scheduling status");
+        }
+
+        appointment.setStatus(DONE);
+        appointmentRepository.save(appointment);
+    }
+
 
     private @NonNull List<AppointmentResponseDTO> applyAndSave(List<BatchItem> items, Map<UUID, Appointment> byId) {
         for (BatchItem item : items) {
@@ -219,7 +273,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private @NonNull List<ConflictWarning> getConflictWarnings(List<BatchItem> items, Map<UUID, Appointment> byId) {
-        record Slot(UUID assignedTo, LocalDateTime at) {}
+        record Slot(UUID assignedTo, LocalDateTime at) {
+        }
 
         Map<UUID, UUID> effective = new HashMap<>();
         for (BatchItem item : items) {
@@ -266,63 +321,5 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<AppointmentResponseDTO> getStatus(AppointmentStatus status, Pageable page) {
-        User user = securityUtils.getCurrentUser();
-      PermissionScope scope = permissionService.getScope(
-                user,
-                APPOINTMENT,
-                READ
-        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
 
-        Specification<Appointment> spec = Specification
-                .where(byScope(scope, user))
-                .and(AppointmentSpecifications.hasStatus(status));
-
-        return appointmentRepository.findAll(spec,page)
-                .map(appointmentMapper::toResponseDTO);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<AppointmentResponseDTO> getAssignedBetween(UUID assignedI, LocalDateTime from, LocalDateTime to, Pageable page) {
-        User user = securityUtils.getCurrentUser();
-        PermissionScope scope = permissionService.getScope(
-                user,
-                APPOINTMENT,
-                READ
-        ).orElseThrow(() -> new AccessDeniedException("Access denied"));
-
-        Specification<Appointment> spec = Specification
-                .where(byScope(scope,user))
-                .and(AppointmentSpecifications.assignedTo(assignedI))
-                .and(AppointmentSpecifications.scheduledBetween(from, to));
-
-        return appointmentRepository.findAll(spec,page)
-                .map(appointmentMapper::toResponseDTO);
-    }
-
-    @Override
-    @Transactional
-    public void complete(UUID id) {
-        User user = securityUtils.getCurrentUser();
-        Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Resource not found"));
-
-        permissionService.checkOrThrow(
-                user,
-                APPOINTMENT,
-                UPDATE,
-                EVALUATOR,
-                appointment.getAssignedTo()
-        );
-
-        if(appointment.getStatus() != SCHEDULED) {
-            throw new IllegalStateException("Invalid scheduling status");
-        }
-
-        appointment.setStatus(DONE);
-        appointmentRepository.save(appointment);
-    }
 }
