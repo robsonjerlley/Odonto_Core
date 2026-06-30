@@ -333,7 +333,7 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 
 | Prioridade | Item | Origem | Estado | Pré-requisitos |
 |---|---|---|---|---|
-| ✅ | Módulo `appointment` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Implementado) | ✅ Implementado + testado (`AppointmentServiceTest`; `DealWonEvent` coberto em `DealServiceTest`) | ADR-026 ✅, ADR-030/031 (UX/pagamento, paralelos) |
+| ✅ | Módulo `appointment` — agenda do Evaluator (`DealWonEvent` síncrono no `closeDeal`) | ADR-029 (Implementado) | ✅ Implementado + testado (`AppointmentServiceTest`; `DealWonEvent` coberto em `DealServiceTest`) | ADR-026 ✅, ADR-030 (UX) / ADR-032 (financeiro, paralelos) |
 | 1 | Módulo `financeiro` — parcelas a receber (`Installment`) via 2ª escuta do `DealWonEvent` + `DealFinancialProvider`; visão mês/cliente/caixa + analytics preciso | ADR-032 (Proposto) | 🎯 Desenho fechado — pronto p/ implementar (`Deal.installmentCount`, `DealFinancialProvider`, `InstallmentEventListener`, RBAC `Resource.INSTALLMENT`) | ADR-029 ✅ (mesmo evento/padrão) |
 | 2 | Cache Redis multi-tenant (chave por `clinicId`) | spec-redis-cache | Backlog — desbloqueada | ADR-022/024 ✅ |
 | 3 | Correções de backend sprint 1 | impl-backend-corrections-sprint1 | Backlog | — |

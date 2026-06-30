@@ -4,7 +4,7 @@
 **Data**: 2026-06-27 (decisão) · 2026-06-30 (implementação concluída)
 **Autores**: Arquiteto-Agent + Robson
 **Impacto**: novo módulo `appointment`; `commercial` (publica `DealWonEvent` no `closeDeal`); reuso de `catalog` (`ProcedureProvider`), `identity` (role `Evaluator`)
-**Relaciona**: ADR-023 (TicketWonEvent — **substituída por esta ADR**; o gatilho vigente é o `DealWonEvent` síncrono), ADR-026/028 (catálogo + read-model pattern), ADR-024 (`@TenantId`), ADR-031 (`Deal.paymentStatus` — consumido no feed, não definido aqui), ADR-003 (imutabilidade/trilha), ADR-002 (interface vs impl)
+**Relaciona**: ADR-023 (TicketWonEvent — **substituída por esta ADR**; o gatilho vigente é o `DealWonEvent` síncrono), ADR-026/028 (catálogo + read-model pattern), ADR-024 (`@TenantId`), ADR-032 (módulo `financeiro` — pagamento/feed; **substitui a ADR-031** que era citada aqui), ADR-003 (imutabilidade/trilha), ADR-002 (interface vs impl)
 
 ---
 
