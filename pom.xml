@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<flyway.version>10.23.0</flyway.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -103,6 +104,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<!-- Flyway 10.x PostgreSQL support (required for PostgreSQL 18 on Railway) -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<version>${flyway.version}</version>
 		</dependency>
 
 		<!-- ====== TESTES - H2 Database (em memória) ====== -->
