@@ -24,7 +24,7 @@ A ADR-030 deixou o financeiro como "Won't-have" de tela completa (só chip pago/
 
 ## 4. Impactos no backend [IMPACTO BACKEND]
 - **[I1]** `PaymentStatus` só tem `EXPECTED`/`PAID` — não existe valor de enum `OVERDUE`. Mas "atrasado" **é** predicado de query (`status=EXPECTED AND dueDate < hoje`, ver `InstallmentMapper.isOverdue`), logo **é filtrável no servidor**. Dentro do mês fica client-side por conveniência (as linhas do mês já estão na mão); **cross-month vai ao servidor** via [I2]. O filtro de *status* segue Todos / A receber / Pago.
-- **[I2] DECIDIDO — endpoint de atrasados cross-month.** Reusar `GET /api/v1/installments` com novo param `overdue=true`:
+- **[I2] IMPLEMENTADO (2026-07-01) — endpoint de atrasados cross-month.** `GET /api/v1/installments` com novo param `overdue=true`:
   - retorna todas as parcelas `EXPECTED` com `dueDate < hoje`, **todos os meses**, paginado, sort default `dueDate ASC` (mais velha primeiro);
   - `month` e `overdue` são **mutuamente exclusivos** — enviar os dois → **400**;
   - Specification nova `overdue()` (= `EXPECTED AND dueDate < today`) combinada com `byScope`; `hasStatus`/`dueBetween` não servem;
@@ -32,5 +32,5 @@ A ADR-030 deixou o financeiro como "Won't-have" de tela completa (só chip pago/
 - **[I3] FORA DO MVP.** Sem status parcial: `/pay` quita mesmo com `paidAmount < expectedAmount`. MVP quita e **avisa**; saldo parcial (`PARTIAL` + residual) é impacto backend futuro.
 
 ## 5. Próximos passos
-1. Implementar `overdue=true` no backend (controller + Specification + validação mútua com `month`).
+1. ~~Implementar `overdue=true` no backend~~ ✅ **feito 2026-07-01** (controller + `overdue()` Specification + validação mútua com `month` → 400; testes service/controller/repo).
 2. Implementar `InstallmentRow` + KPI + Sheet pagamento; drawer e cashflow depois.
