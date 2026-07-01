@@ -104,6 +104,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-flyway</artifactId>
 		</dependency>
+		<!-- Flyway 10+ separou o suporte a cada banco em módulo próprio; o starter do Boot
+		     traz só o flyway-core. Sem este módulo, o Flyway rejeita o Postgres do deploy
+		     com "Unsupported Database: PostgreSQL 18.x". Versão gerenciada pelo BOM do Boot. -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
 
 		<!-- ====== TESTES - H2 Database (em memória) ====== -->
 		<dependency>
