@@ -32,7 +32,18 @@ Risco estratégico: a fatia de mercado de **clínicas pequenas** (1–2 pessoas)
 Home **adaptativa ao modo de operação**, não ao módulo:
 - Solo / papel amplo → **Home "Modo Operação"** (feed de ação).
 - Time → mantém o grid de cards atual.
-- **Sem toggle.** O perfil define a home; a sidebar segue dando acesso aos módulos para o detalhe.
+- **Sem toggle proeminente.** O perfil define a home; a sidebar segue dando acesso aos módulos para o detalhe.
+
+> ⚠️ **Revisão 2026-06-30 — a escolha da home deve ser REVERSÍVEL.** A detecção do "modo solo"
+> (item #10 desta ADR) é heurística e pode errar. Forçar uma escolha **irreversível** viola Nielsen #3
+> (controle e liberdade — "saída de emergência") e #5 (prevenção de erro): se o sistema adivinhar
+> errado, o dono-faz-tudo fica preso numa home que não quer. **Decisão:** preferência tri-estado
+> **`homeMode: AUTO | OPERATION | CARDS`**, persistida por usuário, **default `AUTO`** (a heurística
+> escolhe). O usuário sobrescreve e volta atrás quando quiser. **"Reversível" ≠ "toggle proeminente"**:
+> o controle mora de **baixa proeminência** (menu de configurações ou ícone sutil no header da home),
+> não um segmented control competindo com o feed. Isso preserva o anti-clutter original **e** dá a
+> saída de emergência. **[IMPACTO BACKEND]** persistir a preferência por usuário (endpoint novo; hoje
+> não existe) — resolve parcialmente o item #10 (§6).
 
 > A "Home Modo Operação" **não é um dashboard** (gráficos) nem um **módulo novo**. É uma tela que *consome* dados já existentes (funil, avaliações, deals) + os novos (agenda, a-agendar, status de pagamento) e os apresenta como **tarefas em ordem de ação**, com **micro-ações inline** para não navegar a cada item.
 

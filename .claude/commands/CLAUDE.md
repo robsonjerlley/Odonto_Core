@@ -316,6 +316,8 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [030](../adr/ADR-030-ux-scheduling-home-modo-operacao.md) | UX da agenda (`appointment`) — Home "Modo Operação" + Sheet "Agendar" | Proposto (UX aceita; pendente implementação) |
 | [031](../adr/ADR-031-commercial-deal-payment-status.md) | ~~Commercial — `Deal.paymentStatus` (feed de pagamentos da Home)~~ | **Substituída pela ADR-032** (binário → módulo `financeiro` com parcelas) |
 | [032](../adr/ADR-032-financeiro-installments-deal-won.md) | Módulo `financeiro` — parcelas a receber (`Installment`) via `DealWonEvent` (2ª escuta) + `DealFinancialProvider`; visão mês/cliente/caixa | Proposto (decisão fechada; pendente impl) |
+| [033](../adr/ADR-033-ux-appointment-agenda.md) | UX da tela `appointment` — Agenda completa (visão dia + "A agendar"); concluir/remarcar/cancelar/reatribuir | Proposto (UX aceita; spec no espelho frontend `adr-frontend-003`) |
+| [034](../adr/ADR-034-ux-installment-gestao.md) | UX da tela `financeiro` — Gestão de parcelas (mês, filtros, pagar/estornar, histórico, caixa) | Proposto (UX aceita; spec no espelho frontend `adr-frontend-004`) |
 
 > **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, implementado); 024 implementado — `@TenantId` + `TenantContext` — isolamento automático no ORM ativo; 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`). **Boot greenfield (027)**: V1 reescrita para `CREATE SCHEMA` (Hibernate `ddl-auto=update` cria as tabelas); Flyway desabilitado só no local (PG18); `ClinicResolveTenant` usa sentinela `NO_TENANT` fora de request.
 
