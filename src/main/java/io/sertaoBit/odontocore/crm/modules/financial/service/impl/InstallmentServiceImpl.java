@@ -105,6 +105,24 @@ public class InstallmentServiceImpl implements InstallmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<InstallmentResponseDTO> getOverdue(Pageable pageable) {
+        User user = securityUtils.getCurrentUser();
+        PermissionScope scope = permissionService.getScope(
+                user,
+                INSTALLMENT,
+                READ
+        ).orElseThrow(() -> new AccessDeniedException("Access Denied"));
+
+        Specification<Installment> spec = Specification
+                .where(byScope(scope, user))
+                .and(overdue());
+
+        return installmentRepository.findAll(spec, pageable)
+                .map(installmentMapper::toResponseDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<InstallmentResponseDTO> getInstallmentsByCustomerId(UUID customerId, Pageable pageable) {
         User user = securityUtils.getCurrentUser();
         PermissionScope scope = permissionService.getScope(

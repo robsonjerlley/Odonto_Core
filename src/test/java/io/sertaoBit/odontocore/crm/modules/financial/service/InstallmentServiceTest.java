@@ -221,6 +221,36 @@ class InstallmentServiceTest {
     }
 
     @Test
+    @DisplayName("getOverdue - consulta atrasados cross-month dentro do escopo")
+    void getOverdue_success() {
+        User user = buildUser();
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(eq(user), any(), any()))
+                .thenReturn(Optional.of(PermissionScope.GLOBAL));
+        when(installmentRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        Page<?> result = installmentService.getOverdue(pageable);
+
+        assertNotNull(result);
+        verify(installmentRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    @DisplayName("getOverdue - lança AccessDeniedException sem escopo de leitura")
+    void getOverdue_noScope() {
+        User user = buildUser();
+        when(securityUtils.getCurrentUser()).thenReturn(user);
+        when(permissionService.getScope(eq(user), any(), any())).thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> installmentService.getOverdue(PageRequest.of(0, 10)));
+        verify(installmentRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+    }
+
+    @Test
     @DisplayName("getInstallmentsByCustomerId - lança AccessDeniedException sem escopo de leitura")
     void getInstallmentsByCustomerId_noScope() {
         User user = buildUser();

@@ -13,10 +13,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
 @RequestMapping("/api/v1/installments")
@@ -44,13 +47,28 @@ public class InstallmentController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping(params = "month")
+    @GetMapping(params = {"month", "!overdue"})
     public ResponseEntity<Page<InstallmentResponseDTO>> getInstallments(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
             @RequestParam(required = false) PaymentStatus status,
             @ParameterObject @PageableDefault(size = 20) Pageable page
     ) {
         return ResponseEntity.ok(installmentService.getInstallments(month, status, page));
+    }
+
+    // Atrasados cross-month (feed/chip global — ADR-034 [I2]). month e overdue são
+    // mutuamente exclusivos; os dois juntos → 400.
+    @GetMapping(params = "overdue")
+    public ResponseEntity<Page<InstallmentResponseDTO>> getOverdue(
+            @RequestParam boolean overdue,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+            @ParameterObject @PageableDefault(size = 20, sort = "dueDate") Pageable page
+    ) {
+        if (!overdue || month != null) {
+            throw new ResponseStatusException(BAD_REQUEST,
+                    "Use overdue=true isolado; não combine com month.");
+        }
+        return ResponseEntity.ok(installmentService.getOverdue(page));
     }
 
     @GetMapping(params = "customerId")

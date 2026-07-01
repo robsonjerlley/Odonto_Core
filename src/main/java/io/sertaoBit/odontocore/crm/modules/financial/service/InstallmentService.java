@@ -17,6 +17,8 @@ public interface InstallmentService {
 
     Page<InstallmentResponseDTO> getInstallments(YearMonth date, PaymentStatus status, Pageable pageable);
 
+    Page<InstallmentResponseDTO> getOverdue(Pageable pageable);
+
     Page<InstallmentResponseDTO> getInstallmentsByCustomerId(UUID customerId, Pageable pageable);
 
     List<CashflowMonthDTO> cashflow(YearMonth from, YearMonth to);

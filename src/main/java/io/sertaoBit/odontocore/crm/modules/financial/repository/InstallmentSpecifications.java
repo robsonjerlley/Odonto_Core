@@ -35,6 +35,14 @@ public final class InstallmentSpecifications {
         return (root, criteriaQuery, cb) -> cb.between(root.get("dueDate"), from, to);
     }
 
+    /** Atrasada = ainda EXPECTED e vencida antes de hoje (mesma regra do InstallmentMapper.isOverdue). */
+    public static Specification<Installment> overdue() {
+        return (root, criteriaQuery, cb) -> cb.and(
+                cb.equal(root.get("status"), PaymentStatus.EXPECTED),
+                cb.lessThan(root.get("dueDate"), LocalDate.now())
+        );
+    }
+
     public static Specification<Installment> byScope(PermissionScope scope, User user) {
 
         return switch (scope) {
