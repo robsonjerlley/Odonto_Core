@@ -14,7 +14,7 @@ A ADR-030 deixou o financeiro como "Won't-have" de tela completa (só chip pago/
 ## 2. Decisão
 - Tela **Financeiro · Parcelas**, **mês-a-mês** (navegador de mês; `?month=yyyy-MM`).
 - **KPI strip:** Recebido / A receber (do `/cashflow`) + Atrasado (soma client-side dos `overdue`).
-- **Filtro de status** = Todos / A receber / Pago. **"Atrasado" é faceta client-side** sobre `overdue` — **não** é status filtrável (ver [I1]).
+- **Filtro de status** = Todos / A receber / Pago. **"Atrasado" não é status de enum**; dentro do mês é faceta client-side sobre `overdue`, cross-month vai ao servidor via `overdue=true` (ver [I1]/[I2]).
 - **Marcar pago** = sheet "digite uma vez" (`paidAmount` default = esperado, `paidAt` default = hoje) → `PATCH /pay`.
 - **Estornar** = destrutivo com confirmação (`PATCH /unpay`, 200 sem corpo → refetch).
 - **Histórico por paciente** = drawer (`?customerId`). **Fluxo de caixa** = 1 gráfico simples secundário (única tela do produto que pode ter gráfico).
@@ -23,11 +23,14 @@ A ADR-030 deixou o financeiro como "Won't-have" de tela completa (só chip pago/
 `InstallmentResponseDTO`: `customerName`, `sequence/totalInstallments`, `dueDate`, `expectedAmount`, `status(EXPECTED|PAID)`, `overdue(bool)`, `paidAmount`, `paidAt`. RBAC `INSTALLMENT` só READ/UPDATE; ADM_SYSTEM/ADM_COMMERCIAL GLOBAL. Detalhe completo no espelho frontend §2.
 
 ## 4. Impactos no backend [IMPACTO BACKEND]
-- **[I1]** `PaymentStatus` só tem `EXPECTED`/`PAID`. "Atrasado" é boolean derivado — não filtrável no servidor. Filtro "Só atrasados" é client-side sobre `overdue`.
-- **[I2]** Listagem é por mês obrigatório; não há "atrasados de todos os meses". Feed da home (atrasados globais) e chip global precisam de `GET /installments?overdue=true` cross-month.
-- **[I3]** Sem status parcial: `/pay` quita mesmo com `paidAmount < expectedAmount`. MVP quita e **avisa**; saldo parcial (`PARTIAL` + residual) é impacto futuro.
+- **[I1]** `PaymentStatus` só tem `EXPECTED`/`PAID` — não existe valor de enum `OVERDUE`. Mas "atrasado" **é** predicado de query (`status=EXPECTED AND dueDate < hoje`, ver `InstallmentMapper.isOverdue`), logo **é filtrável no servidor**. Dentro do mês fica client-side por conveniência (as linhas do mês já estão na mão); **cross-month vai ao servidor** via [I2]. O filtro de *status* segue Todos / A receber / Pago.
+- **[I2] DECIDIDO — endpoint de atrasados cross-month.** Reusar `GET /api/v1/installments` com novo param `overdue=true`:
+  - retorna todas as parcelas `EXPECTED` com `dueDate < hoje`, **todos os meses**, paginado, sort default `dueDate ASC` (mais velha primeiro);
+  - `month` e `overdue` são **mutuamente exclusivos** — enviar os dois → **400**;
+  - Specification nova `overdue()` (= `EXPECTED AND dueDate < today`) combinada com `byScope`; `hasStatus`/`dueBetween` não servem;
+  - chip/feed global da home usa `Page.totalElements` como contagem — **sem** endpoint de count separado no MVP.
+- **[I3] FORA DO MVP.** Sem status parcial: `/pay` quita mesmo com `paidAmount < expectedAmount`. MVP quita e **avisa**; saldo parcial (`PARTIAL` + residual) é impacto backend futuro.
 
 ## 5. Próximos passos
-1. Alinhar [I2] (endpoint de atrasados cross-month).
+1. Implementar `overdue=true` no backend (controller + Specification + validação mútua com `month`).
 2. Implementar `InstallmentRow` + KPI + Sheet pagamento; drawer e cashflow depois.
-3. P.O. decide se pagamento parcial [I3] entra no MVP.
