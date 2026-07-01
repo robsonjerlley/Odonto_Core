@@ -2,7 +2,6 @@ package io.sertaoBit.odontocore.crm.modules.commercial.api.dto.response.deal;
 
 import io.sertaoBit.odontocore.crm.core.enums.PaymentMethod;
 import io.sertaoBit.odontocore.crm.core.enums.Sector;
-import io.sertaoBit.odontocore.crm.modules.commercial.api.dto.request.deal.DealItemRequestDTO;
 
 
 import java.math.BigDecimal;
@@ -15,7 +14,7 @@ public record DealResponseDTO(
         UUID ticketId,
         UUID createdBy,
         Sector createdBySector,
-        List<DealItemRequestDTO> items,
+        List<DealProcedureResponseDTO> items,
         BigDecimal totalValue,
         BigDecimal discountPct,
         UUID discountApprovedBy,

@@ -5,4 +5,5 @@ public enum PermissionScope {
     SECTOR,
     OWN,
     INTAKE,
+    PIPELINE,
 }

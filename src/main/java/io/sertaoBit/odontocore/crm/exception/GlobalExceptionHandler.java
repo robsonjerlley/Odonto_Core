@@ -3,6 +3,7 @@ package io.sertaoBit.odontocore.crm.exception;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,6 +33,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleConflict(ResourceAlreadyExistsException ex) {
         return ResponseEntity.status(CONFLICT)
                 .body(ErrorResponse.of(CONFLICT, ex.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Violação de integridade de dados: {}", ex.getMostSpecificCause().getMessage());
+        return ResponseEntity.status(CONFLICT)
+                .body(ErrorResponse.of(CONFLICT, "Registro já existe ou viola uma restrição de integridade."));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -97,6 +105,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        log.error("Erro não tratado: ", ex);
         return ResponseEntity.status(INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of(INTERNAL_SERVER_ERROR, "Erro Interno do Servidor"));
     }

@@ -106,7 +106,7 @@ modules/
 | `PaymentMethod` | PIX(1.00), CASH(1.00), DEBIT_CARD(0.98), CREDIT_CARD(0.97), INSTALLMENT(0.85), DENTAL_INSURANCE(0.90) — cada valor carrega `conversionFactor` (BigDecimal) para cálculo de `expectedCash` em analytics |
 | `Resource` | CUSTOMER, USER, TICKET, CONTACT_LOG, DEAL, PROCEDURE, ANALYTICS, CONFIG |
 | `Action` | CREATE, READ, UPDATE, CLOSE, RECYCLE, CONFIGURE, DELETE |
-| `PermissionScope` | GLOBAL, SECTOR, OWN, INTAKE |
+| `PermissionScope` | GLOBAL, SECTOR, OWN, INTAKE, PIPELINE |
 
 Regra: sempre `@Enumerated(EnumType.STRING)` nas entidades JPA.
 
@@ -145,7 +145,7 @@ Regra: sempre `@Enumerated(EnumType.STRING)` nas entidades JPA.
 permissionService.checkOrThrow(currentUser, Resource.DEAL, Action.CREATE, ticket.getCurrentSector(), null);
 // lança AccessDeniedException (HTTP 403) se negado
 ```
-Resolução: busca regra (role+sector+resource+action) → fallback (role+resource+action) → aplica scope: GLOBAL=sempre | SECTOR=user.sector==targetSector | OWN=user.id==targetOwnerId
+Resolução: busca regra (role+sector+resource+action) → fallback (role+resource+action) → aplica scope: GLOBAL=sempre | SECTOR=user.sector==targetSector | OWN=user.id==targetOwnerId | INTAKE=captação (user LEADS/ATTENDANT) vê recurso em setor de captação {LEADS,ATTENDANT} | PIPELINE=captação vê **só leitura** até avaliação {LEADS,ATTENDANT,EVALUATOR}, exclui COMMERCIAL (ADR-035)
 
 ### Serviços
 - `PermissionService` / `PermissionServiceImpl` — canAccess(), checkOrThrow()
@@ -192,7 +192,7 @@ Transição inválida → `IllegalStateException` → HTTP 422
 
 ### Entidades (`crm_db`)
 - **Deal**: id, ticketId, createdBySector(sempre AVALIACAO), createdBy(UUID), procedures(JSON → List\<DealProcedure\>), totalValue, discountPct=0, discountApprovedBy?, finalValue, paymentMethod?(PaymentMethod enum), closedBy?, closedAt?, archived=false, createdAt, updatedAt
-- **DealProcedure** (record, JSON em Deal — snapshot): procedureId(FK lógica→Procedure), name(snapshot), code?(snapshot), tableValue(snapshot), priceOverride?(negociado neste deal), quantity=1, note? — ver ADR-026
+- **DealProcedure** (record, JSON em Deal — snapshot): procedureId(FK lógica→Procedure), name(snapshot), code?(snapshot), tableValue(snapshot), priceOverride?(negociado neste deal), quantity=1, note? — ver ADR-026. No response, `DealResponseDTO.items` retorna `DealProcedureResponseDTO` (enriquecido com `effectivePrice`=priceOverride??tableValue e `subtotal`=effectivePrice×quantity), mapeado no `DealMapper.toProcedureResponse`
 - **DealHistory**: id, dealId, changedBy(UUID), changedBySector, fieldChanged, valueBefore(JSON), valueAfter(JSON), occurredAt — **imutável**
 - **AdsInvestment**: id, channel, campaign?, amount, periodStart, periodEnd, registeredBy(UUID), createdAt
 - **RecycleConfig**: id, sector?(null=global), afterDays, active=true, configuredBy(UUID), createdAt, updatedAt
@@ -309,7 +309,7 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [023](../adr/ADR-023-ticket-won-event-contract.md) | ~~TicketWonEvent — contrato do evento de fechamento~~ | **Substituída pela ADR-029** (gatilho real = `DealWonEvent` síncrono) |
 | [024](../adr/ADR-024-tenant-isolation-enforcement-tenantid.md) | Tenant isolation enforcement — `@TenantId` + `TenantContext` | Implementado |
 | [025](../adr/ADR-025-rls-postgresql-defense-in-depth.md) | Row Level Security (PostgreSQL) — defesa em profundidade | Proposto (futuro) |
-| [026](../adr/ADR-026-procedure-catalog-deal-snapshot.md) | Catálogo de Procedimentos (`Procedure`) + snapshot em `DealProcedure` | Implementado |
+| [026](../adr/ADR-026-procedure-catalog-deal-snapshot.md) | Catálogo de Procedimentos (`Procedure`) + snapshot em `DealProcedure` | **Implementado (fechado 2026-07-01)** — response enriquecido (`DealResponseDTO.items` → `DealProcedureResponseDTO` com `effectivePrice`/`subtotal`) + RBAC `PROCEDURE` no seeder (write=ADM_SYSTEM, read=todos) |
 | [027](../adr/ADR-027-boot-fixes-schema-flyway-tenant-sentinel.md) | Correções de boot — schema, Flyway (PG18), sentinela de tenant, seed admin | Implementado |
 | [028](../adr/ADR-028-catalog-read-boundary-provider-search.md) | Fronteira de leitura do `catalog` — `ProcedureProvider` (read-model `ProcedureView`) + `search()` unificado (revisa 026) | Implementado |
 | [029](../adr/ADR-029-scheduling-agenda-evaluator-deal-snapshot.md) | Módulo `appointment` — agenda do Evaluator a partir do Deal fechado (`DealWonEvent` síncrono no `closeDeal`, fail-fast) | **Implementado** (entity + listener + service + controller + RBAC; coberto por testes unitários) |
@@ -318,6 +318,7 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 | [032](../adr/ADR-032-financeiro-installments-deal-won.md) | Módulo `financeiro` — parcelas a receber (`Installment`) via `DealWonEvent` (2ª escuta) + `DealFinancialProvider`; visão mês/cliente/caixa | Proposto (decisão fechada; pendente impl) |
 | [033](../adr/ADR-033-ux-appointment-agenda.md) | UX da tela `appointment` — Agenda completa (visão dia + "A agendar"); concluir/remarcar/cancelar/reatribuir | Proposto (UX aceita; spec no espelho frontend `adr-frontend-003`) |
 | [034](../adr/ADR-034-ux-installment-gestao.md) | UX da tela `financeiro` — Gestão de parcelas (mês, filtros, pagar/estornar, histórico, caixa) | Proposto (UX aceita; spec no espelho frontend `adr-frontend-004`) |
+| [035](../adr/ADR-035-pipeline-scope-captacao-read.md) | Escopo `PIPELINE` — visibilidade read-only da captação até avaliação (`{LEADS,ATTENDANT,EVALUATOR}`, exclui COMMERCIAL); READ separado do UPDATE (que fica em INTAKE) | **Implementado (2026-07-01)** |
 
 > **Multi-tenancy (trilha 022 → 024 → 025)**: 022 estabelece a fundação (`clinicId` em User/JWT, implementado); 024 implementado — `@TenantId` + `TenantContext` — isolamento automático no ORM ativo; 025 documenta RLS no PostgreSQL como defesa em profundidade futura. O Redis **não** é coberto por nenhuma — chave de cache com `clinicId` é sempre manual (ver `.claude/specs/spec-redis-cache.md`). **Boot greenfield (027)**: V1 reescrita para `CREATE SCHEMA` (Hibernate `ddl-auto=update` cria as tabelas); Flyway desabilitado só no local (PG18); `ClinicResolveTenant` usa sentinela `NO_TENANT` fora de request.
 
@@ -331,7 +332,7 @@ Dois DataSources configurados em `application.properties`. Cross-db via UUID —
 
 ## Roadmap de implementações pendentes
 
-> Atualizado em 2026-06-30. Catálogo de procedimentos (ADR-026/028) **concluído**. Módulo `appointment` (ADR-029) **concluído** — entity + `AppointmentEventListener` + service + controller + RBAC + testes unitários.
+> Atualizado em 2026-07-01. Catálogo de procedimentos (ADR-026/028) **fechado de fato** — response do Deal enriquecido (`DealProcedureResponseDTO`) + RBAC `PROCEDURE` seedado. Escopo `PIPELINE` (ADR-035) **implementado** — captação lê até avaliação. Módulo `appointment` (ADR-029) **concluído** — entity + `AppointmentEventListener` + service + controller + RBAC + testes unitários.
 
 | Prioridade | Item | Origem | Estado | Pré-requisitos |
 |---|---|---|---|---|

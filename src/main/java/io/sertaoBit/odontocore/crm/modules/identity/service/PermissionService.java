@@ -72,6 +72,12 @@ public class PermissionService {
         return sector == Sector.LEADS || sector == Sector.ATTENDANT;
     }
 
+    // PIPELINE (só leitura): a captação enxerga o lead até a avaliação — LEADS, ATTENDANT e EVALUATOR
+    // (exclui COMMERCIAL). Ver ADR-035.
+    private boolean isPipelineSector(Sector sector) {
+        return sector == Sector.LEADS || sector == Sector.ATTENDANT || sector == Sector.EVALUATOR;
+    }
+
 
     private Boolean resolveScope(
             PermissionScope scope,
@@ -85,6 +91,7 @@ public class PermissionService {
             case SECTOR -> user.getSector().equals(targetSector);
             case OWN -> user.getId().equals(targetOwnerId);
             case INTAKE -> isIntakeSector(user.getSector()) && isIntakeSector(targetSector);
+            case PIPELINE -> isIntakeSector(user.getSector()) && isPipelineSector(targetSector);
         };
 
     }

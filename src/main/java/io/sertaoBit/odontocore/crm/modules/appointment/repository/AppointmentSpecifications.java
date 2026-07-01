@@ -38,7 +38,7 @@ public final class AppointmentSpecifications {
         return switch (scope) {
             case GLOBAL, SECTOR -> (root, criteriaQuery, cb) -> cb.conjunction();
             case OWN -> assignedTo(user.getId());
-            case INTAKE -> throw new UnsupportedOperationException();
+            case INTAKE, PIPELINE -> throw new UnsupportedOperationException();
         };
     }
 

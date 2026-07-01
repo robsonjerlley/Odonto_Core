@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Sector.ATTENDANT;
+import static io.sertaoBit.odontocore.crm.core.enums.Sector.EVALUATOR;
 import static io.sertaoBit.odontocore.crm.core.enums.Sector.LEADS;
 
 public final class LeadTicketSpecifications {
@@ -60,6 +61,7 @@ public final class LeadTicketSpecifications {
             case GLOBAL -> ((root, query, cb) -> cb.conjunction());
             case SECTOR -> currentSector(user.getSector());
             case INTAKE -> currentSectorIn(List.of(LEADS, ATTENDANT));
+            case PIPELINE -> currentSectorIn(List.of(LEADS, ATTENDANT, EVALUATOR));
             case OWN -> createdBy(user.getId());
         };
     }

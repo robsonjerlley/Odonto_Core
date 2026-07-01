@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static io.sertaoBit.odontocore.crm.core.enums.Sector.ATTENDANT;
+import static io.sertaoBit.odontocore.crm.core.enums.Sector.EVALUATOR;
 import static io.sertaoBit.odontocore.crm.core.enums.Sector.LEADS;
 
 public final class CustomerSpecifications {
@@ -77,6 +78,7 @@ public final class CustomerSpecifications {
             case OWN -> createdBy(user.getId());
             case SECTOR -> hasTicketInSector(user.getSector());
             case INTAKE -> hasTicketInSectors(List.of(LEADS, ATTENDANT));
+            case PIPELINE -> hasTicketInSectors(List.of(LEADS, ATTENDANT, EVALUATOR));
         };
     }
 }

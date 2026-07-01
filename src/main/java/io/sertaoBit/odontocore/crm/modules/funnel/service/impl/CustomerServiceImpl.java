@@ -77,6 +77,9 @@ public class CustomerServiceImpl implements CustomerService {
                 user.getId()
         );
 
+        if (customerRepository.findByCpf(dto.cpf()).isPresent()) {
+            throw new ResourceAlreadyExistsException("CPF " + dto.cpf() + " já existe na base de dados");
+        }
 
         Customer customer = Customer.builder()
                 .name(dto.name())

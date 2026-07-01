@@ -1,12 +1,14 @@
 # ADR-026: Catálogo de Procedimentos (`Procedure`) + Snapshot em `DealProcedure`
 
-**Status**: Implementado — 2026-06-27  
+**Status**: Implementado — 2026-06-27 (fechado de fato em 2026-07-01)  
 **Data**: 2026-06-23  
 **Autores**: Arquiteto-Agent  
 **Impacto**: módulo `commercial` (Deal, DealProcedure), novo módulo `catalog` (Procedure), `DealCreateRequestDTO`, `DealUpdateRequestDTO`, `DealServiceImpl`, CLAUDE.md  
 **Relaciona**: ADR-029 (módulo `appointment` — consome `Procedure.estimatedDuration` via `ProcedureProvider`; substitui a referência original à ADR-023), ADR-024 (`@TenantId` — `Procedure` é multi-tenant por `clinicId`)
 
 ---
+
+> ✅ **Fechamento 2026-07-01 — pendências concluídas.** A ADR estava marcada "Implementado" mas dois itens do contrato não haviam sido entregues: (1) o **response enriquecido** — `DealResponseDTO.items` retornava `List<DealItemRequestDTO>` (o DTO de *request*), agora corrigido para `List<DealProcedureResponseDTO>` com `effectivePrice`/`subtotal` calculados no `DealMapper.toProcedureResponse`; (2) o **RBAC do catálogo** — não havia nenhuma regra `PROCEDURE` no `PermissionSeeder` (o `ProcedureServiceImpl` já chamava `checkOrThrow`, mas sem regra tudo dava `AccessDenied`). Seedado: write=`ADM_SYSTEM` (GLOBAL), read=todos os papéis (GLOBAL). Nota de processo: a ADR não deveria ter sido marcada "Implementado" com o contrato incompleto.
 
 > ⚠️ **Revisão 2026-06-28 — `estimatedDuration` removido.** O campo `estimated_duration` (entity `Procedure`, `ProcedureView`, DTOs do catálogo) foi **removido**: o módulo `appointment` — seu único consumidor — deixou de usar duração (agendamento por data/hora basta; ver ADR-029). As menções a `estimatedDuration`/`estimated_duration`/slots de agenda abaixo são **históricas**.
 

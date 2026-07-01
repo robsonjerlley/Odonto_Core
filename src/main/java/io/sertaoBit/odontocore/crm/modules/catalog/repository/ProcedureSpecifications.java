@@ -40,7 +40,7 @@ public final class ProcedureSpecifications {
         return switch (scope) {
             case GLOBAL -> (root, criteriaQuery, cb) -> cb.conjunction();
             case OWN -> createdBy(user.getId());
-            case SECTOR, INTAKE -> throw new UnsupportedOperationException("Not supported yet.");
+            case SECTOR, INTAKE, PIPELINE -> throw new UnsupportedOperationException("Not supported yet.");
         };
     }
 }

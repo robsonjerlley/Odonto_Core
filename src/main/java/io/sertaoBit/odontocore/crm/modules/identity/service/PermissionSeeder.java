@@ -88,43 +88,43 @@ public class PermissionSeeder implements ApplicationRunner {
 
         //ADM_LEADS
         rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, CREATE, SECTOR));
-        rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, READ, INTAKE));
+        rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, READ, PIPELINE));
         rules.add(rule(ADM_LEADS, LEADS, CUSTOMER, UPDATE, INTAKE));
 
         rules.add(rule(ADM_LEADS, LEADS, TICKET, CREATE, SECTOR));
-        rules.add(rule(ADM_LEADS, LEADS, TICKET, READ, INTAKE));
+        rules.add(rule(ADM_LEADS, LEADS, TICKET, READ, PIPELINE));
         rules.add(rule(ADM_LEADS, LEADS, TICKET, UPDATE, INTAKE));
 
         rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, CREATE, SECTOR));
-        rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, READ, INTAKE));
+        rules.add(rule(ADM_LEADS, LEADS, CONTACT_LOG, READ, PIPELINE));
 
         rules.add(rule(ADM_LEADS, LEADS, ANALYTICS, READ, SECTOR));
 
 
         //USER_LEADS
         rules.add(rule(USER_LEADS, LEADS, CUSTOMER, CREATE, OWN));
-        rules.add(rule(USER_LEADS, LEADS, CUSTOMER, READ, INTAKE));
+        rules.add(rule(USER_LEADS, LEADS, CUSTOMER, READ, PIPELINE));
         rules.add(rule(USER_LEADS, LEADS, CUSTOMER, UPDATE, OWN));
 
         rules.add(rule(USER_LEADS, LEADS, TICKET, CREATE, OWN));
-        rules.add(rule(USER_LEADS, LEADS, TICKET, READ, INTAKE));
+        rules.add(rule(USER_LEADS, LEADS, TICKET, READ, PIPELINE));
         rules.add(rule(USER_LEADS, LEADS, TICKET, UPDATE, SECTOR));
 
         rules.add(rule(USER_LEADS, LEADS, CONTACT_LOG, CREATE, OWN));
-        rules.add(rule(USER_LEADS, LEADS, CONTACT_LOG, READ, SECTOR));
+        rules.add(rule(USER_LEADS, LEADS, CONTACT_LOG, READ, PIPELINE));
 
         rules.add(rule(USER_LEADS, LEADS, ANALYTICS, READ, OWN));
 
         //USER_ATTENDANT
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, CREATE, OWN));
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, READ, INTAKE));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, READ, PIPELINE));
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CUSTOMER, UPDATE, INTAKE));
 
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, READ, INTAKE));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, READ, PIPELINE));
         rules.add(rule(USER_ATTENDANT, ATTENDANT, TICKET, UPDATE, INTAKE));
 
         rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, CREATE, OWN));
-        rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, READ, INTAKE));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, CONTACT_LOG, READ, PIPELINE));
 
         rules.add(rule(USER_ATTENDANT, ATTENDANT, ANALYTICS, READ, OWN));
 
@@ -199,6 +199,21 @@ public class PermissionSeeder implements ApplicationRunner {
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, INSTALLMENT, UPDATE, SECTOR));
 
         rules.add(rule(USER_COMMERCIAL, COMMERCIAL, ANALYTICS, READ, OWN));
+
+        //PROCEDURE (catálogo) — ADR-026
+        // escrita: ADM_SYSTEM cura o catálogo da clínica
+        rules.add(rule(ADM_SYSTEM, null, PROCEDURE, CREATE, GLOBAL));
+        rules.add(rule(ADM_SYSTEM, null, PROCEDURE, READ, GLOBAL));
+        rules.add(rule(ADM_SYSTEM, null, PROCEDURE, UPDATE, GLOBAL));
+        rules.add(rule(ADM_SYSTEM, null, PROCEDURE, DELETE, GLOBAL));
+        // leitura: todos os papéis (referência para montar orçamento/agenda)
+        rules.add(rule(ADM_LEADS, LEADS, PROCEDURE, READ, GLOBAL));
+        rules.add(rule(USER_LEADS, LEADS, PROCEDURE, READ, GLOBAL));
+        rules.add(rule(USER_ATTENDANT, ATTENDANT, PROCEDURE, READ, GLOBAL));
+        rules.add(rule(ADM_EVALUATOR, EVALUATOR, PROCEDURE, READ, GLOBAL));
+        rules.add(rule(USER_EVALUATOR, EVALUATOR, PROCEDURE, READ, GLOBAL));
+        rules.add(rule(ADM_COMMERCIAL, COMMERCIAL, PROCEDURE, READ, GLOBAL));
+        rules.add(rule(USER_COMMERCIAL, COMMERCIAL, PROCEDURE, READ, GLOBAL));
 
         permissionRuleRepository.deleteAll();
         permissionRuleRepository.saveAll(rules);

@@ -47,7 +47,7 @@ public final class InstallmentSpecifications {
 
         return switch (scope) {
             case GLOBAL, SECTOR -> (root, criteriaQuery, cb) -> cb.conjunction();
-            case OWN, INTAKE -> throw new UnsupportedOperationException();
+            case OWN, INTAKE, PIPELINE -> throw new UnsupportedOperationException();
 
         };
     }
